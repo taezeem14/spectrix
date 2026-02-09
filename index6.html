@@ -2049,6 +2049,12 @@ else if (isVideo) {
     else {
       const model = document.getElementById("textModel")?.value || "deepseek-v3-0324";
 
+		const messages = session.messages
+        .filter(m => typeof m.content === "string")
+        .map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.content }));
+
+      messages.push({ role: "user", content: prompt });
+		
       const res = await fetch("https://hackoai-worker.tariqmtaezeem.workers.dev/github", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
