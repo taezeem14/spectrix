@@ -976,7 +976,7 @@ body.dark #chat::-webkit-scrollbar-thumb {background-color: #2563eb;border: 2px 
     <footer>
       <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceInput()">🎤</button>
       <div class="input-container">
-        <input id="input" placeholder="Type or speak... (Ctrl+B for new chat)" />
+        <textarea id="input" placeholder="Type or speak... (Ctrl+B for new chat)"></textarea>
         <div class="char-counter" id="charCounter">0 chars</div>
       </div>
       <button class="send" onclick="send()">Send</button>
@@ -2155,13 +2155,14 @@ function initEventListeners() {
   });
 
   input.addEventListener("keydown", e => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  if (e.key === "Enter") {
+    if (!e.shiftKey) {
       e.preventDefault();
       send();
-      return;
-    }
-    e.stopPropagation();
-  });
+    } 
+    // else: shift+Enter => newline, do nothing
+  }
+});
 
   searchBox.addEventListener("input", renderHistory);
 
@@ -2175,7 +2176,7 @@ function initEventListeners() {
       e.preventDefault();
       newChat();
     }
-    if (e.ctrlKey && e.key === "k") {
+    if (e.ctrlKey && e.key === "/") {
       e.preventDefault();
       searchBox.focus();
     }
