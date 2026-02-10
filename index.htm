@@ -39,92 +39,170 @@
             font-family: 'Inter', sans-serif;
         }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .dark ::-webkit-scrollbar-thumb { background: #374151; }
+        /* Glassmorphism Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { 
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+        }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(180deg, #2563eb, #7c3aed);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #1d4ed8, #6d28d9);
+            background-clip: padding-box;
+        }
 
+        /* Code Blocks */
         .prose pre {
-            background-color: #1e1e1e !important;
-            padding: 1rem;
-            border-radius: 0.5rem;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+            padding: 1.5rem;
+            border-radius: 1rem;
             overflow-x: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
         }
         .prose code {
-            color: #ef4444;
-            background-color: rgba(0,0,0,0.05);
-            padding: 0.1rem 0.3rem;
-            border-radius: 0.2rem;
+            color: #60a5fa;
+            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(124,58,237,0.1));
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.375rem;
             font-size: 0.9em;
+            border: 1px solid rgba(96,165,250,0.2);
         }
         .dark .prose code {
             color: #93c5fd;
-            background-color: rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
         }
         .prose pre code {
             color: inherit;
-            background-color: transparent;
+            background: transparent;
             padding: 0;
+            border: none;
         }
 
+        /* Animated Loader */
         .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2563eb;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+            position: relative;
+            animation: rotate 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
+        .loader::before {
+            content: "";
+            box-sizing: border-box;
+            position: absolute;
+            inset: 0px;
+            border-radius: 50%;
+            border: 5px solid #2563eb;
+            animation: prixClipFix 2s linear infinite;
+        }
+        @keyframes rotate {
             100% { transform: rotate(360deg); }
         }
+        @keyframes prixClipFix {
+            0% { clip-path: polygon(50% 50%,0 0,0 0,0 0,0 0,0 0); }
+            25% { clip-path: polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0); }
+            50% { clip-path: polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%); }
+            75% { clip-path: polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%); }
+            100% { clip-path: polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0); }
+        }
 
+        /* Smooth Animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(37,99,235,0.3); }
+            50% { box-shadow: 0 0 40px rgba(37,99,235,0.6); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        .animate-slide-in { animation: slideIn 0.3s ease-out; }
+        .animate-glow { animation: glow 2s ease-in-out infinite; }
+
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Glass Card Effect */
+        .glass-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        /* Hover Effects */
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(37,99,235,0.25);
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-spectrix-900 text-gray-800 dark:text-gray-100 transition-colors duration-200">
 
-    <div id="loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-spectrix-900">
-        <div class="loader mb-4"></div>
-        <div class="text-sm font-medium text-gray-500">Initializing Spectrix...</div>
+    <div id="loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
+        <div class="loader mb-6 animate-glow"></div>
+        <div class="text-lg font-semibold gradient-text animate-pulse">Initializing Spectrix...</div>
+        <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Preparing your AI experience</div>
     </div>
 
     <div id="app" class="flex h-full h-[100dvh] overflow-hidden hidden">
         
         <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-20 hidden lg:hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
 
-        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-72 bg-gray-50 dark:bg-[#1E1E1E] border-r border-gray-200 dark:border-gray-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-30 flex flex-col">
-            <div class="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                <button onclick="createNewChat()" class="flex-1 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-full text-sm font-medium transition-colors text-white">
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-72 bg-gradient-to-b from-gray-50 to-white dark:from-[#1a1a2e] dark:to-[#16213e] border-r border-gray-200 dark:border-gray-700/50 transform -translate-x-full lg:translate-x-0 transition-all duration-300 z-30 flex flex-col shadow-2xl">
+            <div class="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700/50 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
+                <button onclick="createNewChat()" class="flex-1 flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 text-white shadow-lg hover-lift">
                     <i class="ph ph-plus text-lg"></i>
                     <span>New Chat</span>
                 </button>
-                <button onclick="toggleSidebar()" class="lg:hidden ml-2 p-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg">
+                <button onclick="toggleSidebar()" class="lg:hidden ml-2 p-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
                     <i class="ph ph-x text-xl"></i>
                 </button>
             </div>
 
             <input type="text" id="searchBox" placeholder="🔍 Search chats..." 
-                   class="mx-3 my-2 p-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                   class="mx-3 my-3 p-3 glass-card rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-400 dark:placeholder-gray-500">
 
-            <div id="chatHistory" class="flex-1 overflow-y-auto p-3 space-y-1"></div>
+            <div id="chatHistory" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
-            <div class="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                <button onclick="exportAll()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-sm transition-colors">
-                    <i class="ph ph-download text-lg"></i>
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700/50 space-y-2 bg-white/30 dark:bg-white/5 backdrop-blur-sm">
+                <button onclick="exportAll()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 text-sm transition-all hover-lift">
+                    <i class="ph ph-download text-lg text-blue-500"></i>
                     <span>Export All</span>
                 </button>
-                <button onclick="importAll()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-sm transition-colors">
-                    <i class="ph ph-upload text-lg"></i>
+                <button onclick="importAll()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 text-sm transition-all hover-lift">
+                    <i class="ph ph-upload text-lg text-purple-500"></i>
                     <span>Import</span>
                 </button>
-                <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-sm transition-colors">
-                    <i id="themeIcon" class="ph ph-moon text-lg"></i>
+                <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 text-sm transition-all hover-lift">
+                    <i id="themeIcon" class="ph ph-moon text-lg text-yellow-500"></i>
                     <span id="themeText">Dark Mode</span>
                 </button>
             </div>
@@ -132,13 +210,13 @@
 
         <main class="flex-1 flex flex-col h-full w-full relative">
             
-            <header class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-spectrix-900 sticky top-0 z-10">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            <header class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700/50 bg-white/70 dark:bg-spectrix-900/70 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all hover-lift">
                     <i class="ph ph-list text-2xl"></i>
                 </button>
-                <span id="headerTitle" class="font-medium text-sm text-gray-500 dark:text-gray-400">Spectrix AI</span>
+                <span id="headerTitle" class="font-semibold text-sm gradient-text">Spectrix AI</span>
                 <div class="flex gap-2">
-                    <select id="textModel" class="text-xs bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 outline-none">
+                    <select id="textModel" class="text-xs glass-card rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer hover-lift">
                         <option value="openrouter/free">🧠 Auto Router</option>
                         <optgroup label="🔥 God Tier">
                             <option value="deepseek/deepseek-r1-0528:free">DeepSeek R1 0528</option>
@@ -179,7 +257,7 @@
                             <option value="cognitivecomputations/dolphin-mistral-24b-venice-edition:free">Venice Uncensored</option>
                         </optgroup>
                     </select>
-                    <select id="imageModel" class="text-xs bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 outline-none">
+                    <select id="imageModel" class="text-xs glass-card rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 transition-all cursor-pointer hover-lift">
                         <optgroup label="🔥 Photoreal">
                             <option value="stabilityai/stable-diffusion-xl-base-1.0">SDXL Base</option>
                             <option value="stabilityai/stable-diffusion-3.5-large">SD 3.5 Large</option>
@@ -214,34 +292,39 @@
                 </div>
             </header>
 
-            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth bg-gradient-to-b from-transparent via-blue-50/30 to-purple-50/30 dark:via-blue-900/10 dark:to-purple-900/10">
                 <div id="welcomeState" class="h-full flex flex-col items-center justify-center text-center">
-                    <div class="w-16 h-16 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-2xl mb-6 shadow-lg animate-pulse"></div>
-                    <h1 class="text-2xl md:text-4xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Sup dawg! 🔥</h1>
-                    <p class="text-gray-500 dark:text-gray-400 max-w-md">Ready to build some sick stuff?</p>
+                    <div class="w-20 h-20 bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 rounded-3xl mb-8 shadow-2xl animate-float"></div>
+                    <h1 class="text-3xl md:text-5xl font-bold mb-4 gradient-text animate-fade-in">Sup dawg! 🔥</h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-400 max-w-md animate-fade-in">Ready to build some sick stuff?</p>
+                    <div class="mt-8 flex gap-3 animate-fade-in">
+                        <div class="glass-card px-4 py-2 rounded-full text-sm">💬 Chat</div>
+                        <div class="glass-card px-4 py-2 rounded-full text-sm">🖼️ Images</div>
+                        <div class="glass-card px-4 py-2 rounded-full text-sm">🎬 Videos</div>
+                    </div>
                 </div>
             </div>
 
-            <button id="scrollBtn" onclick="scrollToBottom()" class="absolute bottom-24 right-6 p-2 bg-white dark:bg-gray-700 shadow-lg rounded-full hidden transition-transform hover:scale-110 z-10 border border-gray-200 dark:border-gray-600">
-                <i class="ph ph-arrow-down text-xl"></i>
+            <button id="scrollBtn" onclick="scrollToBottom()" class="absolute bottom-24 right-6 p-3 glass-card rounded-full hidden transition-all hover:scale-110 z-10 shadow-xl hover-lift animate-glow">
+                <i class="ph ph-arrow-down text-xl text-blue-500"></i>
             </button>
 
-            <div class="p-4 bg-white dark:bg-spectrix-900">
+            <div class="p-4 bg-gradient-to-t from-white via-white to-transparent dark:from-spectrix-900 dark:via-spectrix-900 dark:to-transparent backdrop-blur-xl">
                 <div class="max-w-4xl mx-auto relative group">
                     <textarea 
                         id="promptInput"
                         rows="1"
                         placeholder="Type or /img or /vid..."
-                        class="w-full bg-gray-100 dark:bg-[#1E1E1E] text-gray-900 dark:text-white rounded-3xl pl-5 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none overflow-hidden max-h-48 transition-all"
+                        class="w-full glass-card text-gray-900 dark:text-white rounded-3xl pl-6 pr-16 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none overflow-hidden max-h-48 transition-all shadow-lg hover:shadow-2xl"
                         oninput="autoResize(this)"
                         onkeydown="handleEnter(event)"
                     ></textarea>
                     
-                    <button id="sendBtn" onclick="sendMessage()" class="absolute right-2 bottom-2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-all transform active:scale-95 flex items-center justify-center w-10 h-10">
+                    <button id="sendBtn" onclick="sendMessage()" class="absolute right-3 bottom-3 p-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all transform active:scale-95 flex items-center justify-center w-11 h-11 shadow-lg animate-glow hover-lift">
                         <i class="ph ph-paper-plane-right text-lg"></i>
                     </button>
                 </div>
-                <div class="text-center mt-2">
+                <div class="text-center mt-3">
                     <p class="text-xs text-gray-400 dark:text-gray-500">Spectrix can make mistakes. Check important info.</p>
                 </div>
             </div>
@@ -400,14 +483,14 @@
             
             els.chatHistory.innerHTML = sorted.map(chat => `
                 <div onclick="selectChat('${chat.id}')" 
-                     class="group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${currentId === chat.id ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">
+                     class="group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all animate-slide-in ${currentId === chat.id ? 'glass-card bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-600 dark:text-blue-400 shadow-lg' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/30 text-gray-700 dark:text-gray-300'} hover-lift">
                     <div class="flex items-center gap-3 overflow-hidden">
-                        <i class="ph ph-chat-circle text-lg shrink-0"></i>
+                        <i class="ph-fill ph-chat-circle text-lg shrink-0 ${currentId === chat.id ? 'text-blue-500' : ''}"></i>
                         <span class="text-sm font-medium truncate">${chat.title}</span>
                     </div>
                     <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="event.stopPropagation(); renameChat('${chat.id}')" class="p-1 hover:text-blue-500"><i class="ph ph-pencil"></i></button>
-                        <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="p-1 hover:text-red-500"><i class="ph ph-trash"></i></button>
+                        <button onclick="event.stopPropagation(); renameChat('${chat.id}')" class="p-1.5 hover:text-blue-500 rounded-lg hover:bg-blue-500/10 transition-all"><i class="ph ph-pencil"></i></button>
+                        <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="p-1.5 hover:text-red-500 rounded-lg hover:bg-red-500/10 transition-all"><i class="ph ph-trash"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -467,17 +550,17 @@
                 if (typeof msg.content === 'object' && msg.content.type === 'image') {
                     return `
                         <div class="flex flex-col items-${msg.role === 'user' ? 'end' : 'start'} animate-fade-in">
-                            <img src="${msg.content.src}" class="max-w-[85%] md:max-w-[75%] rounded-2xl shadow-lg">
+                            <img src="${msg.content.src}" class="max-w-[85%] md:max-w-[75%] rounded-2xl shadow-2xl hover:scale-105 transition-transform duration-300 border-2 border-white/10">
                         </div>
                     `;
                 }
                 
                 return `
                     <div class="flex flex-col items-${msg.role === 'user' ? 'end' : 'start'} animate-fade-in">
-                        <div class="max-w-[85%] md:max-w-[75%] rounded-2xl px-5 py-3.5 ${
+                        <div class="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 shadow-lg hover:shadow-2xl transition-all ${
                             msg.role === 'user' 
-                            ? 'bg-gray-100 dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 rounded-br-none' 
-                            : 'text-gray-800 dark:text-gray-200 prose dark:prose-invert prose-p:my-1 prose-pre:my-2 w-full'
+                            ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-br-none' 
+                            : 'glass-card text-gray-800 dark:text-gray-200 prose dark:prose-invert prose-p:my-1 prose-pre:my-2 w-full rounded-bl-none'
                         }">
                             ${msg.role === 'user' ? escapeHtml(msg.content) : marked.parse(msg.content)}
                         </div>
