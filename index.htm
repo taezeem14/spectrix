@@ -1,753 +1,346 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spectrix AI</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        spectrix: {
-                            50: '#F0F4F9',
-                            100: '#E1E5EA',
-                            800: '#1F1F1F',
-                            900: '#131314',
-                            accent: '#2563eb'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Universal AI Chat</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        html, body {
-            height: 100%;
-            height: 100dvh;
-            overscroll-behavior: none;
-            font-family: 'Inter', sans-serif;
-        }
+  <!-- Marked.js -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-        /* Glassmorphism Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { 
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-        }
-        ::-webkit-scrollbar-thumb { 
-            background: linear-gradient(180deg, #2563eb, #7c3aed);
-            border-radius: 10px;
-            border: 2px solid transparent;
-            background-clip: padding-box;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #1d4ed8, #6d28d9);
-            background-clip: padding-box;
-        }
-
-        /* Code Blocks */
-        .prose pre {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
-            padding: 1.5rem;
-            border-radius: 1rem;
-            overflow-x: auto;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .prose code {
-            color: #60a5fa;
-            background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(124,58,237,0.1));
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.375rem;
-            font-size: 0.9em;
-            border: 1px solid rgba(96,165,250,0.2);
-        }
-        .dark .prose code {
-            color: #93c5fd;
-            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
-        }
-        .prose pre code {
-            color: inherit;
-            background: transparent;
-            padding: 0;
-            border: none;
-        }
-
-        /* Animated Loader */
-        .loader {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            position: relative;
-            animation: rotate 1s linear infinite;
-        }
-        .loader::before {
-            content: "";
-            box-sizing: border-box;
-            position: absolute;
-            inset: 0px;
-            border-radius: 50%;
-            border: 5px solid #2563eb;
-            animation: prixClipFix 2s linear infinite;
-        }
-        @keyframes rotate {
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes prixClipFix {
-            0% { clip-path: polygon(50% 50%,0 0,0 0,0 0,0 0,0 0); }
-            25% { clip-path: polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0); }
-            50% { clip-path: polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%); }
-            75% { clip-path: polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%); }
-            100% { clip-path: polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0); }
-        }
-
-        /* Smooth Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideIn {
-            from { transform: translateX(-20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(37,99,235,0.3); }
-            50% { box-shadow: 0 0 40px rgba(37,99,235,0.6); }
-        }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-        .animate-slide-in { animation: slideIn 0.3s ease-out; }
-        .animate-glow { animation: glow 2s ease-in-out infinite; }
-
-        /* Gradient Text */
-        .gradient-text {
-            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #ec4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* Glass Card Effect */
-        .glass-card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-        
-        /* Hover Effects */
-        .hover-lift {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .hover-lift:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(37,99,235,0.25);
-        }
-
-        /* Floating Animation */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        .animate-float {
-            animation: float 3s ease-in-out infinite;
-        }
-    </style>
+  <style>
+    html, body {
+      height: 100%;
+      background: #f8fafc;
+    }
+    .dark body {
+      background: #0f172a;
+    }
+    .typing::after {
+      content: "▍";
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+  </style>
 </head>
-<body class="bg-white dark:bg-spectrix-900 text-gray-800 dark:text-gray-100 transition-colors duration-200">
+<body class="min-h-screen flex bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100">
 
-    <div id="loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
-        <div class="loader mb-6 animate-glow"></div>
-        <div class="text-lg font-semibold gradient-text animate-pulse">Initializing Spectrix...</div>
-        <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Preparing your AI experience</div>
+<!-- Loader -->
+<div id="loading" class="fixed inset-0 flex items-center justify-center bg-white dark:bg-slate-900 z-50 text-xl font-semibold">
+  Loading App...
+</div>
+
+<!-- Sidebar -->
+<div id="sidebar" class="fixed md:static inset-y-0 left-0 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full md:translate-x-0 transition-transform z-40 flex flex-col">
+  <div class="p-3 flex items-center justify-between border-b border-gray-200 dark:border-slate-700">
+    <span class="font-bold">Chats</span>
+    <button id="newChatBtn" class="text-sm px-2 py-1 rounded bg-blue-500 text-white">+ New</button>
+  </div>
+  <div id="chatList" class="flex-1 overflow-y-auto"></div>
+  <div class="p-3 border-t border-gray-200 dark:border-slate-700 space-y-2">
+    <button id="settingsBtn" class="w-full text-sm px-2 py-1 rounded bg-gray-200 dark:bg-slate-700">Settings</button>
+    <button id="darkToggle" class="w-full text-sm px-2 py-1 rounded bg-gray-200 dark:bg-slate-700">Toggle Dark</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="flex-1 flex flex-col min-h-screen">
+  <!-- Header -->
+  <div class="flex items-center gap-2 p-2 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+    <button id="sidebarToggle" class="md:hidden px-2 py-1 rounded bg-gray-200 dark:bg-slate-700">☰</button>
+    <div id="chatTitle" class="font-semibold truncate">New Chat</div>
+  </div>
+
+  <!-- Messages -->
+  <div id="messages" class="flex-1 overflow-y-auto p-3 space-y-3"></div>
+
+  <!-- Input Bar -->
+  <div class="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 p-2">
+    <div class="flex gap-2">
+      <textarea id="userInput" rows="1" placeholder="Message AI..."
+        class="flex-1 resize-none rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm focus:outline-none"></textarea>
+      <button id="sendBtn" class="px-4 py-2 rounded-lg bg-blue-500 text-white">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-lg p-4 w-full max-w-md space-y-3">
+    <h2 class="font-bold text-lg">Settings</h2>
+
+    <div>
+      <label class="text-sm">OpenRouter API Key</label>
+      <input id="apiKeyInput" type="password" class="w-full mt-1 px-2 py-1 rounded border dark:bg-slate-700" />
     </div>
 
-    <div id="app" class="flex h-full h-[100dvh] overflow-hidden hidden">
-        
-        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-20 hidden lg:hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
-
-        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-72 bg-gradient-to-b from-gray-50 to-white dark:from-[#1a1a2e] dark:to-[#16213e] border-r border-gray-200 dark:border-gray-700/50 transform -translate-x-full lg:translate-x-0 transition-all duration-300 z-30 flex flex-col shadow-2xl">
-            <div class="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700/50 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
-                <button onclick="createNewChat()" class="flex-1 flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 text-white shadow-lg hover-lift">
-                    <i class="ph ph-plus text-lg"></i>
-                    <span>New Chat</span>
-                </button>
-                <button onclick="toggleSidebar()" class="lg:hidden ml-2 p-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                    <i class="ph ph-x text-xl"></i>
-                </button>
-            </div>
-
-            <input type="text" id="searchBox" placeholder="🔍 Search chats..." 
-                   class="mx-3 my-3 p-3 glass-card rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-400 dark:placeholder-gray-500">
-
-            <div id="chatHistory" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
-
-            <div class="p-4 border-t border-gray-200 dark:border-gray-700/50 space-y-2 bg-white/30 dark:bg-white/5 backdrop-blur-sm">
-                <button onclick="exportAll()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 text-sm transition-all hover-lift">
-                    <i class="ph ph-download text-lg text-blue-500"></i>
-                    <span>Export All</span>
-                </button>
-                <button onclick="importAll()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 text-sm transition-all hover-lift">
-                    <i class="ph ph-upload text-lg text-purple-500"></i>
-                    <span>Import</span>
-                </button>
-                <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700/50 text-sm transition-all hover-lift">
-                    <i id="themeIcon" class="ph ph-moon text-lg text-yellow-500"></i>
-                    <span id="themeText">Dark Mode</span>
-                </button>
-            </div>
-        </aside>
-
-        <main class="flex-1 flex flex-col h-full w-full relative">
-            
-            <header class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700/50 bg-white/70 dark:bg-spectrix-900/70 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all hover-lift">
-                    <i class="ph ph-list text-2xl"></i>
-                </button>
-                <span id="headerTitle" class="font-semibold text-sm gradient-text">Spectrix AI</span>
-                <div class="flex gap-2">
-                    <select id="textModel" class="text-xs glass-card rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer hover-lift">
-                        <option value="openrouter/free">🧠 Auto Router</option>
-                        <optgroup label="🔥 God Tier">
-                            <option value="deepseek/deepseek-r1-0528:free">DeepSeek R1 0528</option>
-                            <option value="google/gemma-3-27b-it">Gemma 3 27B</option>
-                            <option value="google/gemma-3-12b-it">Gemma 3 12B</option>
-                            <option value="tngtech/deepseek-r1t2-chimera:free">DeepSeek R1T2 Chimera</option>
-                            <option value="tngtech/deepseek-r1t-chimera:free">DeepSeek R1T Chimera</option>
-                            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B</option>
-                        </optgroup>
-                        <optgroup label="🎨 Creative">
-                            <option value="arcee-ai/trinity-large-preview:free">Trinity Large</option>
-                            <option value="z-ai/glm-4.5-air:free">GLM 4.5 Air</option>
-                            <option value="upstage/solar-pro-3:free">Solar Pro 3</option>
-                            <option value="openai/gpt-oss-120b:free">GPT-OSS 120B</option>
-                            <option value="openai/gpt-oss-20b:free">GPT-OSS 20B</option>
-                            <option value="nousresearch/hermes-3-405b-instruct:free">Hermes 3 405B</option>
-                        </optgroup>
-                        <optgroup label="⚡ Fast">
-                            <option value="stepfun/step-3.5-flash:free">Step 3.5 Flash</option>
-                            <option value="qwen/qwen3-next-80b-a3b-instruct:free">Qwen3 Next 80B</option>
-                            <option value="qwen/qwen3-coder-480b-a35b:free">Qwen3 Coder 480B</option>
-                        </optgroup>
-                        <optgroup label="⚖️ Balanced">
-                            <option value="arcee-ai/trinity-mini:free">Trinity Mini</option>
-                            <option value="mistralai/mistral-small-3.1-24b:free">Mistral Small 3.1</option>
-                            <option value="google/gemma-3-12b:free">Gemma 3 12B</option>
-                            <option value="nvidia/nemotron-3-nano-30b-a3b:free">Nemotron 30B</option>
-                        </optgroup>
-                        <optgroup label="🪶 Lightweight">
-                            <option value="liquid/lfm-2.5-1.2b-thinking:free">LiquidAI 1.2B Think</option>
-                            <option value="liquid/lfm-2.5-1.2b-instruct:free">LiquidAI 1.2B Instruct</option>
-                            <option value="qwen/qwen3-4b:free">Qwen3 4B</option>
-                            <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B</option>
-                            <option value="google/gemma-3-4b:free">Gemma 3 4B</option>
-                            <option value="google/gemma-3n-4b:free">Gemma 3n 4B</option>
-                        </optgroup>
-                        <optgroup label="🧪 Experimental">
-                            <option value="cognitivecomputations/dolphin-mistral-24b-venice-edition:free">Venice Uncensored</option>
-                        </optgroup>
-                    </select>
-                    <select id="imageModel" class="text-xs glass-card rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 transition-all cursor-pointer hover-lift">
-                        <optgroup label="🔥 Photoreal">
-                            <option value="stabilityai/stable-diffusion-xl-base-1.0">SDXL Base</option>
-                            <option value="stabilityai/stable-diffusion-3.5-large">SD 3.5 Large</option>
-                            <option value="stabilityai/stable-diffusion-3.5-medium">SD 3.5 Medium</option>
-                            <option value="stabilityai/stable-diffusion-3-medium">SD 3 Medium</option>
-                            <option value="ByteDance/SDXL-Lightning">SDXL Lightning</option>
-                            <option value="tencent/HunyuanImage-3.0">Hunyuan Image 3.0</option>
-                            <option value="HiDream-ai/HiDream-I1-Full">HiDream I1 Full</option>
-                        </optgroup>
-                        <optgroup label="🎨 Creative">
-                            <option value="black-forest-labs/FLUX.1-dev">FLUX Dev</option>
-                            <option value="black-forest-labs/FLUX.1-schnell">FLUX Schnell</option>
-                            <option value="fal/FLUX.2-dev-Turbo">FLUX 2 Dev Turbo</option>
-                            <option value="black-forest-labs/FLUX.1-Krea-dev">FLUX Krea Dev</option>
-                            <option value="DeverStyle/Z-Image-loras">Z-Image Loras</option>
-                            <option value="Daverrrr75/JTT-Qwen-Image">JTT Qwen Image</option>
-                            <option value="lightx2v/Qwen-Image-Lightning">Qwen Image Lightning</option>
-                            <option value="Qwen/Qwen-Image-2512">Qwen Image 2512</option>
-                            <option value="Qwen/Qwen-Image">Qwen Image</option>
-                            <option value="unsloth/Qwen-Image-2512-GGUF">Qwen Image GGUF</option>
-                            <option value="Tongyi-MAI/Z-Image-Turbo">Z-Image Turbo</option>
-                            <option value="ostris/zimage_turbo_training_adapter">ZImage Turbo Adapter</option>
-                            <option value="baptle/Z-Image-Japan-Expert">Z-Image Japan</option>
-                            <option value="salomonsky/flux-lora-uncensored">FLUX LoRA Uncensored</option>
-                            <option value="Shakker-Labs/FLUX.1-dev-LoRA-Children-Simple-Sketch">FLUX Sketch</option>
-                            <option value="ntc-ai/SDXL-LoRA-slider.sexy">SDXL Slider Sexy</option>
-                            <option value="artificialguybr/PixelArtRedmond">PixelArt Redmond</option>
-                            <option value="briaai/FIBO">FIBO</option>
-                            <option value="nerijs/lego-minifig-xl">LEGO Minifig XL</option>
-                        </optgroup>
-                    </select>
-                </div>
-            </header>
-
-            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth bg-gradient-to-b from-transparent via-blue-50/30 to-purple-50/30 dark:via-blue-900/10 dark:to-purple-900/10">
-                <div id="welcomeState" class="h-full flex flex-col items-center justify-center text-center">
-                    <div class="w-20 h-20 bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 rounded-3xl mb-8 shadow-2xl animate-float"></div>
-                    <h1 class="text-3xl md:text-5xl font-bold mb-4 gradient-text animate-fade-in">Sup dawg! 🔥</h1>
-                    <p class="text-lg text-gray-600 dark:text-gray-400 max-w-md animate-fade-in">Ready to build some sick stuff?</p>
-                    <div class="mt-8 flex gap-3 animate-fade-in">
-                        <div class="glass-card px-4 py-2 rounded-full text-sm">💬 Chat</div>
-                        <div class="glass-card px-4 py-2 rounded-full text-sm">🖼️ Images</div>
-                        <div class="glass-card px-4 py-2 rounded-full text-sm">🎬 Videos</div>
-                    </div>
-                </div>
-            </div>
-
-            <button id="scrollBtn" onclick="scrollToBottom()" class="absolute bottom-24 right-6 p-3 glass-card rounded-full hidden transition-all hover:scale-110 z-10 shadow-xl hover-lift animate-glow">
-                <i class="ph ph-arrow-down text-xl text-blue-500"></i>
-            </button>
-
-            <div class="p-4 bg-gradient-to-t from-white via-white to-transparent dark:from-spectrix-900 dark:via-spectrix-900 dark:to-transparent backdrop-blur-xl">
-                <div class="max-w-4xl mx-auto relative group">
-                    <textarea 
-                        id="promptInput"
-                        rows="1"
-                        placeholder="Type or /img or /vid..."
-                        class="w-full glass-card text-gray-900 dark:text-white rounded-3xl pl-6 pr-16 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none overflow-hidden max-h-48 transition-all shadow-lg hover:shadow-2xl"
-                        oninput="autoResize(this)"
-                        onkeydown="handleEnter(event)"
-                    ></textarea>
-                    
-                    <button id="sendBtn" onclick="sendMessage()" class="absolute right-3 bottom-3 p-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all transform active:scale-95 flex items-center justify-center w-11 h-11 shadow-lg animate-glow hover-lift">
-                        <i class="ph ph-paper-plane-right text-lg"></i>
-                    </button>
-                </div>
-                <div class="text-center mt-3">
-                    <p class="text-xs text-gray-400 dark:text-gray-500">Spectrix can make mistakes. Check important info.</p>
-                </div>
-            </div>
-        </main>
+    <div>
+      <label class="text-sm">Model</label>
+      <input id="modelInput" class="w-full mt-1 px-2 py-1 rounded border dark:bg-slate-700" />
     </div>
 
-    <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+    <div>
+      <label class="text-sm">System Prompt</label>
+      <textarea id="systemPromptInput" rows="3" class="w-full mt-1 px-2 py-1 rounded border dark:bg-slate-700"></textarea>
+    </div>
 
-    <script>
-        // IndexedDB Setup
-        const DB_NAME = 'Spectrix_DB';
-        const DB_VERSION = 1;
-        let db = null;
+    <div class="flex justify-end gap-2">
+      <button id="closeSettings" class="px-3 py-1 rounded bg-gray-200 dark:bg-slate-700">Close</button>
+      <button id="saveSettings" class="px-3 py-1 rounded bg-blue-500 text-white">Save</button>
+    </div>
+  </div>
+</div>
 
-        async function openDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve(db);
-                };
-                request.onupgradeneeded = (e) => {
-                    const database = e.target.result;
-                    if (!database.objectStoreNames.contains('chats')) {
-                        const chatStore = database.createObjectStore('chats', { keyPath: 'id' });
-                        chatStore.createIndex('timestamp', 'timestamp', { unique: false });
-                        chatStore.createIndex('pinned', 'pinned', { unique: false });
-                    }
-                    if (!database.objectStoreNames.contains('media')) {
-                        database.createObjectStore('media', { keyPath: 'id' });
-                    }
-                };
-            });
+<script>
+(() => {
+  const el = id => document.getElementById(id);
+
+  const state = {
+    chats: JSON.parse(localStorage.getItem("chats") || "[]"),
+    activeChatId: localStorage.getItem("activeChatId") || null,
+    apiKey: localStorage.getItem("apiKey") || "",
+    model: localStorage.getItem("model") || "deepseek/deepseek-r1:free",
+    dark: localStorage.getItem("dark") === "true"
+  };
+
+  function saveChats() {
+    localStorage.setItem("chats", JSON.stringify(state.chats));
+    localStorage.setItem("activeChatId", state.activeChatId || "");
+  }
+
+  function applyDark() {
+    document.documentElement.classList.toggle("dark", state.dark);
+    localStorage.setItem("dark", state.dark);
+  }
+
+  function createChat() {
+    const id = Date.now().toString();
+    const chat = { id, title: "New Chat", messages: [], systemPrompt: "" };
+    state.chats.unshift(chat);
+    state.activeChatId = id;
+    saveChats();
+    renderChats();
+    renderMessages();
+  }
+
+  function getActiveChat() {
+    return state.chats.find(c => c.id === state.activeChatId);
+  }
+
+  function renderChats() {
+    const list = el("chatList");
+    list.innerHTML = "";
+    state.chats.forEach(chat => {
+      const div = document.createElement("div");
+      div.className = "flex items-center justify-between px-2 py-1 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700";
+      div.innerHTML = `
+        <span class="truncate">${chat.title}</span>
+        <div class="flex gap-1">
+          <button class="rename px-1">✏️</button>
+          <button class="delete px-1">🗑️</button>
+        </div>
+      `;
+      div.onclick = e => {
+        if (e.target.classList.contains("rename")) {
+          const name = prompt("Rename chat:", chat.title);
+          if (name) chat.title = name;
+          saveChats();
+          renderChats();
+          return;
         }
-
-        async function saveChat(chatData) {
-            if (!db) await openDB();
-            const tx = db.transaction('chats', 'readwrite');
-            const store = tx.objectStore('chats');
-            store.put(chatData);
-            return new Promise((resolve, reject) => {
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            });
-        }
-
-        async function getAllChats() {
-            if (!db) await openDB();
-            const tx = db.transaction('chats', 'readonly');
-            const store = tx.objectStore('chats');
-            return new Promise((resolve, reject) => {
-                const request = store.getAll();
-                request.onsuccess = () => resolve(request.result || []);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        async function deleteChatFromDB(id) {
-            if (!db) await openDB();
-            const tx = db.transaction('chats', 'readwrite');
-            const store = tx.objectStore('chats');
-            store.delete(id);
-            return new Promise((resolve, reject) => {
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            });
-        }
-
-        // State
-        let sessions = {};
-        let currentId = null;
-        let isGenerating = false;
-        let lastUserPrompt = null;
-
-        const els = {
-            messagesContainer: document.getElementById('messagesContainer'),
-            welcomeState: document.getElementById('welcomeState'),
-            promptInput: document.getElementById('promptInput'),
-            sendBtn: document.getElementById('sendBtn'),
-            chatHistory: document.getElementById('chatHistory'),
-            sidebar: document.getElementById('sidebar'),
-            headerTitle: document.getElementById('headerTitle'),
-            searchBox: document.getElementById('searchBox')
-        };
-
-        // Init
-        document.addEventListener('DOMContentLoaded', async () => {
-            await openDB();
-            await loadAllSessions();
-            initTheme();
-            
-            setTimeout(() => {
-                document.getElementById('loading').classList.add('opacity-0', 'pointer-events-none');
-                document.getElementById('app').classList.remove('hidden');
-            }, 500);
-
-            marked.setOptions({
-                highlight: function(code, lang) {
-                    const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-                    return hljs.highlight(code, { language }).value;
-                },
-                breaks: true
-            });
-
-            els.searchBox.addEventListener('input', renderHistory);
-        });
-
-        async function loadAllSessions() {
-            const allChats = await getAllChats();
-            sessions = {};
-            allChats.forEach(chat => {
-                sessions[chat.id] = chat;
-            });
-            
-            if (Object.keys(sessions).length === 0) {
-                await createNewChat();
-            }
-            renderHistory();
-        }
-
-        async function createNewChat() {
-            currentId = Date.now().toString();
-            const newSession = {
-                id: currentId,
-                title: "New Chat",
-                messages: [],
-                timestamp: Date.now(),
-                pinned: false,
-                autoTitled: false
-            };
-            sessions[currentId] = newSession;
-            await saveChat(newSession);
-            localStorage.setItem('Spectrix_current', currentId);
-            renderHistory();
+        if (e.target.classList.contains("delete")) {
+          if (confirm("Delete chat?")) {
+            state.chats = state.chats.filter(c => c.id !== chat.id);
+            if (state.activeChatId === chat.id) state.activeChatId = state.chats[0]?.id || null;
+            saveChats();
+            renderChats();
             renderMessages();
-            closeSidebarMobile();
+          }
+          return;
         }
+        state.activeChatId = chat.id;
+        saveChats();
+        renderMessages();
+      };
+      list.appendChild(div);
+    });
+  }
 
-        function getCurrentSession() {
-            return sessions[currentId] || null;
-        }
+  function renderMessages() {
+    const chat = getActiveChat();
+    const container = el("messages");
+    container.innerHTML = "";
+    el("chatTitle").textContent = chat?.title || "New Chat";
 
-        function renderHistory() {
-            const query = els.searchBox.value.toLowerCase().trim();
-            let filtered = Object.values(sessions);
-            
-            if (query) {
-                filtered = filtered.filter(s =>
-                    s.title.toLowerCase().includes(query) ||
-                    s.messages.some(m => typeof m.content === "string" && m.content.toLowerCase().includes(query))
-                );
+    if (!chat) return;
+
+    chat.messages.forEach(msg => {
+      const div = document.createElement("div");
+      div.className = msg.role === "user" ? "flex justify-end" : "flex justify-start";
+      const bubble = document.createElement("div");
+      bubble.className = "max-w-[80%] px-3 py-2 rounded-lg text-sm " +
+        (msg.role === "user"
+          ? "bg-blue-500 text-white"
+          : "bg-gray-200 dark:bg-slate-700");
+      bubble.innerHTML = marked.parse(msg.content || "");
+      div.appendChild(bubble);
+      container.appendChild(div);
+    });
+
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const input = el("userInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    let chat = getActiveChat();
+    if (!chat) createChat(), chat = getActiveChat();
+
+    chat.messages.push({ role: "user", content: text });
+    if (chat.title === "New Chat") chat.title = text.slice(0, 30);
+    input.value = "";
+    renderChats();
+    renderMessages();
+    saveChats();
+
+    await streamAI(chat);
+  }
+
+  async function streamAI(chat) {
+    const apiKey = state.apiKey;
+    if (!apiKey) {
+      alert("Set API key in settings.");
+      return;
+    }
+
+    const container = el("messages");
+    const wrap = document.createElement("div");
+    wrap.className = "flex justify-start";
+    const bubble = document.createElement("div");
+    bubble.className = "max-w-[80%] px-3 py-2 rounded-lg text-sm bg-gray-200 dark:bg-slate-700 typing";
+    wrap.appendChild(bubble);
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+
+    let content = "";
+
+    try {
+      const messages = [];
+      if (chat.systemPrompt) messages.push({ role: "system", content: chat.systemPrompt });
+      messages.push(...chat.messages);
+
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + apiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: state.model,
+          messages,
+          stream: true
+        })
+      });
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n").filter(l => l.trim());
+
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const data = line.replace("data:", "").trim();
+          if (data === "[DONE]") break;
+
+          try {
+            const json = JSON.parse(data);
+            const token = json.choices?.[0]?.delta?.content || "";
+            if (token) {
+              content += token;
+              bubble.innerHTML = marked.parse(content);
+              container.scrollTop = container.scrollHeight;
             }
-            
-            const sorted = filtered.sort((a, b) => b.timestamp - a.timestamp);
-            
-            els.chatHistory.innerHTML = sorted.map(chat => `
-                <div onclick="selectChat('${chat.id}')" 
-                     class="group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all animate-slide-in ${currentId === chat.id ? 'glass-card bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-600 dark:text-blue-400 shadow-lg' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/30 text-gray-700 dark:text-gray-300'} hover-lift">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <i class="ph-fill ph-chat-circle text-lg shrink-0 ${currentId === chat.id ? 'text-blue-500' : ''}"></i>
-                        <span class="text-sm font-medium truncate">${chat.title}</span>
-                    </div>
-                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="event.stopPropagation(); renameChat('${chat.id}')" class="p-1.5 hover:text-blue-500 rounded-lg hover:bg-blue-500/10 transition-all"><i class="ph ph-pencil"></i></button>
-                        <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="p-1.5 hover:text-red-500 rounded-lg hover:bg-red-500/10 transition-all"><i class="ph ph-trash"></i></button>
-                    </div>
-                </div>
-            `).join('');
+          } catch {}
         }
+      }
 
-        function selectChat(id) {
-            currentId = id;
-            localStorage.setItem('Spectrix_current', currentId);
-            renderMessages();
-            closeSidebarMobile();
-        }
+      bubble.classList.remove("typing");
+      chat.messages.push({ role: "assistant", content });
+      saveChats();
+    } catch (e) {
+      bubble.classList.remove("typing");
+      bubble.textContent = "⚠️ Error connecting to API.";
+    }
+  }
 
-        async function deleteChat(id) {
-            if (!confirm('Delete this chat? 💀')) return;
-            await deleteChatFromDB(id);
-            delete sessions[id];
-            
-            if (id === currentId) {
-                const remaining = Object.keys(sessions);
-                if (remaining.length > 0) {
-                    selectChat(remaining[0]);
-                } else {
-                    await createNewChat();
-                }
-            }
-            renderHistory();
-        }
+  // UI Events
+  el("sendBtn").onclick = sendMessage;
+  el("userInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
 
-        async function renameChat(id) {
-            const chat = sessions[id];
-            const newTitle = prompt('Rename chat:', chat.title);
-            if (newTitle) {
-                chat.title = newTitle;
-                await saveChat(chat);
-                renderHistory();
-                if (id === currentId) {
-                    els.headerTitle.textContent = newTitle;
-                }
-            }
-        }
+  el("newChatBtn").onclick = createChat;
 
-        function renderMessages() {
-            const session = getCurrentSession();
-            
-            if (!session || session.messages.length === 0) {
-                els.welcomeState.style.display = 'flex';
-                els.messagesContainer.innerHTML = '';
-                els.messagesContainer.appendChild(els.welcomeState);
-                els.headerTitle.textContent = session?.title || 'Spectrix AI';
-                return;
-            }
+  el("sidebarToggle").onclick = () => {
+    el("sidebar").classList.toggle("-translate-x-full");
+  };
 
-            els.welcomeState.style.display = 'none';
-            els.headerTitle.textContent = session.title;
-            
-            els.messagesContainer.innerHTML = session.messages.map(msg => {
-                if (typeof msg.content === 'object' && msg.content.type === 'image') {
-                    return `
-                        <div class="flex flex-col items-${msg.role === 'user' ? 'end' : 'start'} animate-fade-in">
-                            <img src="${msg.content.src}" class="max-w-[85%] md:max-w-[75%] rounded-2xl shadow-2xl hover:scale-105 transition-transform duration-300 border-2 border-white/10">
-                        </div>
-                    `;
-                }
-                
-                return `
-                    <div class="flex flex-col items-${msg.role === 'user' ? 'end' : 'start'} animate-fade-in">
-                        <div class="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 shadow-lg hover:shadow-2xl transition-all ${
-                            msg.role === 'user' 
-                            ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-br-none' 
-                            : 'glass-card text-gray-800 dark:text-gray-200 prose dark:prose-invert prose-p:my-1 prose-pre:my-2 w-full rounded-bl-none'
-                        }">
-                            ${msg.role === 'user' ? escapeHtml(msg.content) : marked.parse(msg.content)}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            document.querySelectorAll('pre code').forEach(hljs.highlightElement);
-            scrollToBottom();
-        }
+  el("settingsBtn").onclick = () => {
+    el("apiKeyInput").value = state.apiKey;
+    el("modelInput").value = state.model;
+    const chat = getActiveChat();
+    el("systemPromptInput").value = chat?.systemPrompt || "";
+    el("settingsModal").classList.remove("hidden");
+    el("settingsModal").classList.add("flex");
+  };
 
-        async function sendMessage() {
-            let text = els.promptInput.value.trim();
-            if (!text || isGenerating) return;
+  el("closeSettings").onclick = () => {
+    el("settingsModal").classList.add("hidden");
+    el("settingsModal").classList.remove("flex");
+  };
 
-            if (!currentId) await createNewChat();
+  el("saveSettings").onclick = () => {
+    state.apiKey = el("apiKeyInput").value.trim();
+    state.model = el("modelInput").value.trim() || state.model;
+    const chat = getActiveChat();
+    if (chat) chat.systemPrompt = el("systemPromptInput").value;
+    localStorage.setItem("apiKey", state.apiKey);
+    localStorage.setItem("model", state.model);
+    saveChats();
+    el("closeSettings").click();
+  };
 
-            isGenerating = true;
-            lastUserPrompt = text;
-            els.promptInput.value = '';
-            els.promptInput.style.height = 'auto';
-            els.sendBtn.disabled = true;
-            els.sendBtn.innerHTML = '<div class="loader !w-5 !h-5 !border-2"></div>';
+  el("darkToggle").onclick = () => {
+    state.dark = !state.dark;
+    applyDark();
+  };
 
-            const session = getCurrentSession();
-            const isImage = text.startsWith('/img ');
-            
-            if (isImage) text = text.slice(5);
+  function init() {
+    applyDark();
+    if (!state.chats.length) createChat();
+    renderChats();
+    renderMessages();
+    el("loading").style.display = "none";
+  }
 
-            session.messages.push({ role: 'user', content: text });
-            
-            if (session.messages.length === 1) {
-                session.title = text.slice(0, 30) + (text.length > 30 ? '...' : '');
-                await saveChat(session);
-                renderHistory();
-            }
+  init();
+})();
+</script>
 
-            renderMessages();
-
-            try {
-                if (isImage) {
-                    const imageModel = document.getElementById('imageModel').value;
-                    const res = await fetch("https://hackoai-worker.tariqmtaezeem.workers.dev/hf/img", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                            prompt: text, 
-                            model: imageModel
-                        })
-                    });
-
-                    if (!res.ok) throw new Error('Image generation failed');
-
-                    const { url } = await res.json();
-                    session.messages.push({ role: 'bot', content: { type: 'image', src: url } });
-                    await saveChat(session);
-                    renderMessages();
-                } else {
-                    const model = document.getElementById('textModel').value;
-                    const messages = session.messages
-                        .filter(m => typeof m.content === 'string')
-                        .map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.content }));
-
-                    const res = await fetch("https://hackoai-worker.tariqmtaezeem.workers.dev/chat", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ model, messages })
-                    });
-
-                    const data = await res.json();
-                    const answer = data.choices?.[0]?.message?.content || '💀 Empty response';
-                    
-                    session.messages.push({ role: 'bot', content: answer });
-                    await saveChat(session);
-                    renderMessages();
-                }
-            } catch (err) {
-                session.messages.push({ role: 'bot', content: `**Error:** ${err.message}` });
-                await saveChat(session);
-                renderMessages();
-            } finally {
-                isGenerating = false;
-                els.sendBtn.disabled = false;
-                els.sendBtn.innerHTML = '<i class="ph ph-paper-plane-right text-lg"></i>';
-            }
-        }
-
-        async function exportAll() {
-            const data = JSON.stringify(sessions, null, 2);
-            const blob = new Blob([data], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `Spectrix_backup_${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importAll() {
-            document.getElementById('importFile').click();
-        }
-
-        async function handleImport(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                try {
-                    const imported = JSON.parse(ev.target.result);
-                    if (confirm('Import chats? This will merge with existing chats.')) {
-                        for (const id in imported) {
-                            const newId = Date.now().toString() + Math.random();
-                            imported[id].id = newId;
-                            sessions[newId] = imported[id];
-                            await saveChat(imported[id]);
-                        }
-                        renderHistory();
-                        alert('✅ Chats imported!');
-                    }
-                } catch {
-                    alert('❌ Invalid file!');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // Helpers
-        function handleEnter(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        }
-
-        function autoResize(el) {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
-        }
-
-        function scrollToBottom() {
-            els.messagesContainer.scrollTo({
-                top: els.messagesContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML.replace(/\n/g, '<br>');
-        }
-
-        function toggleSidebar() {
-            const isHidden = els.sidebar.classList.contains('-translate-x-full');
-            if (isHidden) {
-                els.sidebar.classList.remove('-translate-x-full');
-                document.getElementById('sidebarOverlay').classList.remove('hidden');
-            } else {
-                els.sidebar.classList.add('-translate-x-full');
-                document.getElementById('sidebarOverlay').classList.add('hidden');
-            }
-        }
-
-        function closeSidebarMobile() {
-            if (window.innerWidth < 1024) {
-                els.sidebar.classList.add('-translate-x-full');
-                document.getElementById('sidebarOverlay').classList.add('hidden');
-            }
-        }
-
-        function initTheme() {
-            const dark = localStorage.getItem('theme') === 'dark';
-            if (dark) {
-                document.documentElement.classList.add('dark');
-                document.getElementById('themeText').innerText = 'Light Mode';
-                document.getElementById('themeIcon').classList.replace('ph-moon', 'ph-sun');
-            }
-        }
-
-        function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.getElementById('themeText').innerText = isDark ? 'Light Mode' : 'Dark Mode';
-            document.getElementById('themeIcon').classList.toggle('ph-moon');
-            document.getElementById('themeIcon').classList.toggle('ph-sun');
-        }
-    </script>
 </body>
 </html>
