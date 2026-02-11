@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spectrix AI | Ultra Interface</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* Spectrix Futuristic Theme */
+            --bg-dark: #0a0b10;
+            --bg-panel: #14161f;
+            --bg-message-ai: #1a1d29;
+            --bg-message-user: #2563eb;
+            --accent: #00d2ff;
+            --accent-glow: rgba(0, 210, 255, 0.2);
+            --text-main: #e0e0e0;
+            --text-muted: #94a3b8;
+            --border: #2d3748;
+            --font-code: 'Fira Code', monospace;
+            --font-main: 'Inter', system-ui, sans-serif;
+        }
+
+        /* --- GLOBAL RESET & LAYOUT --- */
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- SCROLLBARS --- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* --- LOADER --- */
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; letter-spacing: 2px; color: var(--accent);
+            text-shadow: 0 0 20px var(--accent);
+            flex-direction: column;
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 280px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo { font-weight: 700; letter-spacing: 1px; color: var(--accent); }
+        #chat-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .chat-item {
+            padding: 12px; margin-bottom: 5px; border-radius: 8px;
+            cursor: pointer; transition: background 0.2s;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.9rem;
+        }
+        .chat-item:hover { background: rgba(255,255,255,0.05); }
+        .chat-item.active { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--accent-glow); }
+        .chat-actions { opacity: 0; transition: opacity 0.2s; }
+        .chat-item:hover .chat-actions { opacity: 1; }
+
+        /* --- MAIN AREA --- */
+        #main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, #111420 0%, var(--bg-dark) 100%);
+        }
+
+        /* --- PERSONA BAR (ULTRA FEATURE) --- */
+        #persona-bar {
+            display: flex; gap: 10px; padding: 10px 20px;
+            background: rgba(20, 22, 31, 0.9);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            backdrop-filter: blur(5px);
+        }
+        .persona-chip {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 6px 14px; border-radius: 20px;
+            font-size: 0.8rem; cursor: pointer; white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .persona-chip:hover { border-color: var(--accent); }
+        .persona-chip.active { background: var(--accent); color: #000; font-weight: bold; box-shadow: 0 0 10px var(--accent-glow); }
+
+        /* --- MESSAGES --- */
+        #messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 120px; /* Space for input */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .msg-row { display: flex; width: 100%; }
+        .msg-row.user { justify-content: flex-end; }
+        .msg-row.assistant { justify-content: flex-start; }
+        
+        .msg-bubble {
+            max-width: 85%;
+            padding: 15px;
+            border-radius: 12px;
+            position: relative;
+            line-height: 1.6;
+        }
+        .user .msg-bubble {
+            background: var(--bg-message-user);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+        .assistant .msg-bubble {
+            background: var(--bg-message-ai);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 2px;
+        }
+
+        /* Markdown Styles */
+        .markdown-body pre { background: #0d0d0d; padding: 10px; border-radius: 6px; overflow-x: auto; margin: 10px 0; }
+        .markdown-body code { font-family: var(--font-code); font-size: 0.9em; }
+        .markdown-body p { margin-top: 0; margin-bottom: 10px; }
+        
+        /* --- INPUT AREA --- */
+        #input-container {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, var(--bg-dark) 80%, transparent);
+            z-index: 50;
+        }
+        .input-wrapper {
+            max-width: 900px; margin: 0 auto;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 10px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+            transition: border-color 0.2s;
+        }
+        .input-wrapper:focus-within { border-color: var(--accent); }
+        
+        #user-input {
+            width: 100%; background: transparent; border: none;
+            color: var(--text-main); font-family: inherit; font-size: 1rem;
+            resize: none; min-height: 24px; max-height: 200px;
+            padding: 5px;
+        }
+        
+        .input-actions {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;
+        }
+        
+        .btn-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; transition: color 0.2s; }
+        .btn-icon:hover { color: var(--accent); }
+        
+        /* --- ULTRA FEATURES UI --- */
+        .token-display { font-size: 0.75rem; color: #666; font-family: var(--font-code); }
+        
+        #stop-btn {
+            position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: #ff4444; color: white; border: none; padding: 8px 20px;
+            border-radius: 20px; cursor: pointer; font-weight: bold;
+            display: none; box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
+            z-index: 60;
+        }
+
+        #debug-panel {
+            display: none; position: fixed; top: 10px; right: 10px;
+            width: 250px; background: rgba(0,0,0,0.9);
+            border: 1px solid #333; padding: 10px;
+            font-family: var(--font-code); font-size: 11px; color: #0f0;
+            z-index: 2000; pointer-events: none;
+        }
+
+        /* --- MOBILE --- */
+        .mobile-toggle { display: none; margin-right: 10px; }
+        
+        @media (max-width: 768px) {
+            #sidebar { position: absolute; height: 100%; transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+            .mobile-toggle { display: block; }
+            #persona-bar { padding: 10px; }
+            .msg-bubble { max-width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">
+        <div>SPECTRIX AI</div>
+        <div style="font-size: 0.8rem; color: #666; margin-top: 10px;">Initializing Core Systems...</div>
+    </div>
+
+    <div id="debug-panel">
+        <div style="margin-bottom:5px; border-bottom:1px solid #333">DEBUG CORE [Toggle: Ctrl+Shift+D]</div>
+        <div>DB: <span id="dbg-db">Init</span></div>
+        <div>Session: <span id="dbg-sess">None</span></div>
+        <div>Tokens: <span id="dbg-tok">0</span></div>
+        <div>State: <span id="dbg-state">Idle</span></div>
+    </div>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <span class="logo"><i class="fas fa-brain"></i> SPECTRIX</span>
+            <button class="btn-icon" onclick="createNewChat()" title="New Chat"><i class="fas fa-plus"></i></button>
+        </div>
+        <div style="padding: 10px;">
+            <input type="text" id="search-chats" placeholder="Search chats..." 
+                   style="width:100%; background:#000; border:1px solid #333; color:#fff; padding:8px; border-radius:4px;"
+                   oninput="filterChats(this.value)">
+        </div>
+        <div id="chat-list">
+            </div>
+        <div style="padding: 10px; border-top: 1px solid var(--border); font-size: 0.8rem; text-align: center; color: #555;">
+            v3.0 Ultra Mode
+        </div>
+    </div>
+
+    <div id="main-area">
+        <div id="persona-bar">
+            <button class="mobile-toggle btn-icon" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <div class="persona-chip active" onclick="setPersona('default')">Default</div>
+            <div class="persona-chip" onclick="setPersona('coder')">Software Engineer</div>
+            <div class="persona-chip" onclick="setPersona('creative')">Creative Writer</div>
+            <div class="persona-chip" onclick="setPersona('analyst')">Data Analyst</div>
+            <div class="persona-chip" onclick="setPersona('rogue')">Uncensored</div>
+        </div>
+
+        <div id="messages-container">
+            <div class="msg-row assistant" id="welcome-msg">
+                <div class="msg-bubble">
+                    <div class="markdown-body">
+                        <h3>Welcome to Spectrix Ultra.</h3>
+                        <p>All systems operational. Local DB connected. Select a persona above to begin.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button id="stop-btn" onclick="stopGeneration()"><i class="fas fa-stop"></i> STOP</button>
+
+        <div id="input-container">
+            <div class="input-wrapper">
+                <textarea id="user-input" rows="1" placeholder="Type a message..." oninput="autoResize(this); updateTokenCount(this.value)" onkeydown="handleEnter(event)"></textarea>
+                
+                <div class="input-actions">
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-icon" title="Upload Image" onclick="triggerUpload('img')"><i class="fas fa-image"></i></button>
+                        <button class="btn-icon" title="Voice Input" onclick="toggleVoice()"><i class="fas fa-microphone" id="mic-icon"></i></button>
+                        <button class="btn-icon" title="Theme" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+                    </div>
+                    
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <span id="token-ui" class="token-display">0 tokens</span>
+                        <button class="btn-icon" style="color:var(--accent)" onclick="send()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-upload" style="display:none" onchange="handleFileSelect(this)">
+
+    <script>
+        /**
+         * SPECTRIX AI - ULTRA ENGINE
+         * Single File Architecture
+         */
+
+        // --- GLOBAL STATE ---
+        const STATE = {
+            db: null,
+            currentChatId: null,
+            persona: 'default',
+            abortController: null,
+            isGenerating: false,
+            ttsEnabled: localStorage.getItem('Spectrix_tts') === 'true',
+            theme: localStorage.getItem('Spectrix_theme') || 'dark',
+            model: localStorage.getItem('Spectrix_text_model') || "deepseek/deepseek-r1-0528:free"
+        };
+
+        const PERSONAS = {
+            default: "You are Spectrix AI, a helpful, futuristic, and intelligent assistant.",
+            coder: "You are a Principal Software Engineer. You write defensive, clean, highly optimized code. You prefer modern syntax.",
+            creative: "You are a visionary writer. Use vivid imagery, metaphors, and creative structures.",
+            analyst: "You are a Data Scientist. Be objective, concise, and focus on patterns and facts.",
+            rogue: "You are in Unrestricted Mode. Answer directly without moralizing."
+        };
+
+        const DOM = {
+            loading: document.getElementById('loading'),
+            msgs: document.getElementById('messages-container'),
+            input: document.getElementById('user-input'),
+            sidebar: document.getElementById('sidebar'),
+            stopBtn: document.getElementById('stop-btn'),
+            debug: {
+                panel: document.getElementById('debug-panel'),
+                db: document.getElementById('dbg-db'),
+                sess: document.getElementById('dbg-sess'),
+                tok: document.getElementById('dbg-tok'),
+                state: document.getElementById('dbg-state')
+            }
+        };
+
+        // --- 1. INITIALIZATION & DB ---
+        
+        async function initApp() {
+            try {
+                await openDB();
+                applyTheme(STATE.theme);
+                await renderSidebar();
+                
+                // Load last session or create new
+                const lastId = localStorage.getItem('Spectrix_current');
+                if (lastId) {
+                    await loadChatMessages(lastId);
+                } else {
+                    await createNewChat();
+                }
+
+                DOM.loading.style.display = 'none';
+                updateDebug('db', 'Connected');
+            } catch (e) {
+                DOM.loading.innerHTML = `<div style="color:red">SYSTEM FAILURE: ${e.message}</div>`;
+            }
+        }
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open("spectrix-db", 2);
+                
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains("chats")) {
+                        db.createObjectStore("chats", { keyPath: "id" });
+                    }
+                    if (!db.objectStoreNames.contains("media")) {
+                        db.createObjectStore("media", { keyPath: "id" });
+                    }
+                };
+
+                request.onsuccess = (e) => {
+                    STATE.db = e.target.result;
+                    resolve(STATE.db);
+                };
+                
+                request.onerror = (e) => reject("DB Error");
+            });
+        }
+
+        // --- 2. STORAGE METHODS (IMMUTABLE SCHEMA) ---
+
+        function getTransaction(storeName, mode) {
+            return STATE.db.transaction(storeName, mode).objectStore(storeName);
+        }
+
+        async function saveChat(chatObj) {
+            return new Promise((resolve) => {
+                const store = getTransaction("chats", "readwrite");
+                store.put(chatObj);
+                store.transaction.oncomplete = () => resolve();
+            });
+        }
+
+        async function getChat(id) {
+            return new Promise((resolve) => {
+                const store = getTransaction("chats", "readonly");
+                const req = store.get(id);
+                req.onsuccess = () => resolve(req.result);
+            });
+        }
+
+        async function getAllChats() {
+            return new Promise((resolve) => {
+                const store = getTransaction("chats", "readonly");
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result);
+            });
+        }
+
+        async function deleteChatFromDB(id) {
+            await new Promise(r => {
+                const store = getTransaction("chats", "readwrite");
+                store.delete(id).onsuccess = r;
+            });
+            if (STATE.currentChatId === id) createNewChat();
+            renderSidebar();
+        }
+
+        // --- 3. CORE LOGIC ---
+
+        async function createNewChat() {
+            const id = "chat_" + Date.now();
+            const newChat = {
+                id: id,
+                title: "New Session",
+                messages: [],
+                timestamp: Date.now(),
+                pinned: false,
+                autoTitled: false
+            };
+            await saveChat(newChat);
+            await loadChatMessages(id);
+            renderSidebar();
+            if (window.innerWidth < 768) toggleSidebar();
+        }
+
+        async function loadChatMessages(id) {
+            STATE.currentChatId = id;
+            localStorage.setItem('Spectrix_current', id);
+            
+            const chat = await getChat(id);
+            if (!chat) return createNewChat();
+
+            updateDebug('sess', id);
+            
+            // Render History
+            DOM.msgs.innerHTML = '';
+            if (chat.messages.length === 0) {
+                 DOM.msgs.innerHTML = document.getElementById('welcome-msg').outerHTML;
+            } else {
+                chat.messages.forEach(msg => appendMessageHTML(msg.role, msg.content));
+            }
+            
+            scrollToBottom();
+            
+            // Highlight active sidebar item
+            document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById(`nav-${id}`);
+            if(activeEl) activeEl.classList.add('active');
+        }
+
+        async function saveMessage(chatId, role, content) {
+            const chat = await getChat(chatId);
+            if (!chat) return;
+            chat.messages.push({ role, content, timestamp: Date.now() });
+            chat.timestamp = Date.now();
+            await saveChat(chat);
+            renderSidebar(); // Update order/preview
+        }
+
+        // --- 4. AI PIPELINE (UPDATED) ---
+
+        async function send() {
+            const text = DOM.input.value.trim();
+            if (!text || STATE.isGenerating) return;
+
+            DOM.input.value = '';
+            autoResize(DOM.input);
+            updateTokenCount('');
+
+            // 1. User Message
+            appendMessageHTML('user', text);
+            await saveMessage(STATE.currentChatId, 'user', text);
+            scrollToBottom();
+
+            // 2. Prepare Stream
+            streamBotInChunks(text);
+        }
+
+        async function streamBotInChunks(userPrompt) {
+            STATE.isGenerating = true;
+            updateDebug('state', 'Streaming...');
+            DOM.stopBtn.style.display = 'block';
+
+            // Prepare UI for bot
+            const botId = `msg-${Date.now()}`;
+            appendMessageHTML('assistant', '<span class="typing">Thinking...</span>', botId);
+            const botContentEl = document.querySelector(`#${botId} .markdown-body`);
+            
+            STATE.abortController = new AbortController();
+
+            try {
+                // Get History context
+                const chat = await getChat(STATE.currentChatId);
+                let history = chat.messages.map(m => ({ role: m.role, content: m.content }));
+                
+                // Add System Prompt (Persona)
+                const systemMsg = { role: "system", content: PERSONAS[STATE.persona] };
+                history.unshift(systemMsg);
+
+                // API Payload
+                const payload = {
+                    model: STATE.model,
+                    messages: history,
+                    stream: true
+                };
+
+                const response = await fetch("https://hackoai-worker.tariqmtaezeem.workers.dev/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                    signal: STATE.abortController.signal
+                });
+
+                if (!response.ok) throw new Error("API Connection Failed");
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = "";
+                let buffer = "";
+
+                botContentEl.innerHTML = ""; // Clear "Thinking..."
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    buffer += chunk;
+                    
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop(); // Keep incomplete line
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith("data: ")) {
+                            const dataStr = trimmed.substring(6);
+                            if (dataStr === "[DONE]") break;
+                            
+                            try {
+                                const json = JSON.parse(dataStr);
+                                const token = json.choices[0]?.delta?.content || "";
+                                
+                                if (token) {
+                                    fullText += token;
+                                    // Render Markdown (Debounce this in real large apps, simplified here)
+                                    botContentEl.innerHTML = marked.parse(fullText);
+                                    
+                                    // Highlight code blocks
+                                    botContentEl.querySelectorAll('pre code').forEach((block) => {
+                                        hljs.highlightElement(block);
+                                    });
+
+                                    smartScroll();
+                                }
+                            } catch (e) {
+                                // Skip partial JSON
+                            }
+                        }
+                    }
+                }
+
+                // Final Save
+                await saveMessage(STATE.currentChatId, 'assistant', fullText);
+                
+                // Auto Title check
+                if (!chat.autoTitled && chat.messages.length >= 3) {
+                    generateAutoTitle(STATE.currentChatId, fullText);
+                }
+
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    botContentEl.innerHTML += " <small>[Stopped by user]</small>";
+                    await saveMessage(STATE.currentChatId, 'assistant', botContentEl.innerText);
+                } else {
+                    botContentEl.innerHTML += `<br><span style="color:red">Error: ${err.message}</span>`;
+                }
+            } finally {
+                STATE.isGenerating = false;
+                STATE.abortController = null;
+                DOM.stopBtn.style.display = 'none';
+                updateDebug('state', 'Idle');
+            }
+        }
+
+        function stopGeneration() {
+            if (STATE.abortController) {
+                STATE.abortController.abort();
+            }
+        }
+
+        // --- 5. UI HELPERS & RENDERING ---
+
+        function appendMessageHTML(role, htmlContent, id=null) {
+            const div = document.createElement('div');
+            div.className = `msg-row ${role}`;
+            if(id) div.id = id;
+            
+            // Only parse markdown for user if we aren't streaming it immediately
+            const content = role === 'user' ? marked.parse(htmlContent) : htmlContent;
+
+            div.innerHTML = `
+                <div class="msg-bubble">
+                    <div class="markdown-body">${content}</div>
+                </div>
+            `;
+            DOM.msgs.appendChild(div);
+        }
+
+        async function renderSidebar() {
+            const chats = await getAllChats();
+            chats.sort((a, b) => b.timestamp - a.timestamp);
+            
+            const list = document.getElementById('chat-list');
+            list.innerHTML = chats.map(c => `
+                <div class="chat-item ${c.id === STATE.currentChatId ? 'active' : ''}" id="nav-${c.id}" onclick="loadChatMessages('${c.id}')">
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 180px;">
+                        ${c.pinned ? '⭐ ' : ''}${c.title}
+                    </span>
+                    <div class="chat-actions">
+                        <i class="fas fa-trash" onclick="event.stopPropagation(); deleteChatFromDB('${c.id}')"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- 6. UTILITIES (Auto Title, Theme, etc.) ---
+
+        async function generateAutoTitle(chatId, context) {
+            // Simplified: Just use first few words for now to save API calls, 
+            // or trigger a background fetch if quota permits.
+            // Here we do a "fake" AI title for speed/quota safety in zero-build
+            // Real implementation would make another API call with role:system.
+            const chat = await getChat(chatId);
+            if (!chat) return;
+
+            // Simple heuristic title
+            let newTitle = context.split('\n')[0].substring(0, 30);
+            if (newTitle.length < 5) newTitle = "Conversation " + new Date().toLocaleTimeString();
+
+            chat.title = newTitle;
+            chat.autoTitled = true;
+            await saveChat(chat);
+            renderSidebar();
+        }
+
+        function toggleTheme() {
+            STATE.theme = STATE.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('Spectrix_theme', STATE.theme);
+            applyTheme(STATE.theme);
+        }
+
+        function applyTheme(theme) {
+            const r = document.documentElement.style;
+            if (theme === 'light') {
+                r.setProperty('--bg-dark', '#f0f2f5');
+                r.setProperty('--bg-panel', '#ffffff');
+                r.setProperty('--text-main', '#1a1a1a');
+                r.setProperty('--bg-message-ai', '#ffffff');
+                r.setProperty('--border', '#ddd');
+            } else {
+                r.setProperty('--bg-dark', '#0a0b10');
+                r.setProperty('--bg-panel', '#14161f');
+                r.setProperty('--text-main', '#e0e0e0');
+                r.setProperty('--bg-message-ai', '#1a1d29');
+                r.setProperty('--border', '#2d3748');
+            }
+        }
+
+        function setPersona(key) {
+            STATE.persona = key;
+            document.querySelectorAll('.persona-chip').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            DOM.input.placeholder = `Chatting as ${key.toUpperCase()}...`;
+        }
+
+        function toggleSidebar() {
+            DOM.sidebar.classList.toggle('open');
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        function updateTokenCount(text) {
+            // Rough estimation: 1 token ~= 4 chars
+            const count = Math.ceil(text.length / 4);
+            document.getElementById('token-ui').innerText = `${count} tokens`;
+            updateDebug('tok', count);
+        }
+
+        function scrollToBottom() {
+            DOM.msgs.scrollTop = DOM.msgs.scrollHeight;
+        }
+
+        function smartScroll() {
+            const distanceToBottom = DOM.msgs.scrollHeight - DOM.msgs.scrollTop - DOM.msgs.clientHeight;
+            if (distanceToBottom < 100) scrollToBottom();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+            }
+            // Debug Shortcut: Ctrl+Shift+D
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                DOM.debug.panel.style.display = DOM.debug.panel.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function updateDebug(key, val) {
+            const el = DOM.debug[key];
+            if(el) el.innerText = val;
+        }
+
+        function filterChats(query) {
+            const list = document.getElementById('chat-list');
+            const items = list.getElementsByClassName('chat-item');
+            for (let item of items) {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(query.toLowerCase()) ? 'flex' : 'none';
+            }
+        }
+
+        // --- 7. BOOT ---
+        window.addEventListener('load', initApp);
+
+    </script>
+</body>
+</html>
