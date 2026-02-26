@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: /
 
-# HackoAI – private app, not for indexing
+# Spectrix AI – private app, not for indexing

@@ -1,140 +1,105 @@
-# 🚀 HackoAI • Voice Edition 🎤
+# Spectrix AI
 
-**A lightweight, browser-based AI chat interface with voice input + TTS**
+![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa&logoColor=white)
+![Offline Ready](https://img.shields.io/badge/Offline-Ready-10B981)
+![Vanilla JS](https://img.shields.io/badge/Stack-Vanilla%20JS-F7DF1E?logo=javascript&logoColor=111)
+![Math](https://img.shields.io/badge/Math-KaTeX%20%2B%20MathJax-2563EB)
 
-Built for speed. Built for fun. Built because typing is overrated.
+Production-grade, installable AI chat web app with voice input/output, streaming replies, media generation, persistent history, and advanced PWA behavior.
 
----
+## Screenshots
 
-## 🧠 What is this?
+> Add your screenshots in a `screenshots/` folder at project root.
 
-HackoAI • Voice Edition is a **client-side AI chat UI** that lets you:
+![Spectrix Main UI](screenshots/spectrix-main.png)
+![Spectrix Chat + Math](screenshots/spectrix-math.png)
 
-* 🎙️ Talk to the app using speech recognition
-* 🔊 Hear responses with Text-to-Speech
-* 🧼 Enjoy a clean, hacker-style UI
+## Highlights
 
-Basically: *Jarvis energy, budget edition*.
+- Single-page app in vanilla HTML/CSS/JS
+- Persistent multi-session chat with IndexedDB
+- Voice input + TTS playback toggle
+- Streaming Markdown responses with syntax highlighting
+- KaTeX + MathJax rendering pipeline for math-heavy responses
+- Image (`/img`) and video (`/vid`) generation flows
+- Real Retry and Edit behavior (in-thread regeneration without duplicate user bubbles)
+- Installable PWA with offline shell, runtime caching, update lifecycle, and shortcuts
 
----
-
-## ✨ Features
-
-* 🎤 Voice Input (SpeechRecognition / webkitSpeechRecognition)
-* 🔊 Text-to-Speech toggle (saved in `localStorage`)
-* 🧠 Auto-fill input from voice
-* 📝 Live character counter
-* 🌙 Dark, modern UI
-* 💾 Settings persistence
-* 🧩 Vanilla HTML, CSS, JS (no frameworks, no drama)
-
----
-
-## 🛠️ Tech Stack
-
-* HTML5
-* CSS3
-* Vanilla JavaScript
-* Web Speech API
-* localStorage
-* Indexed-DB
-
-Zero dependencies. Zero pain.
-
----
-
-## 📂 Project Structure
+## Project Structure
 
 ```
 /
 ├── index.html
+├── sw.js
+├── site.webmanifest
+├── robots.txt
 └── README.md
 ```
 
----
+## Run Locally
 
-## 🚀 How to Run
+Use a local web server, then open the app in Chromium browser:
 
-1. Download or clone the repo
-2. Open `index.html` in **Chrome / Edge**
-3. Click 🎤 and start talking
-4. Vibe.
+1. Start server
+   - VS Code Live Server
+   - `npx serve .`
+   - `python -m http.server 5500`
+2. Open `http://127.0.0.1:5500`
 
-> ⚠️ Voice features work best in Chromium-based browsers.
+## Features
 
----
+### Chat & UX
 
-## ⚙️ Settings
+- Session sidebar (search, pin, rename, delete)
+- Export current chat to Markdown
+- Import/export full chat backups as JSON
+- Keyboard shortcuts and smooth scroll-to-latest UX
 
-* TTS Toggle is saved automatically
-* Refresh-safe thanks to `IndexedDB`
-* No accounts. No tracking. No nonsense.
+### AI & Media
 
----
+- Text generation via worker API
+- `/img ...` for image generation
+- `/vid ...` for video generation
+- Adaptive streaming renderer for long outputs
 
-## 🧪 Known Limitations
+### Math Rendering
 
-* Speech Recognition needs HTTPS or localhost
-* Accent accuracy depends on browser engine
-* Safari support is limited
+- KaTeX auto-render + MathJax fallback
+- Auto-normalization for inconsistent model math formatting
+- Inline-code math promotion for better typesetting
 
----
+### Voice
 
-## 🧠 Ideas for Future Upgrades
+- Speech-to-text input
+- TTS playback with persisted state
+- Safe interruption on new responses
 
-* 🔐 Authentication system
-* 🧩 Plugin architecture
-* 🎮 XP / leveling UI
-* 🌍 Multi-language voice support
-* 🤖 Offline AI integration
+## PWA Stack
 
----
+- `site.webmanifest` with shortcuts, launch handler, share target
+- `sw.js` with:
+  - navigation preload
+  - network-first pages
+  - stale-while-revalidate static assets
+  - cache-first images
+  - runtime cache trimming
+  - update/client messaging events
 
-## 📜 License
+## Browser Notes
 
-MIT License — use it freely.
+- Best on Chrome/Edge desktop and Android
+- Voice recognition typically needs HTTPS or localhost
+- iOS Safari has platform-specific voice/install limitations
 
----
+## Deployment
 
-## 🧬 Advanced Capabilities
+Works on static hosting (GitHub Pages, Netlify, Vercel static, etc.) as long as root contains:
 
-* 🧠 **Smart Voice Autofill** — speech instantly converts to clean text
-* 🔁 **Real-time UI State Sync** — buttons, counters, and mic state always accurate
-* 🗣️ **Interrupt-safe TTS** — new responses cancel old speech automatically
-* ⚙️ **Fail-safe Voice Handling** — graceful errors if mic access fails
-* 🧩 **Modular JS Logic** — easy to extend, remix, or weaponize 😈
+- `index.html`
+- `sw.js`
+- `site.webmanifest`
+- icon files referenced by the manifest
 
----
+## Author
 
-## 🔥 Power-User Notes
-
-* Works best on **Chrome / Edge (Desktop)**
-* HTTPS is required for mic access (or use `localhost`)
-* All logic runs **100% client-side** — inspectable, hackable, yours
-* Designed to be embedded into bigger projects
-
----
-
-## 🧪 Tested On
-
-* Windows 10 / 11
-* Chrome (latest)
-* Edge (Chromium)
-
----
-
-## 🧨 Philosophy
-
-> Fast. Simple. Local. No bloat.
-
-This project exists to prove that you don’t need massive frameworks
-or bloated stacks to build something **clean, powerful, and fun**.
-
----
-
-## 👑 Author
-
-Built by **Muhammad Taezeem Tariq Matta** (aka **Mr. !113g2l**)
-Coder • Builder • Chaos Engineer 💻🔥
-
-If you’re reading this — yeah, this was built different.
+Muhammad Taezeem Tariq Matta
