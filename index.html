@@ -26,11 +26,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
 <script>
+<script>
 window.MathJax = {
   tex: {
     inlineMath: [['$', '$'], ['\\(', '\\)']],
     displayMath: [['$$', '$$'], ['\\[', '\\]']],
-    processEscapes: true
+    processEscapes: true,
+    packages: {'[+]': ['ams']}
   },
   options: {
     skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
@@ -1372,11 +1374,22 @@ const THEME_KEY = "Spectrix_theme";
 const TTS_KEY = 'Spectrix_tts';
 const IOS_HINT_KEY = 'Spectrix_ios_hint_dismissed';
 const MAX_PROMPT_CHARS = 8000;
-const MATH_FORMAT_SYSTEM_PROMPT = `When writing mathematical expressions, always use LaTeX delimiters.
-- Inline math: $...$
-- Display math: $$...$$
-- Never wrap math in backticks.
-- Keep normal code snippets in fenced code blocks only when it is actual code.`;
+const MATH_FORMAT_SYSTEM_PROMPT = `
+When writing mathematics, use valid MathJax LaTeX syntax.
+
+Inline math must use:
+\\( ... \\)
+
+Display equations must use:
+\\[ ... \\]
+
+Rules:
+- Never use square brackets [ ... ] for math.
+- Never invent separators like ; or , inside formulas.
+- Use proper LaTeX commands like \\frac{}, \\sqrt{}, \\sin, \\ln.
+- Do not wrap math inside code blocks.
+- Use \\begin{aligned} ... \\end{aligned} for multi-line equations.
+`;
 const API_WORKER_HOST = ['hac', 'koai-worker.tariqmtaezeem.workers.dev'].join('');
 const CHAT_API_URL = `https://${API_WORKER_HOST}/chat`;
 const FIXED_TEXT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
