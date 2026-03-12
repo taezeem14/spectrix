@@ -1639,6 +1639,14 @@ function renderMath(d) {
     }
   }
 
+  // Restore KaTeX failures back to delimited text so MathJax can try
+  d.querySelectorAll('.katex-error').forEach(errEl => {
+    const raw = errEl.textContent;
+    const isDisplay = !!errEl.closest('.katex-display');
+    const delim = isDisplay ? '$$' : '$';
+    errEl.replaceWith(document.createTextNode(delim + raw + delim));
+  });
+
   if (window.MathJax?.typesetPromise) {
     window.MathJax.typesetClear?.([d]);
     window.MathJax.typesetPromise([d]).catch((error) => {
@@ -2192,7 +2200,13 @@ function normalizeMathMarkup(text) {
   });
 
   // Rescue bare LaTeX commands at start of a line only (avoids double-wrapping)
-  normalized = normalized.replace(/(^|\n)([ \t]*(?:[-*] )?)(\\(?:int|sum|prod|frac|sqrt|lim|theta|alpha|beta|gamma|Delta|lambda|pi)\b[^\n]*)(?=\n|$)/gi, (full, lead, indent, expr) => {
+  normalized = normalized.replace(/(^|\n)([ \t]*(?:[-*] )?)(\\(?:int|sum|prod|frac|sqrt|lim|big[lrmb]?|left|right|begin|end|text|binom|log|ln|exp|sin|cos|tan|sec|csc|cot|theta|alpha|beta|gamma|Delta|delta|lambda|pi|sigma|omega|infty|partial|nabla|forall|exists|mathbb|mathcal|mathrm|mathbf|overline|underline|vec|hat|bar|dot|ddot|tilde|cdot|times|div|pm|leq|geq|neq|approx|equiv|subset|supset|cup|cap|in|notin|to|mapsto|implies|iff|quad|qquad|hbar|ell|Re|Im|det|ker|hom|deg|arg|dim|sup|limsup|liminf|max|min|gcd|pmod|bmod|not|neg|oplus|otimes|langle|rangle|lceil|rceil|lfloor|rfloor|varphi|varepsilon|varnothing)\b[^\n]*)(?=\n|$)/gi, (full, lead, indent, expr) => {
+    if (/^\$/.test(expr.trim())) return full;
+    return `${lead}${indent}$$${expr.trim()}$$`;
+  });
+
+  // Rescue \begin{...} environments not already wrapped
+  normalized = normalized.replace(/(^|\n)([ \t]*)(\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\})(?=\n|$)/g, (full, lead, indent, expr) => {
     if (/^\$/.test(expr.trim())) return full;
     return `${lead}${indent}$$${expr.trim()}$$`;
   });
