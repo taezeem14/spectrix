@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,14 +26,17 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
-<script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
+		onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\(', right: '\\)', display: false},{left: '$', right: '$', display: false}], throwOnError: false, strict: 'ignore'});"></script>
 <script>
 window.MathJax = {
   tex: {
     inlineMath: [['$', '$'], ['\\(', '\\)']],
     displayMath: [['$$', '$$'], ['\\[', '\\]']],
-    processEscapes: true,
-    packages: {'[+]': ['ams']}
+    processEscapes: true
   },
   options: {
     skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
@@ -1374,22 +1378,11 @@ const THEME_KEY = "Spectrix_theme";
 const TTS_KEY = 'Spectrix_tts';
 const IOS_HINT_KEY = 'Spectrix_ios_hint_dismissed';
 const MAX_PROMPT_CHARS = 8000;
-const MATH_FORMAT_SYSTEM_PROMPT = `
-When writing mathematics, use valid MathJax LaTeX syntax.
-
-Inline math must use:
-\\( ... \\)
-
-Display equations must use:
-\\[ ... \\]
-
-Rules:
-- Never use square brackets [ ... ] for math.
-- Never invent separators like ; or , inside formulas.
-- Use proper LaTeX commands like \\frac{}, \\sqrt{}, \\sin, \\ln.
-- Do not wrap math inside code blocks.
-- Use \\begin{aligned} ... \\end{aligned} for multi-line equations.
-`;
+const MATH_FORMAT_SYSTEM_PROMPT = `When writing mathematical expressions, always use LaTeX delimiters.
+- Inline math: $...$
+- Display math: $$...$$
+- Never wrap math in backticks.
+- Keep normal code snippets in fenced code blocks only when it is actual code.`;
 const API_WORKER_HOST = ['hac', 'koai-worker.tariqmtaezeem.workers.dev'].join('');
 const CHAT_API_URL = `https://${API_WORKER_HOST}/chat`;
 const FIXED_TEXT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
@@ -1620,14 +1613,29 @@ function speakText(text) {
 // ===== MATH RENDERING =====
 function renderMath(d) {
   if (!d || !d.textContent) return;
-
   const hasMath = /(\$\$[\s\S]+?\$\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]|\$[^$\n]+\$)/.test(d.textContent);
   if (!hasMath) return;
 
+  if (window.renderMathInElement) {
+    try {
+      renderMathInElement(d, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "$", right: "$", display: false }
+        ],
+        throwOnError: false,
+        strict: "ignore"
+      });
+    } catch (error) {
+      console.warn('KaTeX render warning:', error);
+    }
+  }
+
   if (window.MathJax?.typesetPromise) {
-    MathJax.typesetClear?.([d]);
-    MathJax.typesetPromise([d]).catch((err) => {
-      console.warn("MathJax render warning:", err);
+    window.MathJax.typesetClear?.([d]);
+    window.MathJax.typesetPromise([d]).catch((error) => {
+      console.warn('MathJax render warning:', error);
     });
   }
 }
