@@ -2196,11 +2196,11 @@ function normalizeMathMarkup(text) {
   // _{x]  →  _{x}  and  ^{x]  →  ^{x}  (mismatched closing bracket)
   normalized = normalized.replace(/([_^])\{([^{}\]\n]*)\]/g, '$1{$2}');
 
-  // Convert LaTeX math delimiters to dollar-sign delimiters
-  // \[ and \] → $$
-  normalized = normalized.replace(/\\\[/g, '$$$$').replace(/\\\]/g, '$$$$');
-  // \( and \) → $
-  normalized = normalized.replace(/\\\(/g, '$$').replace(/\\\)/g, '$$');
+  // Convert block math \[...\] → $$...$$ as a single-pass (captures full block,
+  // prevents the two-pass approach from leaving dangling delimiters on malformed input)
+  normalized = normalized.replace(/\\\[([\s\S]+?)\\\]/g, (_, c) => '$$' + c.trim() + '$$');
+  // Convert inline math \(...\) → $...$
+  normalized = normalized.replace(/\\\(([\s\S]+?)\\\)/g, (_, c) => '$' + c.trim() + '$');
 
   // Promote inline code `...` to $...$ if it looks like math
   normalized = normalized.replace(/`([^`\n]+)`/g, (full, inner) => {
@@ -2209,19 +2209,36 @@ function normalizeMathMarkup(text) {
     return `$${candidate}$`;
   });
 
-  // Rescue bare LaTeX commands at start of a line only (avoids double-wrapping)
-  normalized = normalized.replace(/(^|\n)([ \t]*(?:[-*] )?)(\\(?:int|sum|prod|frac|sqrt|lim|big[lrmb]?|left|right|begin|end|text|binom|log|ln|exp|sin|cos|tan|sec|csc|cot|theta|alpha|beta|gamma|Delta|delta|lambda|pi|sigma|omega|infty|partial|nabla|forall|exists|mathbb|mathcal|mathrm|mathbf|overline|underline|vec|hat|bar|dot|ddot|tilde|cdot|times|div|pm|leq|geq|neq|approx|equiv|subset|supset|cup|cap|in|notin|to|mapsto|implies|iff|quad|qquad|hbar|ell|Re|Im|det|ker|hom|deg|arg|dim|sup|limsup|liminf|max|min|gcd|pmod|bmod|not|neg|oplus|otimes|langle|rangle|lceil|rceil|lfloor|rfloor|varphi|varepsilon|varnothing)\b[^\n]*)(?=\n|$)/gi, (full, lead, indent, expr) => {
-    if (/^\$/.test(expr.trim())) return full;
+  // Shield already-delimited math before the rescue pass so the rescue regex
+  // cannot double-wrap content that is already inside $$...$$ or $...$.
+  // (Double-wrapping previously caused $$\n$$\int...\n$$\n$$ which breaks shielding.)
+  const rescueStore = [];
+  let safe = normalized;
+  safe = safe.replace(/\$\$([\s\S]+?)\$\$/g, (match) => {
+    rescueStore.push(match);
+    return '\x02R' + (rescueStore.length - 1) + '\x03';
+  });
+  safe = safe.replace(/\$([^\$\n]+?)\$/g, (match) => {
+    rescueStore.push(match);
+    return '\x02R' + (rescueStore.length - 1) + '\x03';
+  });
+
+  // Rescue bare LaTeX commands at the start of a line (unshielded text only)
+  safe = safe.replace(/(^|\n)([ \t]*(?:[-*] )?)(\\(?:int|sum|prod|frac|sqrt|lim|big[lrmb]?|left|right|begin|end|text|binom|log|ln|exp|sin|cos|tan|sec|csc|cot|theta|alpha|beta|gamma|Delta|delta|lambda|pi|sigma|omega|infty|partial|nabla|forall|exists|mathbb|mathcal|mathrm|mathbf|overline|underline|vec|hat|bar|dot|ddot|tilde|cdot|times|div|pm|leq|geq|neq|approx|equiv|subset|supset|cup|cap|in|notin|to|mapsto|implies|iff|quad|qquad|hbar|ell|Re|Im|det|ker|hom|deg|arg|dim|sup|limsup|liminf|max|min|gcd|pmod|bmod|not|neg|oplus|otimes|langle|rangle|lceil|rceil|lfloor|rfloor|varphi|varepsilon|varnothing)\b[^\n]*)(?=\n|$)/gi, (full, lead, indent, expr) => {
     return `${lead}${indent}$$${expr.trim()}$$`;
   });
 
-  // Rescue \begin{...} environments not already wrapped
-  normalized = normalized.replace(/(^|\n)([ \t]*)(\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\})(?=\n|$)/g, (full, lead, indent, expr) => {
-    if (/^\$/.test(expr.trim())) return full;
+  // Rescue \begin{...}...\end{...} environments (unshielded text only)
+  safe = safe.replace(/(^|\n)([ \t]*)(\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\})(?=\n|$)/g, (full, lead, indent, expr) => {
     return `${lead}${indent}$$${expr.trim()}$$`;
   });
 
-  return normalized;
+  // Restore the shielded blocks
+  for (let i = 0; i < rescueStore.length; i++) {
+    safe = safe.split('\x02R' + i + '\x03').join(rescueStore[i]);
+  }
+
+  return safe;
 }
 
 function promoteInlineCodeMath(container) {
