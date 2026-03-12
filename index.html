@@ -25,11 +25,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js"></script>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
-		onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\(', right: '\\)', display: false},{left: '$', right: '$', display: false}], throwOnError: false, strict: 'ignore'});"></script>
 <script>
 window.MathJax = {
   tex: {
@@ -1612,29 +1607,14 @@ function speakText(text) {
 // ===== MATH RENDERING =====
 function renderMath(d) {
   if (!d || !d.textContent) return;
+
   const hasMath = /(\$\$[\s\S]+?\$\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]|\$[^$\n]+\$)/.test(d.textContent);
   if (!hasMath) return;
 
-  if (window.renderMathInElement) {
-    try {
-      renderMathInElement(d, {
-        delimiters: [
-          { left: "$$", right: "$$", display: true },
-          { left: "\\(", right: "\\)", display: false },
-          { left: "$", right: "$", display: false }
-        ],
-        throwOnError: false,
-        strict: "ignore"
-      });
-    } catch (error) {
-      console.warn('KaTeX render warning:', error);
-    }
-  }
-
   if (window.MathJax?.typesetPromise) {
-    window.MathJax.typesetClear?.([d]);
-    window.MathJax.typesetPromise([d]).catch((error) => {
-      console.warn('MathJax render warning:', error);
+    MathJax.typesetClear?.([d]);
+    MathJax.typesetPromise([d]).catch((err) => {
+      console.warn("MathJax render warning:", err);
     });
   }
 }
