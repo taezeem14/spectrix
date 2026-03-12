@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_PREFIX = 'spectrix';
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const PAGE_CACHE = `${CACHE_PREFIX}-pages-${CACHE_VERSION}`;
@@ -70,7 +70,8 @@ async function putInCache(cacheName, request, response) {
   await cache.put(request, response.clone());
 }
 
-async function staleWhileRevalidate(request, cacheName, maxItems) {
+async function staleWhileRevalidate(event, cacheName, maxItems) {
+  const { request } = event;
   const cached = await caches.match(request);
   const networkPromise = fetch(request)
     .then(async (response) => {
@@ -82,6 +83,9 @@ async function staleWhileRevalidate(request, cacheName, maxItems) {
     })
     .catch(() => cached);
 
+  if (cached) {
+    event.waitUntil(networkPromise);
+  }
   return cached || networkPromise;
 }
 
@@ -168,7 +172,7 @@ self.addEventListener('fetch', (event) => {
 
   const isStaticAsset = ['style', 'script', 'font', 'manifest'].includes(request.destination);
   if (isStaticAsset || url.origin === self.location.origin) {
-    event.respondWith(staleWhileRevalidate(request, ASSET_CACHE, MAX_ASSET_ITEMS));
+    event.respondWith(staleWhileRevalidate(event, ASSET_CACHE, MAX_ASSET_ITEMS));
   }
 });
 

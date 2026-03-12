@@ -1,6 +1,6 @@
 {
   "id": "/?app=spectrix",
-  "name": "Spectrix Ai",
+  "name": "Spectrix AI",
   "short_name": "Spectrix AI",
   "description": "Voice-enabled AI chat web app with installable PWA support and local chat history.",
   "start_url": "/index.html?source=pwa",

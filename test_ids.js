@@ -1,0 +1,1 @@
+const fs = require('fs'); const html = fs.readFileSync('index.html', 'utf8'); const jsMatch = html.match(/<script.*?>([\s\S]*?)<\/script>/gi) || []; const js = jsMatch.join('\n'); const ids = [...js.matchAll(/getElementById\(['\x22]([^'\x22]+)['\x22]\)/g)].map(m => m[1]); ids.forEach(id => { if (!html.includes('id=\x22'+id+'\x22')) console.log('Missing id:', id); });
