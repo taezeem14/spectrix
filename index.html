@@ -2757,7 +2757,8 @@ async function send(options = {}) {
         throw new Error("Puter SDK not loaded");
       }
 
-      const img = await puter.ai.txt2img(prompt);
+      const model = document.getElementById("imageModel").value;
+      const img = await puter.ai.txt2img(prompt, { model, disable_safety_checker: true });
       loading.remove();
       isGenerating = false;
 
@@ -2786,7 +2787,7 @@ async function send(options = {}) {
         throw new Error("Puter SDK not loaded");
       }
 
-      const video = await puter.ai.txt2vid(prompt);
+      const video = await puter.ai.txt2vid(prompt, { model: FIXED_VIDEO_MODEL, seconds: 8 });
       loading.remove();
       isGenerating = false;
 
