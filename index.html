@@ -2763,18 +2763,11 @@ async function send(options = {}) {
       isGenerating = false;
 
       img.classList.add("ai-img");
-      img.onload = async () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        canvas.getContext("2d").drawImage(img, 0, 0);
-        const base64 = canvas.toDataURL();
-
-        const mediaId = `img_${Date.now()}`;
-        const blob = await (await fetch(base64)).blob();
-        await saveMedia(mediaId, blob);
-        await saveMessage("bot", { type: "image", src: base64, mediaId });
-      };
+      const base64 = img.src;
+      const mediaId = `img_${Date.now()}`;
+      const blob = await (await fetch(base64)).blob();
+      await saveMedia(mediaId, blob);
+      await saveMessage("bot", { type: "image", src: base64, mediaId });
 
       const div = document.createElement("div");
       div.className = "msg bot";
