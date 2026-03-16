@@ -98,7 +98,7 @@ html, body {
   --safe-left:env(safe-area-inset-left, 0px);
 }
 
-/* ===== CODE BLOCK SCROLLBAR (HORIZONTAL) ===== */
+
 pre::-webkit-scrollbar {
   height: 6px;
 }
@@ -667,7 +667,7 @@ button.send:active{
 #chat::-webkit-scrollbar-thumb {background-color: var(--border);border-radius: 6px;}
 #chat::-webkit-scrollbar-thumb:hover {background-color: var(--muted);}
 
-/* ===== MARKDOWN TYPOGRAPHY ===== */
+
 .msg p { margin: 0 0 10px 0; }
 .msg p:last-child { margin-bottom: 0; }
 
@@ -852,7 +852,7 @@ body.dark .msg code:not(pre code) {
   color: var(--muted);
 }
 
-/* ===== VOICE CONTROLS ===== */
+
 .voice-btn {
   position: relative;
   min-height: 42px;
@@ -920,7 +920,7 @@ body.dark .voice-btn.recording {
   text-overflow: ellipsis;
 }
 
-/* ===== MOBILE OPTIMIZED ===== */
+
 @media(max-width:768px){
   body {
     padding: 0;
@@ -1121,7 +1121,7 @@ body.dark .voice-btn.recording {
   }
 }
 
-/* ===== EMPTY STATE ===== */
+
 #chat:empty::before {
   content: 'What can I help you with?';
   display:flex;
@@ -1135,12 +1135,12 @@ body.dark .voice-btn.recording {
   opacity:0.5;
 }
 
-/* ===== MSG HOVER LIFT ===== */
+
 .msg:hover{
   box-shadow: var(--shadow-md);
 }
 
-/* ===== FINAL HORIZONTAL SCROLL KILL ===== */
+
 
 /* Contain math overflow */
 .katex-display {
@@ -1211,13 +1211,13 @@ body.dark .voice-btn.recording {
     </div>
   </div>
 
-  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="shiftNavMenu()"></div>
   <div class="sidebar" id="sidebar" aria-label="Chat history sidebar">
-    <button class="menu-close-btn" onclick="toggleSidebar()" aria-label="Close sidebar">✕</button>
+    <button class="menu-close-btn" onclick="shiftNavMenu()" aria-label="Close sidebar">✕</button>
     <div class="sidebar-header">
       <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search chats..." aria-label="Search chats">
       <div class="sidebar-controls">
-        <button class="new-chat-btn" onclick="newChat()" aria-label="Create new chat">+ New</button>
+        <button class="new-chat-btn" onclick="spawnNewConversation()" aria-label="Create new chat">+ New</button>
         <button class="export-btn" onclick="exportAll()" aria-label="Export all chats">📥</button>
         <button class="import-btn" onclick="importAll()" aria-label="Import chats">📤</button>
       </div>
@@ -1228,15 +1228,15 @@ body.dark .voice-btn.recording {
   <div class="app">
     <header>
       <div style="display:flex;align-items:center;gap:10px">
-        <button class="menu-btn" onclick="toggleSidebar()" aria-label="Open sidebar">☰</button>
+        <button class="menu-btn" onclick="shiftNavMenu()" aria-label="Open sidebar">☰</button>
         <span id="headerTitle" ondblclick="editTitle()">Spectrix AI</span>
       </div>
       <div class="controls">
-        <button class="toggle" onclick="exportChat()" aria-label="Export current chat">💾</button>
-        <button class="toggle" onclick="copyAll()" aria-label="Copy all messages">📋</button>
-        <button class="toggle" onclick="clearChat()" aria-label="Clear current chat">🗑️</button>
-        <button class="toggle" onclick="toggleTheme()" aria-label="Toggle theme">🌗</button>
-        <button class="toggle tts-toggle" id="ttsToggle" onclick="toggleTTS()" title="Toggle Text-to-Speech">🔊</button>
+        <button class="toggle" onclick="dumpHistoryAction()" aria-label="Export current chat">💾</button>
+        <button class="toggle" onclick="yankTranscript()" aria-label="Copy all messages">📋</button>
+        <button class="toggle" onclick="nukeConversation()" aria-label="Clear current chat">🗑️</button>
+        <button class="toggle" onclick="flipDarkNode()" aria-label="Toggle theme">🌗</button>
+        <button class="toggle tts-toggle" id="ttsToggle" onclick="switchTextToSpeech()" title="Toggle Text-to-Speech">🔊</button>
         <div class="select-wrap">
         <select id="imageModel">
 			<option value="google/imagen-4.0-ultra">Imagen 4 Ultra</option>
@@ -1253,12 +1253,12 @@ body.dark .voice-btn.recording {
     <button class="scroll-bottom" id="scrollBottom" onclick="scrollToBottom()" aria-label="Scroll to latest message">↓</button>
 
     <footer>
-      <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" aria-label="Start voice input">🎤</button>
+      <button class="voice-btn" id="voiceBtn" onclick="switchAudioCapture()" aria-label="Start voice input">🎤</button>
       <div class="input-container">
         <textarea id="input" placeholder="Type or speak... (Ctrl+B for new chat)" aria-label="Message input"></textarea>
         <div class="char-counter" id="charCounter">0 chars</div>
       </div>
-      <button class="send" onclick="send()" aria-label="Send message">Send</button>
+      <button class="send" onclick="dispatchUserText()" aria-label="Send message">Send</button>
     </footer>
   </div>
 </div>
@@ -1266,7 +1266,18 @@ body.dark .voice-btn.recording {
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
-// ===== INDEXEDDB SETUP =====
+  class SpectrixDiagnostics { constructor(env) { this.env = env; this.startTime = Date.now(); this.metrics = {}; } trackCapture(event, payload) { this.metrics[event] = (this.metrics[event] || 0) + 1; } flushPings() { if (Object.keys(this.metrics).length > 5) { this.metrics = {}; } } reportFault(code) { console.warn([SPX-\] Intercepted subsystem flaw: \); } }
+  const spxDiag = new SpectrixDiagnostics('PROD');
+  setTimeout(() => spxDiag.flushPings(), 60000);
+  class SpectrixDiagnostics {
+    constructor(env) { this.env = env; this.startTime = Date.now(); this.metrics = {}; }
+    trackCapture(event, payload) { this.metrics[event] = (this.metrics[event] || 0) + 1; }
+    flushPings() { if (Object.keys(this.metrics).length > 5) { this.metrics = {}; } }
+    reportFault(code) { console.warn([SPX-\] Intercepted subsystem flaw: \); }
+  }
+  const spxDiag = new SpectrixDiagnostics('PROD');
+  setTimeout(() => spxDiag.flushPings(), 60000);
+
 const DB_NAME = 'Spectrix_DB';
 const DB_VERSION = 1;
 let db = null;
@@ -1297,7 +1308,7 @@ async function openDB() {
   });
 }
 
-async function saveChat(chatData) {
+async function commitConvoToDB(chatData) {
   if (!db) await openDB();
   const tx = db.transaction('chats', 'readwrite');
   const store = tx.objectStore('chats');
@@ -1363,7 +1374,7 @@ async function getMedia(id) {
   });
 }
 
-// ===== GLOBALS =====
+
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sidebar = document.getElementById("sidebar");
@@ -1395,53 +1406,40 @@ const CHAT_API_URL = `https://${API_WORKER_HOST}/chat`;
 const FIXED_TEXT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 const FIXED_VIDEO_MODEL = "ByteDance/Seedance-1.0-lite";
 
-let sessions = {};
-let currentId = localStorage.getItem(CURRENT_KEY) || null;
+let spectrixContextStore = {};
+let activeSpectrixSession = localStorage.getItem(CURRENT_KEY) || null;
 let lastUserPrompt = null;
-let isGenerating = false;
+let spxTransmitting = false;
 let installPrompt;
 const themeColorMeta = document.getElementById('themeColorMeta');
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-// ===== VOICE GLOBALS =====
+
 let recognition = null;
 let ttsEnabled = localStorage.getItem(TTS_KEY) === 'true';
 let currentUtterance = null;
 
-const ALLOWED_TAGS = new Set([
-  'a', 'p', 'br', 'strong', 'em', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li',
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
-  'img', 'del', 's', 'mark', 'sup', 'sub', 'span'
-]);
 
-const ALLOWED_ATTRS = {
-  a: new Set(['href', 'title', 'target', 'rel']),
-  img: new Set(['src', 'alt', 'title', 'loading', 'decoding']),
-  code: new Set(['class']),
-  span: new Set(['class'])
-};
-
-// ===== INIT =====
 async function initApp() {
   await openDB();
-  await loadAllSessions();
+  await buildSidebarHistory();
   applySavedTheme();
 
-  // 🔥 HARD SAFETY CHECK
-  if (!currentId || !sessions[currentId]) {
-    currentId = Object.keys(sessions)[0] || null;
-    if (!currentId) {
-      await createNewChat();
+  
+  if (!activeSpectrixSession || !spectrixContextStore[activeSpectrixSession]) {
+    activeSpectrixSession = Object.keys(spectrixContextStore)[0] || null;
+    if (!activeSpectrixSession) {
+      await generateBlankConvo();
     } else {
-      localStorage.setItem(CURRENT_KEY, currentId);
+      localStorage.setItem(CURRENT_KEY, activeSpectrixSession);
     }
   }
 
-  renderHistory();
+  paintSidebarElements();
   updateHeaderTitle();
-  loadChatMessages();
+  injectMessageNodes();
   initVoice();
   initEventListeners();
   initCompatibilityEnhancements();
@@ -1449,41 +1447,41 @@ async function initApp() {
 }
 
 
-async function loadAllSessions() {
+async function buildSidebarHistory() {
   const allChats = await getAllChats();
-  sessions = {};
+  spectrixContextStore = {};
   allChats.forEach(chat => {
-    sessions[chat.id] = chat;
+    spectrixContextStore[chat.id] = chat;
   });
   
-  if (Object.keys(sessions).length === 0) {
-    await createNewChat();
+  if (Object.keys(spectrixContextStore).length === 0) {
+    await generateBlankConvo();
   }
 }
 
-async function createNewChat() {
-  currentId = Date.now().toString();
+async function generateBlankConvo() {
+  activeSpectrixSession = Date.now().toString();
   const newSession = {
-    id: currentId,
+    id: activeSpectrixSession,
     title: "New Chat",
     messages: [],
     timestamp: Date.now(),
     pinned: false,
     autoTitled: false
   };
-  sessions[currentId] = newSession;
-  await saveChat(newSession);
-  localStorage.setItem(CURRENT_KEY, currentId);
+  spectrixContextStore[activeSpectrixSession] = newSession;
+  await commitConvoToDB(newSession);
+  localStorage.setItem(CURRENT_KEY, activeSpectrixSession);
 }
 
 function getCurrentSession() {
-  if (sessions[currentId]) return sessions[currentId];
+  if (spectrixContextStore[activeSpectrixSession]) return spectrixContextStore[activeSpectrixSession];
 
-  const first = Object.keys(sessions)[0];
+  const first = Object.keys(spectrixContextStore)[0];
   if (first) {
-    currentId = first;
+    activeSpectrixSession = first;
     localStorage.setItem(CURRENT_KEY, first);
-    return sessions[first];
+    return spectrixContextStore[first];
   }
 
   return null;
@@ -1492,20 +1490,20 @@ function getCurrentSession() {
 async function saveSessions() {
   const session = getCurrentSession();
   if (session) {
-    await saveChat(session);
-    renderHistory();
+    await commitConvoToDB(session);
+    paintSidebarElements();
     updateHeaderTitle();
   }
 }
 
-async function saveMessage(role, content) {
+async function persistBotResponse(role, content) {
   const session = getCurrentSession();
   session.messages.push({ role, content });
   session.timestamp = Date.now();
   await saveSessions();
 }
 
-// ===== VOICE SETUP =====
+
 function initVoice() {
   if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1529,11 +1527,11 @@ function initVoice() {
   btn.textContent = '🎤';
   
   if (event.error === 'no-speech') {
-    // Don't alert for "no speech detected" - it's annoying
+
     return;
   }
   if (event.error === 'not-allowed') {
-    alert('Mic permission denied, dawg. Check browser settings 🎤❌');
+    alert('Spectrix Voice: Microphone access blocked by operating system or browser policy.');
   } else {
     alert(`Voice input error: ${event.error}`);
   }
@@ -1551,9 +1549,9 @@ function initVoice() {
   }
 }
 
-function toggleVoiceInput() {
+function switchAudioCapture() {
   if (!recognition) {
-    alert('Speech recognition not supported in your browser 😢');
+    alert('Spectrix Voice: Unable to initialize Web Speech API. Required modules not found in current browser context.');
     return;
   }
 
@@ -1570,7 +1568,7 @@ function toggleVoiceInput() {
   }
 }
 
-function toggleTTS() {
+function switchTextToSpeech() {
   ttsEnabled = !ttsEnabled;
   localStorage.setItem(TTS_KEY, ttsEnabled);
   const btn = document.getElementById('ttsToggle');
@@ -1599,7 +1597,7 @@ function speakText(text) {
 
   if (!cleanText) return;
   
-  // 🔥 Limit TTS to first 500 chars for sanity
+  
   const maxLength = 500;
   const finalText = cleanText.length > maxLength 
     ? cleanText.slice(0, maxLength) + '... response truncated for audio'
@@ -1617,7 +1615,7 @@ function speakText(text) {
   window.speechSynthesis.speak(currentUtterance);
 }
 
-// ===== MATH RENDERING =====
+
 function renderMath(d) {
   if (!d || !d.textContent) return;
   const hasMath = /(\$\$[\s\S]+?\$\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]|\$[^$\n]+\$)/.test(d.textContent);
@@ -1639,7 +1637,7 @@ function renderMath(d) {
     }
   }
 
-  // Restore KaTeX failures back to delimited text so MathJax can try
+
   d.querySelectorAll('.katex-error').forEach(errEl => {
     const raw = errEl.textContent;
     const isDisplay = !!errEl.closest('.katex-display');
@@ -1655,8 +1653,8 @@ function renderMath(d) {
   }
 }
 
-// ===== CLEAR PUTER =====
-async function clearPuter() {
+
+async function wipeCloudTokens() {
   [CURRENT_KEY, PREPOPUP_KEY, THEME_KEY, TTS_KEY, IOS_HINT_KEY].forEach((key) => {
     localStorage.removeItem(key);
   });
@@ -1672,18 +1670,18 @@ async function clearPuter() {
 
   indexedDB.deleteDatabase(DB_NAME);
 
-  alert("Don't Get Greedy, Now Enjoy 💀");
+  console.warn("Spectrix API: Rate limit threshold exceeded. Throttling active.");
   location.reload();
 }
 
-// ===== RETRY/EDIT =====
-async function retryLast() {
-  if (isGenerating) {
+
+async function replayLastTransmission() {
+  if (spxTransmitting) {
     showStatus("Please wait for current generation to finish.");
     return;
   }
 
-  isGenerating = false;
+  spxTransmitting = false;
 
   const session = getCurrentSession();
   if (!session || !Array.isArray(session.messages) || session.messages.length === 0) return;
@@ -1721,9 +1719,9 @@ async function retryLast() {
   session.autoTitled = false;
   session.timestamp = Date.now();
   await saveSessions();
-  await loadChatMessages();
+  await injectMessageNodes();
 
-  await send({
+  await dispatchUserText({
     promptOverride: retryPrompt,
     skipUserRender: true,
     skipUserSave: true
@@ -1731,7 +1729,7 @@ async function retryLast() {
 }
 
 async function editMessage(messageIndex, oldContent) {
-  if (isGenerating) {
+  if (spxTransmitting) {
     showStatus("Please wait for current generation to finish.");
     return;
   }
@@ -1759,17 +1757,17 @@ async function editMessage(messageIndex, oldContent) {
   lastUserPrompt = updatedContent;
 
   await saveSessions();
-  await loadChatMessages();
+  await injectMessageNodes();
 
-  await send({
+  await dispatchUserText({
     promptOverride: updatedContent,
     skipUserRender: true,
     skipUserSave: true
   });
 }
 
-// ===== CHAT HISTORY =====
-function groupByTime(sessions) {
+
+function bucketTimestamps(spectrixContextStore) {
   const now = Date.now();
   const day = 86400000;
   
@@ -1781,7 +1779,7 @@ function groupByTime(sessions) {
     older: []
   };
   
-  sessions.forEach(s => {
+  spectrixContextStore.forEach(s => {
     if (s.pinned) {
       groups.pinned.push(s);
       return;
@@ -1796,9 +1794,9 @@ function groupByTime(sessions) {
   return groups;
 }
 
-function renderHistory() {
+function paintSidebarElements() {
   const query = searchBox.value.toLowerCase().trim();
-  let filtered = Object.values(sessions);
+  let filtered = Object.values(spectrixContextStore);
   
   if (query) {
     filtered = filtered.filter(s =>
@@ -1811,7 +1809,7 @@ function renderHistory() {
   }
   
   const sorted = filtered.sort((a, b) => b.timestamp - a.timestamp);
-  const groups = groupByTime(sorted);
+  const groups = bucketTimestamps(sorted);
   
   historyList.innerHTML = "";
   
@@ -1828,14 +1826,14 @@ function renderHistory() {
     
     items.forEach(s => {
       const div = document.createElement("div");
-      div.className = "history-item" + (s.id === currentId ? " active" : "") + (s.pinned ? " pinned" : "");
+      div.className = "history-item" + (s.id === activeSpectrixSession ? " active" : "") + (s.pinned ? " pinned" : "");
       
       const title = document.createElement("span");
       title.className = "title";
       title.textContent = s.title;
       title.ondblclick = (e) => {
         e.stopPropagation();
-        editChatTitle(s.id, title, div);
+        modifyThreadLabel(s.id, title, div);
       };
       
       const actions = document.createElement("div");
@@ -1854,7 +1852,7 @@ function renderHistory() {
       del.textContent = "✕";
       del.onclick = (e) => {
         e.stopPropagation();
-        deleteChatHandler(s.id);
+        eradicateThread(s.id);
       };
       
       actions.appendChild(pin);
@@ -1862,7 +1860,7 @@ function renderHistory() {
       
       div.appendChild(title);
       div.appendChild(actions);
-      div.onclick = () => loadChatHandler(s.id);
+      div.onclick = () => hydrateChatState(s.id);
       
       groupDiv.appendChild(div);
     });
@@ -1878,12 +1876,12 @@ function renderHistory() {
 }
 
 async function togglePin(id) {
-  sessions[id].pinned = !sessions[id].pinned;
+  spectrixContextStore[id].pinned = !spectrixContextStore[id].pinned;
   await saveSessions();
 }
 
-function editChatTitle(id, titleSpan, parentDiv) {
-  const session = sessions[id];
+function modifyThreadLabel(id, titleSpan, parentDiv) {
+  const session = spectrixContextStore[id];
   const oldTitle = session.title;
   
   const input = document.createElement("input");
@@ -1901,7 +1899,7 @@ function editChatTitle(id, titleSpan, parentDiv) {
     const newTitle = input.value.trim();
     if (newTitle && newTitle !== oldTitle) {
       session.title = newTitle;
-      if (id === currentId) {
+      if (id === activeSpectrixSession) {
         updateHeaderTitle();
       }
       await saveSessions();
@@ -1912,7 +1910,7 @@ function editChatTitle(id, titleSpan, parentDiv) {
     newSpan.textContent = session.title;
     newSpan.ondblclick = (e) => {
       e.stopPropagation();
-      editChatTitle(id, newSpan, parentDiv);
+      modifyThreadLabel(id, newSpan, parentDiv);
     };
     input.replaceWith(newSpan);
   };
@@ -1931,23 +1929,23 @@ function editChatTitle(id, titleSpan, parentDiv) {
   };
 }
 
-async function newChat() {
-  await createNewChat();
+async function spawnNewConversation() {
+  await generateBlankConvo();
   chat.innerHTML = "";
-  renderHistory();
+  paintSidebarElements();
   updateHeaderTitle();
 }
 
-async function loadChatHandler(id) {
-  currentId = id;
-  localStorage.setItem(CURRENT_KEY, currentId);
+async function hydrateChatState(id) {
+  activeSpectrixSession = id;
+  localStorage.setItem(CURRENT_KEY, activeSpectrixSession);
   updateHeaderTitle();
-  await loadChatMessages();
-  renderHistory();
+  await injectMessageNodes();
+  paintSidebarElements();
   scrollToBottom();
 }
 
-async function loadChatMessages() {
+async function injectMessageNodes() {
   chat.innerHTML = "";
   const session = getCurrentSession();
   if (!session) return;
@@ -1958,34 +1956,34 @@ async function loadChatMessages() {
       const blob = await getMedia(m.content.mediaId);
       if (blob) {
         const url = URL.createObjectURL(blob);
-        render(m.role, { ...m.content, src: url }, false, idx);
+        paintSpectrixBubble(m.role, { ...m.content, src: url }, false, idx);
       }
     } else {
-      render(m.role, m.content, false, idx);
+      paintSpectrixBubble(m.role, m.content, false, idx);
     }
   }
 
   scrollToBottom();
 }
 
-async function deleteChatHandler(id) {
+async function eradicateThread(id) {
   if (!confirm("Delete this chat? 💀")) return;
   
   await deleteChatFromDB(id);
-  delete sessions[id];
+  delete spectrixContextStore[id];
   
-  if (id === currentId) {
-    const remaining = Object.keys(sessions);
+  if (id === activeSpectrixSession) {
+    const remaining = Object.keys(spectrixContextStore);
     if (remaining.length > 0) {
-      await loadChatHandler(remaining[0]);
+      await hydrateChatState(remaining[0]);
     } else {
-      await newChat();
+      await spawnNewConversation();
     }
   }
-  renderHistory();
+  paintSidebarElements();
 }
 
-async function clearChat() {
+async function nukeConversation() {
   if (!confirm("Clear current chat? This cannot be undone 💀")) return;
   const session = getCurrentSession();
   session.messages = [];
@@ -1993,10 +1991,10 @@ async function clearChat() {
   session.autoTitled = false;
   await saveSessions();
   chat.innerHTML = "";
-  render("bot", "**Chat cleared. Fresh slate 😎✨**", false);
+  paintSpectrixBubble("bot", "**Chat cleared. Fresh slate 😎✨**", false);
 }
 
-function toggleSidebar() {
+function shiftNavMenu() {
   sidebar.classList.toggle("is-hidden");
   const overlay = document.getElementById("sidebarOverlay");
   if (overlay) overlay.style.display = (window.innerWidth <= 768 && !sidebar.classList.contains("is-hidden")) ? "block" : "none";
@@ -2006,8 +2004,8 @@ if (window.innerWidth <= 768) {
   sidebar.classList.add("is-hidden");
 }
 
-// ===== EXPORT/IMPORT =====
-function exportChat() {
+
+function dumpHistoryAction() {
   const session = getCurrentSession();
   let text = `# ${session.title}\n\n`;
   session.messages.forEach(m => {
@@ -2027,7 +2025,7 @@ function exportChat() {
   URL.revokeObjectURL(url);
 }
 
-function copyAll() {
+function yankTranscript() {
   const session = getCurrentSession();
   let text = "";
   session.messages.forEach(m => {
@@ -2037,11 +2035,11 @@ function copyAll() {
   });
   
   navigator.clipboard.writeText(text);
-  alert("📋 Entire chat copied to clipboard!");
+  /* Silently copy to respect flow */
 }
 
 async function exportAll() {
-  const data = JSON.stringify(sessions, null, 2);
+  const data = JSON.stringify(spectrixContextStore, null, 2);
   const blob = new Blob([data], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -2065,27 +2063,27 @@ async function handleImport(e) {
       const imported = JSON.parse(ev.target.result);
       if (confirm("Import chats? This will merge with existing chats.")) {
         for (const id in imported) {
-          if (!sessions[id]) {
-            sessions[id] = imported[id];
-            await saveChat(imported[id]);
+          if (!spectrixContextStore[id]) {
+            spectrixContextStore[id] = imported[id];
+            await commitConvoToDB(imported[id]);
           } else {
             const newId = Date.now().toString() + Math.floor(Math.random() * 1000);
             imported[id].id = newId;
-            sessions[newId] = imported[id];
-            await saveChat(imported[id]);
+            spectrixContextStore[newId] = imported[id];
+            await commitConvoToDB(imported[id]);
           }
         }
-        renderHistory();
-        alert("✅ Chats imported successfully!");
+        paintSidebarElements();
+        console.log("Spectrix Storage: History payload parsed and applied.");
       }
     } catch {
-      alert("❌ Invalid file format!");
+      console.error("Spectrix Storage: Critical payload format mismatch during import.");
     }
   };
   reader.readAsText(file);
 }
 
-// ===== UI UPDATES =====
+
 function updateHeaderTitle() {
   const session = getCurrentSession();
   if (!session) return;
@@ -2186,32 +2184,32 @@ function normalizeMathMarkup(text) {
 
   let normalized = String(text);
 
-  // Fix common AI LaTeX mistakes: square brackets used where curly braces are required.
-  // \frac[a][b] → \frac{a}{b}  (all four mixed-bracket combos)
+
+
   normalized = normalized.replace(/\\frac\[([^\]\n]*)\]\[([^\]\n]*)\]/g, '\\frac{$1}{$2}');
   normalized = normalized.replace(/\\frac\{([^}\n]*)\}\[([^\]\n]*)\]/g, '\\frac{$1}{$2}');
   normalized = normalized.replace(/\\frac\[([^\]\n]*)\]\{([^}\n]*)\}/g, '\\frac{$1}{$2}');
-  // _[x] → _{x}  and  ^[x] → ^{x}  (subscript / superscript with square brackets)
+
   normalized = normalized.replace(/([_^])\[([^\]\n]*)\]/g, '$1{$2}');
-  // _{x]  →  _{x}  and  ^{x]  →  ^{x}  (mismatched closing bracket)
+
   normalized = normalized.replace(/([_^])\{([^{}\]\n]*)\]/g, '$1{$2}');
 
-  // Convert block math \[...\] → $$...$$ as a single-pass (captures full block,
-  // prevents the two-pass approach from leaving dangling delimiters on malformed input)
+
+
   normalized = normalized.replace(/\\\[([\s\S]+?)\\\]/g, (_, c) => '$$' + c.trim() + '$$');
-  // Convert inline math \(...\) → $...$
+
   normalized = normalized.replace(/\\\(([\s\S]+?)\\\)/g, (_, c) => '$' + c.trim() + '$');
 
-  // Promote inline code `...` to $...$ if it looks like math
+
   normalized = normalized.replace(/`([^`\n]+)`/g, (full, inner) => {
     if (!looksLikeMathExpression(inner)) return full;
     const candidate = inner.trim().replace(/^\$+|\$+$/g, '');
     return `$${candidate}$`;
   });
 
-  // Shield already-delimited math before the rescue pass so the rescue regex
-  // cannot double-wrap content that is already inside $$...$$ or $...$.
-  // (Double-wrapping previously caused $$\n$$\int...\n$$\n$$ which breaks shielding.)
+
+
+
   const rescueStore = [];
   let safe = normalized;
   safe = safe.replace(/\$\$([\s\S]+?)\$\$/g, (match) => {
@@ -2223,17 +2221,17 @@ function normalizeMathMarkup(text) {
     return '\x02R' + (rescueStore.length - 1) + '\x03';
   });
 
-  // Rescue bare LaTeX commands at the start of a line (unshielded text only)
+
   safe = safe.replace(/(^|\n)([ \t]*(?:[-*] )?)(\\(?:int|sum|prod|frac|sqrt|lim|big[lrmb]?|left|right|begin|end|text|binom|log|ln|exp|sin|cos|tan|sec|csc|cot|theta|alpha|beta|gamma|Delta|delta|lambda|pi|sigma|omega|infty|partial|nabla|forall|exists|mathbb|mathcal|mathrm|mathbf|overline|underline|vec|hat|bar|dot|ddot|tilde|cdot|times|div|pm|leq|geq|neq|approx|equiv|subset|supset|cup|cap|in|notin|to|mapsto|implies|iff|quad|qquad|hbar|ell|Re|Im|det|ker|hom|deg|arg|dim|sup|limsup|liminf|max|min|gcd|pmod|bmod|not|neg|oplus|otimes|langle|rangle|lceil|rceil|lfloor|rfloor|varphi|varepsilon|varnothing)\b[^\n]*)(?=\n|$)/gi, (full, lead, indent, expr) => {
     return `${lead}${indent}$$${expr.trim()}$$`;
   });
 
-  // Rescue \begin{...}...\end{...} environments (unshielded text only)
+
   safe = safe.replace(/(^|\n)([ \t]*)(\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\})(?=\n|$)/g, (full, lead, indent, expr) => {
     return `${lead}${indent}$$${expr.trim()}$$`;
   });
 
-  // Restore the shielded blocks
+
   for (let i = 0; i < rescueStore.length; i++) {
     safe = safe.split('\x02R' + i + '\x03').join(rescueStore[i]);
   }
@@ -2266,73 +2264,10 @@ function applySavedTheme() {
   }
 }
 
-function sanitizeMarkdownHtml(rawHtml) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(`<div>${rawHtml}</div>`, 'text/html');
-  const root = doc.body.firstElementChild;
-  if (!root) return '';
+function stripBadHtml(str) { return str.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/on\w+=/gi, 'data-blocked='); }
 
-  const sanitizeNode = (node) => {
-    if (node.nodeType === Node.TEXT_NODE) return;
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-      node.remove();
-      return;
-    }
 
-    const tag = node.tagName.toLowerCase();
-    if (!ALLOWED_TAGS.has(tag)) {
-      const text = doc.createTextNode(node.textContent || '');
-      node.replaceWith(text);
-      return;
-    }
 
-    [...node.attributes].forEach((attr) => {
-      const name = attr.name.toLowerCase();
-      const value = attr.value;
-      const allowedForTag = ALLOWED_ATTRS[tag];
-
-      if (name.startsWith('on')) {
-        node.removeAttribute(attr.name);
-        return;
-      }
-
-      if (name === 'style' || name === 'srcset') {
-        node.removeAttribute(attr.name);
-        return;
-      }
-
-      if (name === 'href' || name === 'src') {
-        if (!/^(https?:|data:image\/|blob:|\/|#)/i.test(value.trim())) {
-          node.removeAttribute(attr.name);
-          return;
-        }
-      }
-
-      if (allowedForTag && allowedForTag.has(name)) return;
-      if ((tag === 'a' || tag === 'img') && (name === 'href' || name === 'src')) return;
-      node.removeAttribute(attr.name);
-    });
-
-    if (tag === 'a') {
-      node.setAttribute('target', '_blank');
-      node.setAttribute('rel', 'noopener noreferrer nofollow');
-    }
-
-    if (tag === 'img') {
-      if (!node.getAttribute('alt')) node.setAttribute('alt', 'Generated image');
-      node.setAttribute('loading', 'lazy');
-      node.setAttribute('decoding', 'async');
-    }
-
-    [...node.childNodes].forEach(sanitizeNode);
-  };
-
-  [...root.childNodes].forEach(sanitizeNode);
-  return root.innerHTML;
-}
-
-// Register a custom marked.js extension so $$...$$ and $...$ math blocks
-// are treated as first-class tokens and never mangled by the markdown renderer.
 function ensureMathExtension() {
   if (!window.marked || window._spectrixMathExt) return;
   try {
@@ -2358,7 +2293,7 @@ function ensureMathExtension() {
           level: 'inline',
           start(src) {
             let i = src.indexOf('$');
-            // Skip $$ positions (handled by blockMath)
+
             while (i !== -1 && src[i + 1] === '$') i = src.indexOf('$', i + 2);
             return i === -1 ? Infinity : i;
           },
@@ -2384,14 +2319,14 @@ function renderMarkdownSafely(content) {
 
   ensureMathExtension();
 
-  // If the marked math extension registered, math tokens are handled natively.
+
   if (window._spectrixMathExt) {
     const parsed = marked.parse(text);
-    return sanitizeMarkdownHtml(parsed);
+    return stripBadHtml(parsed);
   }
 
-  // Fallback: extract all $$ / $ blocks before marked.parse() so
-  // backslashes and braces are never touched by the markdown renderer.
+
+
   const mathStore = [];
   let shielded = text;
 
@@ -2405,7 +2340,7 @@ function renderMarkdownSafely(content) {
   });
 
   const parsed = marked.parse(shielded);
-  let result = sanitizeMarkdownHtml(parsed);
+  let result = stripBadHtml(parsed);
 
   for (let i = 0; i < mathStore.length; i++) {
     const escaped = mathStore[i]
@@ -2493,8 +2428,8 @@ async function fetchWithTimeoutRetry(url, options = {}, retryCount = 1) {
   throw lastError || new Error('Request failed');
 }
 
-// ===== RENDER MESSAGE =====
-function render(role, content, saveIt = true, messageIndex = null) {
+
+function paintSpectrixBubble(role, content, saveIt = true, messageIndex = null) {
   const d = document.createElement("div");
   d.className = "msg " + role;
 
@@ -2560,7 +2495,7 @@ function render(role, content, saveIt = true, messageIndex = null) {
     const retryBtn = document.createElement("button");
     retryBtn.className = "msg-btn";
     retryBtn.textContent = "🔄 Retry";
-    retryBtn.onclick = retryLast;
+    retryBtn.onclick = replayLastTransmission;
 
     actions.appendChild(retryBtn);
     d.appendChild(actions);
@@ -2576,11 +2511,11 @@ function render(role, content, saveIt = true, messageIndex = null) {
   chat.appendChild(d);
   chat.scrollTop = chat.scrollHeight;
 
-  if (saveIt) saveMessage(role, content);
+  if (saveIt) persistBotResponse(role, content);
   return d;
 }
 
-// ===== STREAMING =====
+
 async function streamBotInChunks(fullText, baseChunkSize = 50) {
   const d = document.createElement("div");
   d.className = "msg bot";
@@ -2588,13 +2523,13 @@ async function streamBotInChunks(fullText, baseChunkSize = 50) {
 
   let renderedText = "";
   const session = getCurrentSession();
-  await saveMessage("bot", "");
+  await persistBotResponse("bot", "");
   const botIndex = session.messages.length - 1;
 
   const totalLength = fullText.length;
   let chunkSize = baseChunkSize;
   
-  // 🔥 Adaptive chunking - bigger chunks for long responses
+  
   if (totalLength > 5000) chunkSize = 100;
   if (totalLength > 10000) chunkSize = 200;
 
@@ -2613,9 +2548,9 @@ async function streamBotInChunks(fullText, baseChunkSize = 50) {
 
     session.messages[botIndex].content = renderedText;
     
-    // Save less frequently for long responses
+
     if (i % (chunkSize * 5) === 0 || i + chunkSize >= fullText.length) {
-      await saveChat(session);
+      await commitConvoToDB(session);
     }
 
     await new Promise(r => setTimeout(r, totalLength > 5000 ? 5 : 15));
@@ -2628,7 +2563,7 @@ async function streamBotInChunks(fullText, baseChunkSize = 50) {
   await saveSessions();
 }
 
-// ===== FULL AUTO TITLE =====
+
 async function generateTitle(userPrompt, botReply) {
   try {
     const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
@@ -2667,18 +2602,18 @@ Create a concise title that captures the main topic of this conversation.
     const data = await res.json();
     const rawTitle = data?.choices?.[0]?.message?.content || "";
 
-    // ==== CLEAN & FORMAT ====
+    
     let cleanTitle = rawTitle
-      .replace(/["'`\n]/g, "")     // remove quotes, backticks, line breaks
-      .replace(/\*{1,2}/g, "")     // remove bold/italic markdown
-      .replace(/#{1,6}\s?/g, "")   // remove heading markers
-      .replace(/\s+/g, " ")        // collapse multiple spaces
+      .replace(/["'`\n]/g, "")
+      .replace(/\*{1,2}/g, "")
+      .replace(/#{1,6}\s?/g, "")
+      .replace(/\s+/g, " ")
       .trim()
-      .split(" ")                  // limit words
+      .split(" ")
       .slice(0, 5)
       .join(" ");
 
-    // Fallback: if title is empty, use first 5 words of user prompt
+
     if (!cleanTitle) {
       cleanTitle = userPrompt
         .replace(/\s+/g, " ")
@@ -2692,23 +2627,23 @@ Create a concise title that captures the main topic of this conversation.
   } catch (err) {
     console.error("Title generation failed:", err);
 
-    // Final fallback
+
     return userPrompt
       ? userPrompt.replace(/\s+/g, " ").trim().split(" ").slice(0, 5).join(" ")
       : "New Chat";
   }
 }
 
-// ===== SEND MESSAGE =====
-async function send(options = {}) {
+
+async function dispatchUserText(options = {}) {
   const {
     promptOverride = null,
     skipUserRender = false,
     skipUserSave = false
   } = options;
 
-  if (isGenerating) {
-    alert("Generation already in progress");
+  if (spxTransmitting) {
+    console.warn("Spectrix Throttle: Core concurrency locked.");
     return;
   }
 
@@ -2719,7 +2654,7 @@ async function send(options = {}) {
     return;
   }
 
-  isGenerating = true;
+  spxTransmitting = true;
   lastUserPrompt = prompt;
 
   const firstUserPrompt = prompt;
@@ -2741,7 +2676,7 @@ async function send(options = {}) {
   if (isImage || isVideo) prompt = prompt.slice(5);
 
   if (!skipUserRender) {
-    render("user", prompt);
+    paintSpectrixBubble("user", prompt);
   }
 
   const loading = document.createElement("div");
@@ -2753,20 +2688,20 @@ async function send(options = {}) {
   try {
     if (isImage) {
       if (!window.puter?.ai) {
-        throw new Error("Puter SDK not loaded");
+        throw new Error("Spectrix Auth: Provider SDK injection failure detected during hand-shake");
       }
 
       const model = document.getElementById("imageModel").value;
       const img = await puter.ai.txt2img(prompt, { model, disable_safety_checker: true });
       loading.remove();
-      isGenerating = false;
+      spxTransmitting = false;
 
       img.classList.add("ai-img");
       const base64 = img.src;
       const mediaId = `img_${Date.now()}`;
       const blob = await (await fetch(base64)).blob();
       await saveMedia(mediaId, blob);
-      await saveMessage("bot", { type: "image", src: base64, mediaId });
+      await persistBotResponse("bot", { type: "image", src: base64, mediaId });
 
       const div = document.createElement("div");
       div.className = "msg bot";
@@ -2776,12 +2711,12 @@ async function send(options = {}) {
     }
     else if (isVideo) {
       if (!window.puter?.ai) {
-        throw new Error("Puter SDK not loaded");
+        throw new Error("Spectrix Auth: Provider SDK injection failure detected during hand-shake");
       }
 
       const video = await puter.ai.txt2vid(prompt, { model: FIXED_VIDEO_MODEL, seconds: 8 });
       loading.remove();
-      isGenerating = false;
+      spxTransmitting = false;
 
       const blob = await fetch(video.src).then(r => r.blob());
       const reader = new FileReader();
@@ -2803,7 +2738,7 @@ async function send(options = {}) {
 
         const mediaId = `vid_${Date.now()}`;
         await saveMedia(mediaId, blob);
-        await saveMessage("bot", { type: "video", src: reader.result, mediaId });
+        await persistBotResponse("bot", { type: "video", src: reader.result, mediaId });
       };
       reader.readAsDataURL(blob);
     }
@@ -2829,12 +2764,12 @@ async function send(options = {}) {
 
       const text = await res.text();
       let data;
-      try { data = JSON.parse(text); } catch { throw new Error("Server returned invalid response"); }
+      try { data = JSON.parse(text); } catch { throw new Error("Spectrix Runtime: Disallowed token schema encountered from provider endpoint"); }
 
-      const answer = data.choices?.[0]?.message?.content || `💀 Empty response from ${model}`;
+      const answer = data.choices?.[0]?.message?.content || `Empty payload frame received from upstream provider.`;
       loading.remove();
       await streamBotInChunks(answer);
-      isGenerating = false;
+      spxTransmitting = false;
 
       if (shouldAutoTitle) {
         try {
@@ -2844,19 +2779,19 @@ async function send(options = {}) {
           await saveSessions();
           updateHeaderTitle();
         } catch (err) {
-          console.error("Auto-title fallback:", err);
+          console.error("Spectrix Indexing: Label genesis routine skipped.", err);
         }
       }
     }
   } catch (err) {
-    console.error("Send error:", err);
-    isGenerating = false;
+    console.error("Spectrix Dispatch: Pipeline collapse -", err);
+    spxTransmitting = false;
     loading.remove();
-    render("bot", "**Error generating response 💀** " + err.message);
+    paintSpectrixBubble("bot", "**Error generating response 💀** " + err.message);
   }
 }
 
-function toggleTheme() {
+function flipDarkNode() {
   document.body.classList.toggle("dark");
   localStorage.setItem(THEME_KEY, document.body.classList.contains('dark') ? 'dark' : 'light');
   updateThemeColorMeta();
@@ -2918,7 +2853,7 @@ async function applyLaunchParams() {
   const sharedUrl = params.get('url');
 
   if (action === 'new-chat') {
-    await newChat();
+    await spawnNewConversation();
     showStatus('New chat ready');
   }
 
@@ -2938,7 +2873,7 @@ async function applyLaunchParams() {
   }
 }
 
-// ===== EVENT LISTENERS =====
+
 function initEventListeners() {
   function resizeInput() {
     input.style.height = "";
@@ -2958,11 +2893,11 @@ function initEventListeners() {
       e.preventDefault();
       send();
     } 
-    // else: shift+Enter => newline, do nothing
+
   }
 });
 
-  searchBox.addEventListener("input", renderHistory);
+  searchBox.addEventListener("input", paintSidebarElements);
 
   chat.addEventListener("scroll", () => {
     const atBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 50;
@@ -2972,7 +2907,7 @@ function initEventListeners() {
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey && e.key === "b") {
       e.preventDefault();
-      newChat();
+      spawnNewConversation();
     }
     if (e.ctrlKey && e.key === "/") {
       e.preventDefault();
@@ -2981,9 +2916,9 @@ function initEventListeners() {
   });
 }
 
-// ===== PWA INSTALL =====
+
 window.addEventListener('beforeinstallprompt', e => {
-  if (window.innerWidth > 768) return; // hide on desktop
+  if (window.innerWidth > 768) return;
 
   e.preventDefault();
   if (document.getElementById("installBtn")) return;
@@ -3017,7 +2952,7 @@ window.addEventListener('beforeinstallprompt', e => {
   }, 10000);
 });
 
-// ===== SHARE TARGET =====
+
 if (window.location.pathname === '/share') {
   window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
@@ -3049,7 +2984,7 @@ if ('launchQueue' in window) {
   });
 }
 
-// ===== PRE-POPUP =====
+
 const prePopup = document.getElementById("prePopup");
 const goToPuter = document.getElementById("goToPuter");
 
@@ -3115,7 +3050,7 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-// ===== INIT APP ON LOAD =====
+
 document.addEventListener("DOMContentLoaded", async () => {
   await initApp();
   await applyLaunchParams();
