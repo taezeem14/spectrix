@@ -2819,12 +2819,25 @@ async function send(options = {}) {
         messages.push({ role: "user", content: prompt });
       }
 
-      const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        timeoutMs: 30000,
-        body: JSON.stringify({ model: model, messages: messages })
-      }, 1);
+	// 🧠 FIRECRAWL ENABLED PAYLOAD
+const payload = {
+  model: model,
+  messages: messages,
+  plugins: [
+    {
+      id: "web",
+      engine: "firecrawl",
+      max_results: 5
+    }
+  ]
+};
+
+const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  timeoutMs: 30000,
+  body: JSON.stringify(payload)
+}, 1);
 
       const text = await res.text();
       let data;
