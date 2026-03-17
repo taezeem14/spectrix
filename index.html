@@ -2819,7 +2819,7 @@ async function send(options = {}) {
         messages.push({ role: "user", content: prompt });
       }
 
-	// 🧠 FIRECRAWL ENABLED PAYLOAD
+// 🧠 FIRECRAWL ENABLED PAYLOAD
 const payload = {
   model: model,
   messages: messages,
@@ -2829,8 +2829,7 @@ const payload = {
       engine: "firecrawl",
       max_results: 5
     }
-  ],
-  tool_choice: "auto" // 🔥 THIS IS THE MAGIC
+  ]
 };
 
 const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
