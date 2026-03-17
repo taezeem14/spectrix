@@ -2819,14 +2819,14 @@ async function send(options = {}) {
         messages.push({ role: "user", content: prompt });
       }
 
-// 🧠 FIRECRAWL ENABLED PAYLOAD
+// 🧠 EXA SEARCH ENABLED PAYLOAD
 const payload = {
-  model: model,
+  model: model + ":online",
   messages: messages,
   plugins: [
     {
       id: "web",
-      engine: "firecrawl",
+      engine: "exa",
       max_results: 5
     }
   ]
