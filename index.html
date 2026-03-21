@@ -1183,11 +1183,21 @@ body.dark .voice-btn.recording {
 /* ===== FINAL HORIZONTAL SCROLL KILL ===== */
 
 /* Contain math overflow */
-.katex-display {
+.katex-display, mjx-container[display='true'] {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 4px;
+  padding: 1.5rem 1rem !important;
+  margin: 1.25rem 0 !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.katex-display:hover, mjx-container[display='true']:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Prevent math from forcing layout wider */
@@ -1223,6 +1233,15 @@ body.dark .voice-btn.recording {
 }
 
 
+</style>
+
+<style>
+
+.toast-notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #111; border: 1px solid #0ff; color: #0ff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); padding: 8px 16px; border-radius: 8px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast-notification.show { opacity: 1; }
+@keyframes slideUpFade { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.btn:hover { transform: scale(1.03); }
+.neon-highlight.math-display { box-shadow: 0 0 10px #0ff; }
 </style>
 </head>
 
@@ -3192,4 +3211,126 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 </script>
 </body>
+
+<!-- Math UI Setup: Native Absolute Copy Buttons -->
+<style>
+/* Clean positioning for math blocks */
+.katex-display, mjx-container[display='true'] {
+    position: relative !important;
+}
+
+.math-copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: inherit;
+    backdrop-filter: blur(4px);
+}
+
+.katex-display:hover .math-copy-btn, 
+mjx-container[display='true']:hover .math-copy-btn {
+    opacity: 1;
+}
+
+.math-copy-btn:hover {
+    background: rgba(30, 41, 59, 1);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #10b981;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.toast-notification.show {
+    opacity: 1;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let originalRenderMath = window.renderMath;
+    window.renderMath = function(d) {
+        if (originalRenderMath) originalRenderMath(d);
+        if (!d || !d.querySelectorAll) return;
+        
+        d.querySelectorAll('.katex-display, mjx-container[display="true"]').forEach(el => {
+            if (el.querySelector('.math-copy-btn')) return;
+            const btn = document.createElement('button');
+            btn.className = 'math-copy-btn';
+            btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy LaTeX`;
+            el.appendChild(btn);
+        });
+    };
+});
+
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.math-copy-btn');
+    if (!btn) return;
+    const mathEl = btn.closest('.katex-display, mjx-container[display="true"]');
+    if (!mathEl) return;
+    
+    let rawTex = '';
+    const annotation = mathEl.querySelector("annotation[encoding='application/x-tex']");
+    if (annotation) {
+        rawTex = annotation.textContent;
+    } else {
+        const mathml = mathEl.querySelector('math');
+        if (mathml && mathml.hasAttribute('alttext')) {
+            rawTex = mathml.getAttribute('alttext');
+        } else {
+            if (mathEl.dataset.formula) rawTex = mathEl.dataset.formula;
+        }
+    }
+    
+    if (!rawTex) {
+        const clone = mathEl.cloneNode(true);
+        const rm = clone.querySelector('.math-copy-btn');
+        if (rm) rm.remove();
+        rawTex = clone.textContent.replace(/\n/g, '').trim();
+    }
+    
+    navigator.clipboard.writeText(rawTex).then(() => {
+        let toast = document.getElementById('math-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'math-toast';
+            toast.className = 'toast-notification';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = 'LaTeX Copied to Clipboard!';
+        toast.classList.add('show');
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>Copied!`;
+        setTimeout(() => {
+            toast.classList.remove('show');
+            btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy LaTeX`;
+        }, 2000);
+    });
+});
+</script>
 </html>

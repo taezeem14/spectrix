@@ -18,9 +18,9 @@ Spectrix is designed to feel **fast, modern, and smooth**, not like a slow acade
 
 Key features:
 
-* ⚡ **Real-time streaming responses** – messages appear instantly instead of waiting
+* ⚡ **Real-time streaming responses** with 60 FPS guaranteed math-rendering optimizations`n* 💬 **Real-time streaming responses** – messages appear instantly instead of waiting
 * 🎤 **Voice input** + 🔊 **Text-to-speech output** for hands-free interaction
-* 🧠 **Math-friendly chat** with KaTeX + MathJax rendering
+* 🧠 **Math-friendly chat** with KaTeX + MathJax rendering`n* 📋 **Smart Math UI** featuring floating "Copy LaTeX" functionality directly on equations
 * 🎨 `/img` and 🎬 `/vid` commands for media generation
 * ✏️ **Retry + Edit system** that avoids duplicate or broken messages
 * 📦 **Progressive Web App (PWA)** – install Spectrix like a native app
@@ -175,3 +175,5 @@ Also include the icons referenced in the manifest.
 Student developer, builder, and experimenter in AI tools.
 
 Built with **caffeine, chaos, and clean UI energy. ⚡🔥**
+
+
