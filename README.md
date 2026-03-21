@@ -104,6 +104,7 @@ Result: **fast load times and zero heavy frameworks.**
 ├── sw.js
 ├── site.webmanifest
 ├── robots.txt
+├── worker.js
 └── README.md
 ```
 
