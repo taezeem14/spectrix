@@ -44,7 +44,7 @@ It’s engineered for **speed, control, and real-world usability**.
   * smooth 60 FPS rendering
   * floating **Copy LaTeX** UI
 
-* 🌐 **Optional Web Search Mode**
+* 🌐 **Optional Web Search Mode** :
   Toggle live search when you need **fresh, real-time data**.
 
 * 🎨 **Media Generation Commands**
