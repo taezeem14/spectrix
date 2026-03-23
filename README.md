@@ -2,17 +2,17 @@
 
 ![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa\&logoColor=white)
 ![Offline Ready](https://img.shields.io/badge/Offline-Ready-10B981)
-![Vanilla JS](https://img.shields.io/badge/Stack-Vanilla%20JS-F7DF1E?logo=javascript\&logoColor=111)
+![Architecture](https://img.shields.io/badge/Architecture-AI%20Assisted-7C3AED)
 ![Math](https://img.shields.io/badge/Math-KaTeX%20%2B%20MathJax-2563EB)
 
 > ⚡ **Fast. Smart. Offline-ready.**
-> Spectrix AI is a next-gen AI chat app built for **students, developers, and productivity nerds** by **student**.
+> Spectrix AI is a next-gen AI chat app built for **students, developers, and productivity nerds** — combining **AI-assisted engineering** with human design and direction.
 
 ---
 
 ## 🚀 What is Spectrix?
 
-**Spectrix AI** is a **high-performance AI-Driven ChatBot application** designed for:
+**Spectrix AI** is a **high-performance AI-driven chatbot application** designed for:
 
 * 📚 Homework & learning
 * 💻 Coding & problem solving
@@ -25,6 +25,19 @@ It delivers a **real-time, app-like experience** with streaming responses, voice
 
 ---
 
+## 💡 How It Was Built
+
+Spectrix was developed using an **AI-assisted workflow**:
+
+* 🧠 Core logic and systems were generated using AI
+* 🛠️ Refined, edited, and debugged manually
+* 🎯 Directed with a strong focus on performance, UX, and real-world usability
+
+> This project reflects a modern development approach:
+> **leveraging AI as a tool, not a replacement for thinking.**
+
+---
+
 ## ⚡ Why Spectrix Hits Different
 
 Spectrix isn’t just another AI wrapper.
@@ -33,10 +46,10 @@ It’s engineered for **speed, control, and real-world usability**.
 ### 🧠 Core Features
 
 * ⚡ **Real-time streaming responses**
-  Messages render instantly — no waiting, no blocking.
+  Messages render instantly — no waiting, no blocking
 
 * 🎤 **Voice input + 🔊 Text-to-Speech**
-  Fully hands-free interaction.
+  Fully hands-free interaction
 
 * 🧮 **Advanced Math Engine**
   Powered by **KaTeX + MathJax** with:
@@ -44,8 +57,8 @@ It’s engineered for **speed, control, and real-world usability**.
   * smooth 60 FPS rendering
   * floating **Copy LaTeX** UI
 
-* 🌐 **Optional Web Search Mode** :
-  Toggle live search when you need **fresh, real-time data**.
+* 🌐 **Optional Web Search Mode**
+  Toggle live search for **real-time data**
 
 * 🎨 **Media Generation Commands**
 
@@ -53,22 +66,22 @@ It’s engineered for **speed, control, and real-world usability**.
   * `/vid` → generate videos
 
 * ✏️ **Retry + Edit System**
-  Fix prompts without breaking chat flow.
+  Fix prompts without breaking chat flow
 
 * 📦 **Installable PWA**
-  Works like a real app on desktop & mobile.
+  Works like a real app on desktop & mobile
 
 * 📡 **Offline-ready architecture**
-  Core UI loads even without internet.
+  Core UI loads even without internet
 
 ---
 
-## 🧠 Under the Hood (What Makes It Powerful)
+## 🧠 Under the Hood
 
-Spectrix is not just UI — it’s a **full AI system**:
+Spectrix is a **full AI-powered system**, not just a UI layer:
 
 * ⚡ **Cloudflare Worker backend**
-* 🔑 **API key rotation system** (better reliability under limits)
+* 🔑 **API key rotation system**
 * 🌐 **Web search integration** (Firecrawl via OpenRouter)
 * 🤖 **High-performance LLM routing (OpenRouter)**
 
@@ -79,7 +92,16 @@ Spectrix is not just UI — it’s a **full AI system**:
 ## 📸 Screenshots
 
 ![Spectrix Main UI](screenshots/spectrix-main.png)
+*⚡ Real-time streaming interface*
+
 ![Spectrix Math Chat](screenshots/spectrix-math.png)
+*🧮 Advanced math rendering in action*
+
+---
+
+## 🌐 Live Demo
+
+> https://spectrix.netlify.app
 
 ---
 
@@ -109,8 +131,6 @@ http://127.0.0.1:5500
 
 ## 🧠 Commands
 
-Simple command system:
-
 ```bash
 /img your prompt
 ```
@@ -129,7 +149,7 @@ Simple command system:
 
 Built for **performance + simplicity**:
 
-* Vanilla **HTML, CSS, JavaScript**
+* Framework-free **HTML, CSS, JavaScript architecture**
 * **IndexedDB** (persistent storage)
 * **Service Workers** (offline + caching)
 * **Web Speech API** (voice + TTS)
@@ -210,7 +230,7 @@ site.webmanifest
 
 Student developer building fast, modern AI tools.
 
-> Built with caffeine, chaos, and clean UI energy ⚡🔥
+> Built with AI, refined with intent ⚡🔥
 
 ---
 
