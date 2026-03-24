@@ -948,6 +948,13 @@ body.dark .voice-btn.recording {
   text-overflow: ellipsis;
 }
 
+#textModelSelect {
+  max-width: 145px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ===== MOBILE OPTIMIZED ===== */
 @media(max-width:768px){
   body {
@@ -1305,6 +1312,12 @@ body.dark .voice-btn.recording {
 			<option value="gpt-image-1.5">GPT Image 1.5</option>
 		</select>
         </div>
+          <div class="select-wrap">
+            <select id="textModelSelect" title="Choose text model">
+              <option value="stepfun/step-3.5-flash:free">Stepfun 3.5 Flash  (Quick)</option>
+              <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 3 Super (Reasoning)</option>
+            </select>
+          </div>
       </div>
     </header>
 
@@ -1452,7 +1465,7 @@ CRITICAL RULES:
 `;
 const API_WORKER_HOST = ['hac', 'koai-worker.tariqmtaezeem.workers.dev'].join('');
 const CHAT_API_URL = `https://${API_WORKER_HOST}/chat`;
-const FIXED_TEXT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
+let FIXED_TEXT_MODEL = localStorage.getItem('Spectrix_text_model') || "stepfun/step-3.5-flash:free";
 const FIXED_VIDEO_MODEL = "ByteDance/Seedance-1.0-lite";
 
 let sessions = {};
@@ -1505,6 +1518,7 @@ async function initApp() {
   loadChatMessages();
   initVoice();
   initEventListeners();
+  initTextModelDropdown();
   initCompatibilityEnhancements();
   updateThemeColorMeta();
 }
@@ -3067,6 +3081,27 @@ function initEventListeners() {
       e.preventDefault();
       searchBox.focus();
     }
+  });
+}
+
+// Initialize the text model dropdown, wire selection to FIXED_TEXT_MODEL and persist
+function initTextModelDropdown() {
+  const sel = document.getElementById('textModelSelect');
+  if (!sel) return;
+  // Set initial value from persisted setting or current variable
+  const persisted = localStorage.getItem('Spectrix_text_model');
+  if (persisted) {
+    FIXED_TEXT_MODEL = persisted;
+  }
+  // Ensure the select reflects the active model
+  sel.value = FIXED_TEXT_MODEL || sel.value;
+
+  sel.addEventListener('change', (e) => {
+    const v = e.target.value;
+    FIXED_TEXT_MODEL = v;
+    localStorage.setItem('Spectrix_text_model', v);
+    // Optional: notify user briefly
+    console.log('Text model set to', v);
   });
 }
 

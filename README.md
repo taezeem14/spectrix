@@ -119,6 +119,17 @@ http://127.0.0.1:5500
 
 ---
 
+## 🧾 Model Dropdown
+
+Spectrix includes a model selection dropdown in the header controls which lets you choose the text model used for requests. The two built-in options are:
+
+- **Quick**: `stepfun/step-3.5-flash:free` — optimized for low latency and fast replies.
+- **Reasoning**: `nvidia/nemotron-3-super-120b-a12b:free` — optimized for deeper reasoning and complex tasks.
+
+The selected model is persisted in the browser `localStorage` under the key `Spectrix_text_model` and is read into the app as the `FIXED_TEXT_MODEL` variable in `index.html`. You can change the default by editing `FIXED_TEXT_MODEL` in `index.html` or by setting the `Spectrix_text_model` value in your browser devtools.
+
+---
+
 ## 👨‍💻 Author
 
 **Muhammad Taezeem Tariq Matta**
