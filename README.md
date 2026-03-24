@@ -16,7 +16,7 @@
 👉 [https://spectrix.netlify.app](https://spectrix.netlify.app)
 
 🌍 **Custom Domain (Vanity URL):**
-👉 [https://taezeem.is-a.dev/spectrix](https://taezeem.is-a.dev/spectrix)
+👉 [https://taezeem.is-a.dev/spectrix](https://taezeem.is-a.dev/Spectrix)
 
 ---
 
