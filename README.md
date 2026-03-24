@@ -149,7 +149,7 @@ FIXED_TEXT_MODEL
 
 ---
 
-👉 **Quick = speed ⚡**
+👉 **Quick = speed ⚡** <br>
 👉 **Reasoning = power 🧠**
 
 *choose your weapon.*
