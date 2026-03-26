@@ -1,169 +1,154 @@
-# Spectrix AI ✨
+<div align="center">
 
-![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa\&logoColor=white)
-![Offline Ready](https://img.shields.io/badge/Offline-Ready-10B981)
-![Architecture](https://img.shields.io/badge/Architecture-AI%20Assisted-7C3AED)
-![Math](https://img.shields.io/badge/Math-KaTeX%20%2B%20MathJax-2563EB)
+# ⚡ Spectrix AI
 
-> ⚡ **Fast. Smart. Offline-ready.**
-> Spectrix AI is a next-gen AI chat app built for **students, developers, and productivity nerds** — combining **AI-assisted engineering** with human design and direction.
+**fast. smart. offline-ready. hits different.**
 
----
+[![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa&logoColor=white)](https://spectrix.netlify.app)
+[![Offline](https://img.shields.io/badge/Offline-Ready-10B981)](https://spectrix.netlify.app)
+[![Build](https://img.shields.io/badge/Architecture-AI%20Assisted-7C3AED)](https://spectrix.netlify.app)
+[![Math](https://img.shields.io/badge/Math-KaTeX%20%2B%20MathJax-2563EB)](https://spectrix.netlify.app)
+[![Deploy](https://img.shields.io/badge/Deployed-Netlify-00C7B7?logo=netlify&logoColor=white)](https://spectrix.netlify.app)
 
-## 🌐 Live Demo
+🚀 **[spectrix.netlify.app](https://spectrix.netlify.app)** &nbsp;|&nbsp; 🌍 **[taezeem.is-a.dev/spectrix](https://taezeem.is-a.dev/Spectrix)**
 
-🚀 **Try it now:**
-👉 [https://spectrix.netlify.app](https://spectrix.netlify.app)
-
-🌍 **Custom Domain (Vanity URL):**
-👉 [https://taezeem.is-a.dev/spectrix](https://taezeem.is-a.dev/Spectrix)
+</div>
 
 ---
 
-## 🚀 What is Spectrix?
+## ok so what even is this
 
-**Spectrix AI** is a **high-performance AI-driven chatbot application** designed for:
+bro it's an AI chat app. but not the mid kind.
 
-* 📚 Homework & learning
-* 💻 Coding & problem solving
-* 🧠 Math-heavy workflows
-* ⚡ Everyday productivity
+Spectrix is built for **students, devs, and people who actually want things to work** — real-time streaming, math rendering, voice I/O, offline PWA, web search. all in vanilla HTML/CSS/JS. no framework. no build step. no cap.
 
-It delivers a **real-time, app-like experience** with streaming responses, voice interaction, and advanced math rendering — all inside a lightweight PWA.
+use it for:
+- 📚 homework + studying
+- 💻 coding + debugging
+- 🧮 math-heavy stuff (LaTeX goes hard here)
+- ⚡ anything really
 
-👉 **Short version:** *it cooks. 🔥*
-
----
-
-## 💡 How It Was Built
-
-Spectrix was developed using an **AI-assisted workflow**:
-
-* 🧠 Core logic and systems were generated using AI
-* 🛠️ Refined, edited, and debugged manually
-* 🎯 Directed with a strong focus on performance, UX, and real-world usability
-
-> This project reflects a modern development approach:
-> **leveraging AI as a tool, not a replacement for thinking.**
+> *short version: it cooks. 🔥*
 
 ---
 
-## ⚡ Why Spectrix Hits Different
+## how was it built tho
 
-Spectrix isn’t just another AI wrapper.
-It’s engineered for **speed, control, and real-world usability**.
+AI-assisted workflow. real talk:
 
-### 🧠 Core Features
+- core logic → generated with AI
+- bugs + UX + direction → handled manually
+- vibes → immaculate
 
-* ⚡ **Real-time streaming responses**
-* 🎤 **Voice input + 🔊 Text-to-Speech**
-* 🧮 **Advanced Math Engine (KaTeX + MathJax)**
-* 🌐 **Optional Web Search Mode**
-* 🎨 **/img and /vid generation commands**
-* ✏️ **Retry + Edit System**
-* 📦 **Installable PWA**
-* 📡 **Offline-ready architecture**
+> using AI as a tool, not a crutch. big difference.
 
 ---
 
-## 🧠 Under the Hood
+## features (the actual ones that matter)
 
-* ⚡ Cloudflare Worker backend
-* 🔑 API key rotation system
-* 🌐 Web search (Firecrawl via OpenRouter)
-* 🤖 LLM routing via OpenRouter
-
-👉 Result: **fast, stable, real-time AI responses**
-
----
-
-## 📸 Screenshots
-
-![Spectrix Main UI](screenshots/spectrix-main.png)
-*⚡ Real-time streaming interface*
-
-![Spectrix Math Chat](screenshots/spectrix-math.png)
-*🧮 Math rendering in action*
+| feature | what it does |
+|---|---|
+| ⚡ streaming responses | token-by-token. no staring at a loading spinner |
+| 🎤 voice input | just talk to it. Web Speech API |
+| 🔊 text-to-speech | it talks back. kinda unhinged actually |
+| 🧮 math engine | KaTeX + MathJax. LaTeX renders clean |
+| 🌐 web search mode | live search via Firecrawl. optional but bussin |
+| 🎨 /img + /vid | generate images + video mid-chat with slash commands |
+| ✏️ retry + edit | mess up your prompt? fix it. re-run. no context lost |
+| 📦 installable PWA | add to home screen, works offline, feels native |
+| 📡 offline arch | Service Workers + IndexedDB. yes it actually works offline |
 
 ---
 
-## ⚡ Quick Start
+## pick your brain ⚡
 
-```bash
-npx serve .
+switch modes from the header. choose wisely.
+
+### ⚡ quick mode
+```
+stepfun/step-3.5-flash:free
+```
+fast. snappy. zero delay. for everyday stuff and quick answers.
+
+### 🧠 reasoning mode
+```
+nvidia/nemotron-super-120b:free
+```
+slower. but like. actually thinks. use this for hard code, deep problems, complex math.
+
+> selected model saves automatically → `localStorage: Spectrix_text_model`
+> wanna change the default? edit `FIXED_TEXT_MODEL` in `index.html`
+
+---
+
+## under the hood
+
+```
+Cloudflare Worker  →  API Key Rotation  →  OpenRouter LLM Routing
+                                                  ↓
+                                     Firecrawl Web Search (optional)
+                                                  ↓
+                                      streaming response → you
 ```
 
-or
+- **Cloudflare Worker** — edge backend. cold starts? never heard of her
+- **API Key Rotation** — keys rotate so the thing stays alive
+- **OpenRouter** — swap models without touching infra
+- **Firecrawl** — web search piped straight into chat context
+
+---
+
+## tech stack (no cap, all vanilla)
+
+```
+HTML / CSS / JavaScript   ← no framework. touch grass.
+IndexedDB
+Service Workers
+Web Speech API
+Highlight.js
+Markdown Pipeline
+KaTeX + MathJax
+Cloudflare Workers
+OpenRouter
+```
+
+---
+
+## quick start
 
 ```bash
+# node
+npx serve .
+
+# python
 python -m http.server 5500
 ```
 
-Open:
-
-```
-http://127.0.0.1:5500
-```
+open → `http://127.0.0.1:5500` and you're in
 
 ---
 
-## 💻 Tech Stack
+## screenshots
 
-* Framework-free HTML, CSS, JavaScript
-* IndexedDB
-* Service Workers
-* Web Speech API
-* Highlight.js
-* Markdown pipeline
-* KaTeX + MathJax
+| main UI | math mode |
+|---|---|
+| ![Main](screenshots/spectrix-main.png) | ![Math](screenshots/spectrix-math.png) |
+| *streaming live* | *latex going crazy* |
 
 ---
 
-## 🧠 Model Control (Pick Your Brain ⚡)
-
-Spectrix lets you switch between different AI “modes” right from the header — depending on what you need.
-
-### ⚡ Quick Mode
-
-`stepfun/step-3.5-flash:free`
-Fast. Snappy. Gets things done instantly.
-Perfect for chats, quick answers, and everyday use.
-
-### 🧠 Reasoning Mode
-
-`nvidia/nemotron-3-super-120b-a12b:free`
-Slower, but way smarter.
-Built for deep thinking, coding, and complex problems.
-
----
-
-💾 Your selected model is saved automatically in your browser
-(`localStorage → Spectrix_text_model`)
-
-🛠️ Want to tweak it manually?
-You can change the default in `index.html` via:
-
-```js
-FIXED_TEXT_MODEL
-```
-
----
-
-👉 **Quick = speed ⚡** <br>
-👉 **Reasoning = power 🧠**
-
-*choose your weapon.*
-
----
-
-## 👨‍💻 Author
+## who made this
 
 **Muhammad Taezeem Tariq Matta**
 
-> Built with AI, refined with intent ⚡🔥
+> built with AI, refined with intent ⚡🔥
 
 ---
 
-## ⭐ Final Note
+<div align="center">
 
-> **the fastest, cleanest AI experience you’ve ever used.**
+*the fastest, cleanest AI experience you've ever used.*
+
+⭐ if spectrix hit — drop a star. you know the move.
+
+</div>
