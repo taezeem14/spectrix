@@ -1,5 +1,9 @@
 # Spectrix AI ✨
 
+<p align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Inter&weight=600&size=22&duration=2500&pause=800&color=7C3AED&center=true&vCenter=true&width=600&lines=AI+Chat+Engine+for+Real+Workflows;Fast+%E2%9A%A1+Smart+%F0%9F%A7%A0+Reliable;Built+with+Intent+%F0%9F%94%A5" />
+</p>
+
 ![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa\&logoColor=white)
 ![Offline Ready](https://img.shields.io/badge/Offline-Ready-10B981)
 ![Architecture](https://img.shields.io/badge/Architecture-AI%20Assisted-7C3AED)
@@ -13,10 +17,10 @@
 ## 🌐 Live Demo
 
 🚀 **Try it now:**
-👉 https://spectrix.netlify.app
+👉 [https://spectrix.netlify.app](https://spectrix.netlify.app)
 
 🌍 **Custom Domain:**
-👉 https://taezeem.is-a.dev/spectrix
+👉 [https://taezeem.is-a.dev/spectrix](https://taezeem.is-a.dev/spectrix)
 
 ---
 
@@ -31,7 +35,7 @@
 
 It delivers a **real-time, app-like experience** with streaming responses, voice interaction, and advanced math rendering — all inside a lightweight PWA.
 
-👉 **Short version:** *it cooks. 🔥*
+👉 **Short version:** *it cooks. consistently. 🔥*
 
 ---
 
@@ -52,24 +56,27 @@ Spectrix was built to fix that:
 All in one place.
 
 ---
+
 ## 📊 Development Stats (Live)
 
 * 🗓️ Built over **3 months**
 
 <div align="center">
 
-![Commits](https://img.shields.io/github/commit-activity/m/taezeem14/Spectrix?style=for-the-badge&color=7C3AED)
-![Last Commit](https://img.shields.io/github/last-commit/taezeem14/Spectrix?style=for-the-badge&color=10B981)
-![Repo Size](https://img.shields.io/github/repo-size/taezeem14/Spectrix?style=for-the-badge&color=2563EB)
-![Stars](https://img.shields.io/github/stars/taezeem14/Spectrix?style=for-the-badge&color=FACC15)
+![Commits](https://img.shields.io/github/commit-activity/m/taezeem14/Spectrix?style=for-the-badge\&color=7C3AED)
+![Last Commit](https://img.shields.io/github/last-commit/taezeem14/Spectrix?style=for-the-badge\&color=10B981)
+![Repo Size](https://img.shields.io/github/repo-size/taezeem14/Spectrix?style=for-the-badge\&color=2563EB)
+![Stars](https://img.shields.io/github/stars/taezeem14/Spectrix?style=for-the-badge\&color=FACC15)
+![Activity](https://img.shields.io/github/commit-activity/w/taezeem14/Spectrix?style=for-the-badge\&color=F59E0B)
 
 ![Deploy Status](https://api.netlify.com/api/v1/badges/ffee7a14-ee63-4633-b49f-388084446cdb/deploy-status)
 
 </div>
 
-* 🔁 Continuous iteration cycle  
+* 🔁 Continuous iteration cycle
 
 > build → test → deploy → refine
+
 ---
 
 ## 💡 How It Was Built
@@ -80,7 +87,7 @@ Spectrix follows an **AI-assisted engineering workflow**:
 * 🛠️ Code is manually refined & debugged
 * 🎯 Designed with performance + UX in mind
 
-> **AI is the tool — not the brain.**
+> **AI is the tool — not the decision-maker.**
 
 ---
 
