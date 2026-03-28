@@ -1,16 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+  xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
+  xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+  http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
+  <!-- 🏠 MAIN APP -->
+  <url>
+    <loc>https://spectrix.netlify.app/</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
 
-<url>
-  <loc>https://spectrix.netlify.app/</loc>
-  <lastmod>2026-03-28T12:50:01+00:00</lastmod>
-</url>
+  <!-- 📄 CORE META PAGES (virtual SEO routes) -->
+  <url>
+    <loc>https://spectrix.netlify.app/#home</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
 
+  <url>
+    <loc>https://spectrix.netlify.app/#chat</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>always</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://spectrix.netlify.app/#features</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://spectrix.netlify.app/#models</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://spectrix.netlify.app/#architecture</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 🧠 AI FEATURES -->
+  <url>
+    <loc>https://spectrix.netlify.app/#ai-engine</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://spectrix.netlify.app/#voice</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://spectrix.netlify.app/#math</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 📱 PWA / SYSTEM -->
+  <url>
+    <loc>https://spectrix.netlify.app/site.webmanifest</loc>
+    <lastmod>2026-03-15T10:00:00+00:00</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://spectrix.netlify.app/sw.js</loc>
+    <lastmod>2026-03-15T10:00:00+00:00</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+
+  <url>
+    <loc>https://spectrix.netlify.app/worker.js</loc>
+    <lastmod>2026-03-28T12:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- 🖼️ ICONS / BRAND ASSETS -->
+  <url>
+    <loc>https://spectrix.netlify.app/android-chrome-512x512.png</loc>
+    <lastmod>2026-02-20T10:00:00+00:00</lastmod>
+    <image:image>
+      <image:loc>https://spectrix.netlify.app/android-chrome-512x512.png</image:loc>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://spectrix.netlify.app/apple-touch-icon.png</loc>
+    <lastmod>2026-02-20T10:00:00+00:00</lastmod>
+    <image:image>
+      <image:loc>https://spectrix.netlify.app/apple-touch-icon.png</image:loc>
+    </image:image>
+  </url>
+
+  <!-- 🌍 ALT DOMAIN -->
+  <url>
+    <loc>https://taezeem.is-a.dev/spectrix</loc>
+    <lastmod>2026-03-28T12:50:01+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
 
 </urlset>
