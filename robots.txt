@@ -1,4 +1,0 @@
-User-agent: *
-Disallow: /
-
-# Spectrix AI – private app, not for indexing
