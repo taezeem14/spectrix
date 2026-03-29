@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Space+Grotesk&weight=800&size=28&duration=2000&pause=600&color=7C3AED&center=true&vCenter=true&width=700&lines=⚡+Spectrix+AI;Not+Just+Another+AI+Wrapper.;Built+for+Speed.+Built+for+Control.;Fast.+Smart.+Offline-Ready.+🔥" />
+<img src="https://readme-typing-svg.herokuapp.com?font=Space+Grotesk&weight=800&size=28&duration=2000&pause=600&color=7C3AED&center=true&vCenter=true&width=700&lines=⚡+Spectrix+AI;Not+Just+Another+AI+Wrapper.;Built+for+Speed.+Built+for+Control.;Fast.+Smart.+Offline-Ready.+🔥;Now+With+Persistent+AI+Memory.+🧠" />
 
 <br/>
 
@@ -12,6 +12,7 @@
 [![Backend](https://img.shields.io/badge/Backend-Cloudflare%20Workers-F6821F?style=for-the-badge&logo=cloudflare&logoColor=white)](https://spectrix.netlify.app)
 [![Models](https://img.shields.io/badge/Models-OpenRouter%20Multi--Model-7C3AED?style=for-the-badge&logo=openai&logoColor=white)](https://spectrix.netlify.app)
 [![Storage](https://img.shields.io/badge/Storage-IndexedDB-0EA5E9?style=for-the-badge&logo=databricks&logoColor=white)](https://spectrix.netlify.app)
+[![Memory](https://img.shields.io/badge/AI%20Memory-Persistent-7C3AED?style=for-the-badge&logo=brain&logoColor=white)](https://spectrix.netlify.app)
 
 <br/>
 
@@ -46,6 +47,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - 🧮 Full LaTeX math rendering (KaTeX + MathJax)
 - 📡 Offline-first architecture with IndexedDB persistence
 - 🎤 Voice I/O with Web Speech API
+- 🧠 **Persistent AI Memory** — remembers you across conversations
 
 > **Short version:** *it cooks. consistently. 🔥*
 
@@ -73,6 +75,15 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Smart API key rotation** — maximizes uptime & rate limit handling
 - **Web search mode** — powered by Firecrawl via OpenRouter
 
+### 🧠 AI Memory (NEW)
+- **Persistent memory** across conversations — the AI remembers you
+- **Auto-extraction** — learns your name, preferences, interests, goals automatically
+- **Manual memory** — add facts yourself via the 🧠 memory panel
+- **Memory categories** — personal, preference, technical, interest, context
+- **Full control** — view, delete individual memories, or clear all
+- **Toggle on/off** — enable or disable auto-learning anytime
+- **IndexedDB-powered** — zero server dependency, fully local & private
+
 ### 🎤 Voice & Interaction
 - **Voice input** (Web Speech API)
 - **Text-to-Speech** output
@@ -88,6 +99,30 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Offline-ready** — service worker caching
 - **Persistent chat history** — IndexedDB storage
 - **/img & /vid commands** — media generation
+
+---
+
+## 🧠 AI Memory — How It Works
+
+```
+User sends message
+    │
+    ├── AI responds normally
+    │
+    └── Background: Memory Extraction
+          │
+          ├── Analyzes conversation for user facts
+          ├── Deduplicates against existing memories
+          ├── Categorizes (personal/preference/technical/etc.)
+          └── Saves to IndexedDB → 'memories' store
+                │
+                └── Next conversation
+                      │
+                      └── Memories injected into system prompt
+                            → AI uses context naturally
+```
+
+> 🔒 All memories stored **locally in your browser**. Nothing leaves your device. Period.
 
 ---
 
@@ -109,6 +144,7 @@ User Browser
     │
     ├── PWA (HTML/CSS/JS)
     │     ├── IndexedDB  →  Chat persistence
+    │     ├── IndexedDB  →  AI Memory (persistent user context)
     │     ├── Service Worker  →  Offline support
     │     ├── Web Speech API  →  Voice I/O
     │     └── KaTeX + MathJax  →  Math rendering
@@ -147,7 +183,7 @@ http://127.0.0.1:5500
 | Layer | Tech |
 |-------|------|
 | Frontend | HTML, CSS, Vanilla JavaScript |
-| Storage | IndexedDB |
+| Storage | IndexedDB (chats + AI memory) |
 | PWA | Service Workers |
 | Voice | Web Speech API |
 | Math | KaTeX + MathJax |
@@ -163,7 +199,7 @@ http://127.0.0.1:5500
 - 📚 **Students** — solve problems, get explanations, render math cleanly
 - 💻 **Developers** — debug code, generate snippets, ask technical questions
 - 🧠 **Researchers** — web search + reasoning mode for deep dives
-- ⚡ **Everyone** — fast, reliable AI without the bloat
+- ⚡ **Everyone** — fast, reliable AI that actually *remembers* you
 
 ---
 
@@ -203,4 +239,4 @@ Idea  →  AI generates core logic
 
 If Spectrix helped you — drop a ⭐ on the repo. It means a lot. 🙏
 
-> *Not just another AI wrapper. A system built for speed, control, and real-world use.* ⚡
+> *Not just another AI wrapper. A system built for speed, control, memory, and real-world use.* ⚡

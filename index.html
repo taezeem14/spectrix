@@ -1241,6 +1241,269 @@ body.dark .voice-btn.recording {
 }
 
 
+/* ===== AI MEMORY PANEL ===== */
+.memory-toggle {
+  position: relative;
+}
+
+.memory-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.memory-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: min(92vw, 520px);
+  max-height: 80vh;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 1100;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  backdrop-filter: blur(20px);
+}
+
+.memory-panel.visible {
+  display: flex;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.memory-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(59,130,246,0.08));
+}
+
+.memory-panel-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.memory-panel-header .memory-count {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.memory-panel-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.memory-panel-actions button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.memory-panel-actions button:hover {
+  border-color: var(--user);
+  background: var(--accent-glow);
+}
+
+.memory-panel-actions button.danger:hover {
+  border-color: #ef4444;
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+}
+
+.memory-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memory-list::-webkit-scrollbar { width: 4px; }
+.memory-list::-webkit-scrollbar-track { background: transparent; }
+.memory-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.memory-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--chat);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  line-height: 1.5;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.memory-item:hover {
+  border-color: rgba(124,58,237,0.3);
+  background: rgba(124,58,237,0.04);
+}
+
+.memory-item .memory-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.memory-item .memory-text {
+  flex: 1;
+  color: var(--text);
+}
+
+.memory-item .memory-date {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.memory-item .memory-delete {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.memory-item:hover .memory-delete {
+  opacity: 1;
+}
+
+.memory-item .memory-delete:hover {
+  color: #ef4444;
+}
+
+.memory-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  text-align: center;
+  gap: 8px;
+}
+
+.memory-empty .empty-icon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.memory-empty .empty-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.memory-empty .empty-hint {
+  font-size: 12px;
+  opacity: 0.7;
+  max-width: 280px;
+}
+
+.memory-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1099;
+  display: none;
+  backdrop-filter: blur(4px);
+}
+
+.memory-overlay.visible {
+  display: block;
+}
+
+.memory-toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.memory-toggle-switch label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.memory-toggle-switch input[type="checkbox"] {
+  width: 36px;
+  height: 20px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--border);
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  padding: 0;
+}
+
+.memory-toggle-switch input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.memory-toggle-switch input[type="checkbox"]:checked {
+  background: #7c3aed;
+}
+
+.memory-toggle-switch input[type="checkbox"]:checked::after {
+  transform: translateX(16px);
+}
+
 </style>
 
 <style>
@@ -1302,6 +1565,7 @@ body.dark .voice-btn.recording {
         <button class="toggle" onclick="exportChat()" aria-label="Export current chat">💾</button>
         <button class="toggle" onclick="copyAll()" aria-label="Copy all messages">📋</button>
         <button class="toggle" onclick="clearChat()" aria-label="Clear current chat">🗑️</button>
+        <button class="toggle memory-toggle" onclick="toggleMemoryPanel()" aria-label="AI Memory" title="AI Memory">🧠<span class="memory-badge" id="memoryBadge" style="display:none;">0</span></button>
         <button class="toggle" onclick="toggleTheme()" aria-label="Toggle theme">🌗</button>
         <button class="toggle tts-toggle" id="ttsToggle" onclick="toggleTTS()" title="Toggle Text-to-Speech">🔊</button>
         <div class="select-wrap">
@@ -1337,12 +1601,32 @@ body.dark .voice-btn.recording {
   </div>
 </div>
 
+<!-- AI MEMORY PANEL -->
+<div class="memory-overlay" id="memoryOverlay" onclick="toggleMemoryPanel()"></div>
+<div class="memory-panel" id="memoryPanel">
+  <div class="memory-panel-header">
+    <h3>🧠 AI Memory <span class="memory-count" id="memoryPanelCount"></span></h3>
+    <div class="memory-panel-actions">
+      <button onclick="addManualMemory()">+ Add</button>
+      <button class="danger" onclick="clearAllMemories()">Clear All</button>
+      <button onclick="toggleMemoryPanel()">✕</button>
+    </div>
+  </div>
+  <div class="memory-list" id="memoryList"></div>
+  <div class="memory-toggle-switch">
+    <label>
+      <input type="checkbox" id="memoryEnabled" checked onchange="toggleMemoryEnabled()">
+      <span>Auto-learn from conversations</span>
+    </label>
+  </div>
+</div>
+
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
 // ===== INDEXEDDB SETUP =====
 const DB_NAME = 'Spectrix_DB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 let db = null;
 
 async function openDB() {
@@ -1366,6 +1650,13 @@ async function openDB() {
       
       if (!database.objectStoreNames.contains('media')) {
         database.createObjectStore('media', { keyPath: 'id' });
+      }
+
+      // v2: AI Memory store
+      if (!database.objectStoreNames.contains('memories')) {
+        const memStore = database.createObjectStore('memories', { keyPath: 'id' });
+        memStore.createIndex('timestamp', 'timestamp', { unique: false });
+        memStore.createIndex('category', 'category', { unique: false });
       }
     };
   });
@@ -1437,6 +1728,51 @@ async function getMedia(id) {
   });
 }
 
+// ===== AI MEMORY INDEXEDDB OPERATIONS =====
+async function saveMemory(memoryData) {
+  if (!db) await openDB();
+  const tx = db.transaction('memories', 'readwrite');
+  const store = tx.objectStore('memories');
+  store.put(memoryData);
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getAllMemories() {
+  if (!db) await openDB();
+  const tx = db.transaction('memories', 'readonly');
+  const store = tx.objectStore('memories');
+  return new Promise((resolve, reject) => {
+    const request = store.getAll();
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function deleteMemory(id) {
+  if (!db) await openDB();
+  const tx = db.transaction('memories', 'readwrite');
+  const store = tx.objectStore('memories');
+  store.delete(id);
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function clearAllMemoriesFromDB() {
+  if (!db) await openDB();
+  const tx = db.transaction('memories', 'readwrite');
+  const store = tx.objectStore('memories');
+  store.clear();
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 // ===== GLOBALS =====
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
@@ -1451,6 +1787,7 @@ const PREPOPUP_KEY = "spectrix_prepopup_clicked";
 const THEME_KEY = "Spectrix_theme";
 const TTS_KEY = 'Spectrix_tts';
 const IOS_HINT_KEY = 'Spectrix_ios_hint_dismissed';
+const MEMORY_ENABLED_KEY = 'Spectrix_memory_enabled';
 const MAX_PROMPT_CHARS = 8000;
 const MATH_FORMAT_SYSTEM_PROMPT = `
 When writing mathematics, use valid MathJax / KaTeX LaTeX syntax.
@@ -1475,6 +1812,7 @@ let lastUserPrompt = null;
 let isGenerating = false;
 let installPrompt;
 let webSearchEnabled = false;
+let memoryEnabled = localStorage.getItem(MEMORY_ENABLED_KEY) !== 'false';
 const themeColorMeta = document.getElementById('themeColorMeta');
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1522,6 +1860,7 @@ async function initApp() {
   initTextModelDropdown();
   initCompatibilityEnhancements();
   updateThemeColorMeta();
+  initMemorySystem();
 }
 
 
@@ -2902,7 +3241,15 @@ async function send(options = {}) {
         .filter(m => typeof m.content === "string")
         .map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.content }));
 
-      messages.unshift({ role: "system", content: MATH_FORMAT_SYSTEM_PROMPT });
+      // 🧠 Build system prompt with memory context
+      let systemPrompt = MATH_FORMAT_SYSTEM_PROMPT;
+      if (memoryEnabled) {
+        const memoryContext = await buildMemoryContext();
+        if (memoryContext) {
+          systemPrompt += '\n' + memoryContext;
+        }
+      }
+      messages.unshift({ role: "system", content: systemPrompt });
 
       if (!skipUserSave) {
         messages.push({ role: "user", content: prompt });
@@ -2950,6 +3297,11 @@ const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
         } catch (err) {
           console.error("Auto-title fallback:", err);
         }
+      }
+
+      // 🧠 Extract memories from this exchange
+      if (memoryEnabled) {
+        extractMemories(prompt, answer).catch(err => console.warn('Memory extraction failed:', err));
       }
     }
   } catch (err) {
@@ -3083,6 +3435,239 @@ function initEventListeners() {
       searchBox.focus();
     }
   });
+}
+
+// ===== AI MEMORY SYSTEM =====
+const MEMORY_CATEGORIES = {
+  personal: '👤',
+  preference: '⭐',
+  technical: '💻',
+  interest: '🎯',
+  context: '📌',
+  general: '🧠'
+};
+
+async function initMemorySystem() {
+  const toggle = document.getElementById('memoryEnabled');
+  if (toggle) toggle.checked = memoryEnabled;
+  await updateMemoryBadge();
+}
+
+function toggleMemoryEnabled() {
+  memoryEnabled = !memoryEnabled;
+  localStorage.setItem(MEMORY_ENABLED_KEY, memoryEnabled);
+  const toggle = document.getElementById('memoryEnabled');
+  if (toggle) toggle.checked = memoryEnabled;
+}
+
+async function toggleMemoryPanel() {
+  const panel = document.getElementById('memoryPanel');
+  const overlay = document.getElementById('memoryOverlay');
+  if (!panel || !overlay) return;
+
+  const isVisible = panel.classList.contains('visible');
+  if (isVisible) {
+    panel.classList.remove('visible');
+    overlay.classList.remove('visible');
+  } else {
+    await renderMemoryList();
+    panel.classList.add('visible');
+    overlay.classList.add('visible');
+  }
+}
+
+async function renderMemoryList() {
+  const list = document.getElementById('memoryList');
+  const countEl = document.getElementById('memoryPanelCount');
+  if (!list) return;
+
+  const memories = await getAllMemories();
+  memories.sort((a, b) => b.timestamp - a.timestamp);
+
+  if (countEl) countEl.textContent = `(${memories.length})`;
+
+  if (memories.length === 0) {
+    list.innerHTML = `
+      <div class="memory-empty">
+        <div class="empty-icon">🧠</div>
+        <div class="empty-text">No memories yet</div>
+        <div class="empty-hint">Chat with AI and it will automatically remember important things about you.</div>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = '';
+  memories.forEach(mem => {
+    const item = document.createElement('div');
+    item.className = 'memory-item';
+
+    const icon = document.createElement('span');
+    icon.className = 'memory-icon';
+    icon.textContent = MEMORY_CATEGORIES[mem.category] || '🧠';
+
+    const text = document.createElement('span');
+    text.className = 'memory-text';
+    text.textContent = mem.content;
+
+    const date = document.createElement('span');
+    date.className = 'memory-date';
+    date.textContent = new Date(mem.timestamp).toLocaleDateString();
+
+    const del = document.createElement('button');
+    del.className = 'memory-delete';
+    del.textContent = '✕';
+    del.onclick = async () => {
+      await deleteMemory(mem.id);
+      await renderMemoryList();
+      await updateMemoryBadge();
+    };
+
+    item.appendChild(icon);
+    item.appendChild(text);
+    item.appendChild(date);
+    item.appendChild(del);
+    list.appendChild(item);
+  });
+}
+
+async function updateMemoryBadge() {
+  const badge = document.getElementById('memoryBadge');
+  if (!badge) return;
+  const memories = await getAllMemories();
+  if (memories.length > 0) {
+    badge.textContent = memories.length;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function addManualMemory() {
+  const content = prompt('What should the AI remember about you?');
+  if (!content || !content.trim()) return;
+
+  const memory = {
+    id: 'mem_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    content: content.trim(),
+    category: 'personal',
+    timestamp: Date.now(),
+    source: 'manual'
+  };
+
+  await saveMemory(memory);
+  await renderMemoryList();
+  await updateMemoryBadge();
+  showStatus('Memory saved 🧠');
+}
+
+async function clearAllMemories() {
+  if (!confirm('Delete all AI memories? This cannot be undone. 💀')) return;
+  await clearAllMemoriesFromDB();
+  await renderMemoryList();
+  await updateMemoryBadge();
+  showStatus('All memories cleared 🗑️');
+}
+
+async function buildMemoryContext() {
+  try {
+    const memories = await getAllMemories();
+    if (memories.length === 0) return '';
+
+    const memLines = memories
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 30)
+      .map(m => `- ${m.content}`)
+      .join('\n');
+
+    return `
+## User Memory Context
+You have persistent memory about this user. Use this context to personalize your responses.
+Do NOT repeat these facts back to the user unless relevant. Use them naturally.
+
+${memLines}
+`;
+  } catch (err) {
+    console.warn('Failed to build memory context:', err);
+    return '';
+  }
+}
+
+async function extractMemories(userMessage, botReply) {
+  try {
+    const existingMemories = await getAllMemories();
+    const existingFacts = existingMemories.map(m => m.content.toLowerCase());
+
+    const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      timeoutMs: 18000,
+      body: JSON.stringify({
+        model: FIXED_TEXT_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a memory extraction system. Analyze the conversation and extract ONLY genuinely memorable user facts.
+
+Rules:
+- Extract facts about the USER only (name, age, location, job, preferences, interests, goals, technical stack, learning topics).
+- Do NOT extract facts about the AI or generic conversation topics.
+- Do NOT extract greetings, pleasantries, or trivial exchanges.
+- Each fact must be a concise statement (under 15 words).
+- Categorize each fact: personal, preference, technical, interest, context, general.
+- If nothing worth remembering, respond with EXACTLY: NONE
+- Format: category|fact
+- One fact per line. Max 3 facts.
+
+Existing memories (avoid duplicates):
+${existingFacts.slice(0, 20).join('\n')}`
+          },
+          {
+            role: 'user',
+            content: `User said: ${userMessage.slice(0, 500)}\nAssistant replied: ${botReply.slice(0, 500)}\n\nExtract memorable facts about the user:`
+          }
+        ]
+      })
+    });
+
+    const data = await res.json();
+    const rawOutput = data?.choices?.[0]?.message?.content?.trim();
+
+    if (!rawOutput || rawOutput.toUpperCase() === 'NONE') return;
+
+    const lines = rawOutput.split('\n').filter(l => l.includes('|'));
+    let saved = 0;
+
+    for (const line of lines) {
+      const parts = line.split('|').map(s => s.trim());
+      if (parts.length < 2) continue;
+
+      const category = parts[0].toLowerCase().replace(/[^a-z]/g, '');
+      const fact = parts[1];
+
+      if (!fact || fact.length < 4 || fact.length > 200) continue;
+      if (existingFacts.some(ef => ef === fact.toLowerCase() || ef.includes(fact.toLowerCase().slice(0, 20)))) continue;
+      if (!MEMORY_CATEGORIES[category] && !MEMORY_CATEGORIES.general) continue;
+
+      const memory = {
+        id: 'mem_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+        content: fact,
+        category: MEMORY_CATEGORIES[category] ? category : 'general',
+        timestamp: Date.now(),
+        source: 'auto'
+      };
+
+      await saveMemory(memory);
+      saved++;
+      if (saved >= 3) break;
+    }
+
+    if (saved > 0) {
+      await updateMemoryBadge();
+    }
+  } catch (err) {
+    console.warn('Memory extraction error:', err);
+  }
 }
 
 // Initialize the text model dropdown, wire selection to FIXED_TEXT_MODEL and persist
