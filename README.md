@@ -1,5 +1,5 @@
 <div align="center">
-
+    
 <img src="https://readme-typing-svg.herokuapp.com?font=Space+Grotesk&weight=800&size=28&duration=2000&pause=600&color=02e3d4&center=true&vCenter=true&width=700&lines=⚡+Spectrix+AI;Not+Just+Another+AI+Wrapper.;Built+for+Speed.+Built+for+Control.;Fast.+Smart.+Offline-Ready.+🔥;Now+With+Persistent+AI+Memory.+🧠" />
 
 <br/>
