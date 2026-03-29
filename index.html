@@ -3347,9 +3347,14 @@ const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
   body: JSON.stringify(payload)
 }, 1);
 
-      loading.remove();
-	const answer = await streamResponse(res, getCurrentSession());
-	isGenerating = false;
+    const text = await res.text();
+let data;
+try { data = JSON.parse(text); } catch { throw new Error("Server returned invalid response"); }
+
+const answer = data.choices?.[0]?.message?.content || `💀 Empty response from ${model}`;
+loading.remove();
+await streamBotInChunks(answer);
+isGenerating = false;
 
      if (shouldAutoTitle) {
   // Mark as titled IMMEDIATELY to prevent double-firing
