@@ -3316,8 +3316,10 @@ const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
 
       // 🧠 Extract memories from this exchange
       if (memoryEnabled) {
-        extractMemories(prompt, answer).catch(err => console.warn('Memory extraction failed:', err));
-      }
+  			setTimeout(() => {
+    		extractMemories(prompt, answer).catch(err => console.warn('Memory extraction failed:', err));
+ 		 }, 3000);
+		}
     }
   } catch (err) {
     console.error("Send error:", err);
@@ -3636,12 +3638,12 @@ Rules:
 - Do NOT extract facts about the AI or generic conversation topics.
 - Do NOT extract greetings, pleasantries, or trivial exchanges.
 - Each fact must be a concise statement (under 15 words).
-- Categorize each fact: personal, preference, technical, interest, context, general.
+- Categorize each fact using ONLY one of these exact words: personal, preference, technical, interest, context, general
 - If nothing worth remembering, respond with EXACTLY: NONE
 - Format: category|fact
 - One fact per line. Max 3 facts.
 
-Existing memories (avoid duplicates):
+Existing memories (avoid near-duplicates):
 ${existingFacts.slice(0, 20).join('\n')}`
           },
           {
@@ -3664,28 +3666,43 @@ ${existingFacts.slice(0, 20).join('\n')}`
       const parts = line.split('|').map(s => s.trim());
       if (parts.length < 2) continue;
 
-      const category = parts[0].toLowerCase().replace(/[^a-z]/g, '');
+      // FIX 2: properly validate category
+      const rawCat = parts[0].toLowerCase().replace(/[^a-z]/g, '');
+      const category = MEMORY_CATEGORIES[rawCat] ? rawCat : 'general';
       const fact = parts[1];
 
       if (!fact || fact.length < 4 || fact.length > 200) continue;
-      if (existingFacts.some(ef => ef === fact.toLowerCase() || ef.includes(fact.toLowerCase().slice(0, 20)))) continue;
-      if (!MEMORY_CATEGORIES[category] && !MEMORY_CATEGORIES.general) continue;
+
+      // FIX 3: stricter but fairer duplicate check (full string match, not substring)
+      const factLower = fact.toLowerCase();
+      const isDuplicate = existingFacts.some(ef => {
+        if (ef === factLower) return true;
+        // Only block if >80% of words overlap
+        const efWords = new Set(ef.split(' '));
+        const factWords = factLower.split(' ');
+        const overlap = factWords.filter(w => w.length > 3 && efWords.has(w)).length;
+        return overlap >= Math.ceil(factWords.length * 0.8);
+      });
+
+      if (isDuplicate) continue;
 
       const memory = {
         id: 'mem_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
         content: fact,
-        category: MEMORY_CATEGORIES[category] ? category : 'general',
+        category,
         timestamp: Date.now(),
         source: 'auto'
       };
 
       await saveMemory(memory);
+      existingFacts.push(factLower); // prevent within-batch duplicates
       saved++;
       if (saved >= 3) break;
     }
 
     if (saved > 0) {
       await updateMemoryBadge();
+      console.log(`🧠 Saved ${saved} new memories`);
     }
   } catch (err) {
     console.warn('Memory extraction error:', err);
