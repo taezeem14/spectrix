@@ -162,10 +162,6 @@ export default {
           return new Response(JSON.stringify({ error: "OpenRouter API keys not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
-        // Randomly select one of the available keys to balance the load
-        const randomIndex = Math.floor(Math.random() * keys.length);
-        const API_KEY = keys[randomIndex];
-
         const selectedModel = model || "nvidia/nemotron-3-super-120b-a12b:free";
         const finalMessages = [mergedSystemPrompt, ...clientMessages];
 
@@ -175,13 +171,43 @@ export default {
           max_tokens: selectedModel.includes("deepseek") ? 2048 : 4096,
           reasoning: selectedModel.includes("deepseek") ? { effort: "low" } : undefined,
           plugins: body.plugins
-        };        
-        
-        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        };
+
+        // Retry with exponential backoff on 429 (rate limit) from upstream
+        const MAX_RETRIES = 3;
+        let lastRes = null;
+
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+          // Pick a different key on each retry to spread load
+          const keyIndex = (Math.floor(Math.random() * keys.length) + attempt) % keys.length;
+          const API_KEY = keys[keyIndex];
+
+          lastRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (lastRes.status !== 429) break;
+
+          // On 429, wait with exponential backoff before retrying
+          if (attempt < MAX_RETRIES - 1) {
+            const backoffMs = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
+            await new Promise(r => setTimeout(r, backoffMs));
+          }
+        }
+
+        const res = lastRes;
+
+        // If still 429 after all retries, return a helpful error
+        if (res.status === 429) {
+          const retryAfter = res.headers.get("retry-after");
+          const errorBody = {
+            error: { message: "Rate limited by AI provider. Please wait a moment and try again.", code: 429 },
+            retryAfter: retryAfter ? parseInt(retryAfter, 10) : 30
+          };
+          return new Response(JSON.stringify(errorBody), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
 
         const contentType = res.headers.get("content-type") || "";
         let data;

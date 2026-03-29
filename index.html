@@ -2899,6 +2899,19 @@ async function fetchWithTimeoutRetry(url, options = {}, retryCount = 1) {
       });
       clearTimeout(timeoutHandle);
 
+      // Special handling for 429 — don't retry, the worker already retried
+      if (response.status === 429) {
+        let retryAfter = 30;
+        try {
+          const errBody = await response.clone().json();
+          if (errBody.retryAfter) retryAfter = errBody.retryAfter;
+        } catch {}
+        const err = new Error(`Rate limited — please wait ~${retryAfter}s and try again.`);
+        err.isRateLimit = true;
+        err.retryAfter = retryAfter;
+        throw err;
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -2906,9 +2919,12 @@ async function fetchWithTimeoutRetry(url, options = {}, retryCount = 1) {
       return response;
     } catch (error) {
       clearTimeout(timeoutHandle);
+      // Don't retry rate limit errors — propagate immediately
+      if (error.isRateLimit) throw error;
       lastError = error;
       if (attempt < retryCount) {
-        await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt), 8000);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
       }
     }
   }
@@ -3308,7 +3324,14 @@ const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
     console.error("Send error:", err);
     isGenerating = false;
     loading.remove();
-    render("bot", "**Error generating response 💀** " + err.message);
+
+    if (err.isRateLimit) {
+      const secs = err.retryAfter || 30;
+      const rateLimitMsg = `**⏳ Whoa, slow down bro!** The AI provider is rate-limiting us right now.\n\nTry again in about **${secs} seconds**. This usually happens when too many requests are sent in a short time.\n\n> 💡 *Tip: Wait a moment, then tap 🔄 Retry below.*`;
+      render("bot", rateLimitMsg);
+    } else {
+      render("bot", "**Error generating response 💀** " + err.message);
+    }
   }
 }
 
