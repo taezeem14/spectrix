@@ -169,7 +169,6 @@ export default {
           model: selectedModel,
           messages: finalMessages,
           max_tokens: selectedModel.includes("deepseek") ? 2048 : 4096,
-          stream: true,
           reasoning: selectedModel.includes("deepseek") ? { effort: "low" } : undefined,
           plugins: body.plugins
         };
@@ -223,16 +222,15 @@ export default {
           });
         }
 
-        // ✅ PIPE THE SSE STREAM STRAIGHT THROUGH TO THE CLIENT
-        return new Response(res.body, {
-          status: 200,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no"   // disables nginx buffering if present
-          }
-        });
+       const contentType = res.headers.get("content-type") || "";
+let data;
+if (contentType.includes("application/json")) {
+  data = await res.json().catch(() => ({ error: "upstream returned invalid json" }));
+} else {
+  data = await res.text();
+}
+const bodyStr = typeof data === "string" ? data : JSON.stringify(data);
+return new Response(bodyStr, { status: res.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
