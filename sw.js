@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_PREFIX = 'spectrix';
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const PAGE_CACHE = `${CACHE_PREFIX}-pages-${CACHE_VERSION}`;
@@ -166,9 +166,15 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.destination === 'image') {
-    event.respondWith(cacheFirst(request, IMAGE_CACHE, MAX_IMAGE_ITEMS));
+  // Use staleWhileRevalidate for favicons so they always update
+  const isFavicon = url.pathname.includes('favicon') || url.pathname.includes('apple-touch-icon') || url.pathname.includes('android-chrome');
+  if (isFavicon) {
+    event.respondWith(staleWhileRevalidate(event, SHELL_CACHE, null));
     return;
   }
+  event.respondWith(cacheFirst(request, IMAGE_CACHE, MAX_IMAGE_ITEMS));
+  return;
+}
 
   const isStaticAsset = ['style', 'script', 'font', 'manifest'].includes(request.destination);
   if (isStaticAsset || url.origin === self.location.origin) {
