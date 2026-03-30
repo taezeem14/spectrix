@@ -1995,9 +1995,10 @@ if (!ttsEnabled && currentUtterance) {
     window.speechSynthesis.cancel();
   } else if (ttsEnabled && 'speechSynthesis' in window) {
     // ADD THIS:
-    const u = new SpeechSynthesisUtterance('');
-    u.volume = 0;
-    window.speechSynthesis.speak(u);
+const u = new SpeechSynthesisUtterance(' ');
+u.volume = 0;
+window.speechSynthesis.speak(u);
+if (window.speechSynthesis.state === 'paused') window.speechSynthesis.resume();
   }
 }
 
@@ -2005,7 +2006,9 @@ function speakText(text) {
   if (!ttsEnabled || !('speechSynthesis' in window)) return;
 
   // Force-clear any stuck queue
+  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
   window.speechSynthesis.cancel();
+  }
 
   const cleanText = text
     .replace(/\*\*/g, ' ')
@@ -3229,9 +3232,10 @@ async function send(options = {}) {
   }
 
 	if (ttsEnabled && 'speechSynthesis' in window) {
-    const u = new SpeechSynthesisUtterance('');
-    u.volume = 0;
-    window.speechSynthesis.speak(u);
+	const u = new SpeechSynthesisUtterance(' ');
+	u.volume = 0;
+	window.speechSynthesis.speak(u);
+	if (window.speechSynthesis.state === 'paused') window.speechSynthesis.resume();
   }
 
   let prompt = String(promptOverride ?? input.value).trim();
