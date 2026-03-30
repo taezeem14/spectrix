@@ -1991,8 +1991,13 @@ function toggleTTS() {
   btn.classList.toggle('active', ttsEnabled);
   btn.textContent = ttsEnabled ? '🔊' : '🔇';
   
-  if (!ttsEnabled && currentUtterance) {
+if (!ttsEnabled && currentUtterance) {
     window.speechSynthesis.cancel();
+  } else if (ttsEnabled && 'speechSynthesis' in window) {
+    // ADD THIS:
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    window.speechSynthesis.speak(u);
   }
 }
 
@@ -2026,12 +2031,14 @@ function speakText(text) {
     currentUtterance.pitch = 1;
     currentUtterance.volume = 0.9;
 
-    const speak = () => {
-      const voices = speechSynthesis.getVoices();
-      const enVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-      if (enVoice) currentUtterance.voice = enVoice;
-      window.speechSynthesis.speak(currentUtterance);
-    };
+	const speak = () => {
+  	const voices = speechSynthesis.getVoices();
+  	const enVoice = voices.find(v => v.lang.startsWith('en') && v.localService)
+               	|| voices.find(v => v.lang.startsWith('en'))
+               	|| voices[0];
+  	if (enVoice) currentUtterance.voice = enVoice;
+  	window.speechSynthesis.speak(currentUtterance);
+	};
 
     if (speechSynthesis.getVoices().length > 0) {
       speak();
@@ -3219,6 +3226,12 @@ async function send(options = {}) {
   if (isGenerating) {
     alert("Generation already in progress");
     return;
+  }
+
+	if (ttsEnabled && 'speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    window.speechSynthesis.speak(u);
   }
 
   let prompt = String(promptOverride ?? input.value).trim();
