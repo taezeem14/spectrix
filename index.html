@@ -3312,12 +3312,10 @@ async function send(options = {}) {
 
       // 🧠 Build system prompt with memory context
       let systemPrompt = MATH_FORMAT_SYSTEM_PROMPT;
-      if (memoryEnabled) {
-        const memoryContext = await buildMemoryContext();
-        if (memoryContext) {
-          systemPrompt += '\n' + memoryContext;
-        }
-      }
+	  const memoryContext = await buildMemoryContext();
+  		if (memoryContext) {
+  		systemPrompt += '\n' + memoryContext;
+		}
       messages.unshift({ role: "system", content: systemPrompt });
 
       if (!skipUserSave) {
