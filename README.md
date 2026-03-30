@@ -58,7 +58,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 | Stat | Value |
 |------|-------|
 | 🗓️ Build Duration | 3 months |
-| 🔁 Commits | 500+ |
+| 🔁 Commits | 530+ |
 | 🚀 Deployments | 250+ |
 | 📦 Framework | None (Vanilla JS) |
 | ⚙️ Backend | Cloudflare Workers |
