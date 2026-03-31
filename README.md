@@ -155,6 +155,7 @@ User Browser
           ├── Request proxying
           └── OpenRouter  →  Multi-model AI routing
                               ├── step-3.5-flash (Quick)
+                              ├── qwen 3.6 plus (fast)
                               └── nemotron-120b (Reasoning)
 ```
 
