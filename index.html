@@ -2493,7 +2493,7 @@ function copyAll() {
   let text = "";
   session.messages.forEach(m => {
     if (typeof m.content === "string") {
-      text += `${m.role.toUpperCase()}: ${m.content}\n\n`;
+      text += `${m.role === "bot" ? "SPECTRIX" : "YOU"}: ${m.content}\n\n`;
     }
   });
   
