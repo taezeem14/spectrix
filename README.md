@@ -132,6 +132,7 @@ User sends message
 |------|-------|----------|
 | ⚡ Quick | `stepfun/step-3.5-flash:free` | Everyday use, fast replies |
 | 🧠 Reasoning | `nvidia/nemotron-3-super-120b-a12b:free` | Complex problems, deep reasoning |
+| 🚀 Smart | `qwen/qwen3.6-plus-preview:free` | Agentic tasks, frontend dev, fast + smart |
 
 > 💾 Preference saved to `localStorage → Spectrix_text_model`
 
