@@ -169,7 +169,7 @@ export default {
           model: selectedModel,
           messages: finalMessages,
           max_tokens: selectedModel.includes("deepseek") ? 2048 : 4096,
-          reasoning: selectedModel.includes("deepseek") ? { effort: "low" } : undefined,
+          ...(selectedModel.includes("deepseek") ? { reasoning: { effort: "low" } } : {}),
           plugins: body.plugins
         };
 

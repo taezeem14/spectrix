@@ -20,7 +20,7 @@ const APP_SHELL = [
 ];
 
 const WORKER_HOST = ['hac', 'koai-worker.tariqmtaezeem.workers.dev'].join('');
-const BYPASS_HOSTS = [WORKER_HOST, 'puter.com'];
+const BYPASS_HOSTS = [WORKER_HOST, 'puter.com', 'firestore.googleapis.com', 'www.googleapis.com'];
 const MAX_ASSET_ITEMS = 180;
 const MAX_IMAGE_ITEMS = 100;
 
@@ -81,7 +81,7 @@ async function staleWhileRevalidate(event, cacheName, maxItems) {
       }
       return response;
     })
-    .catch(() => cached);
+    .catch(() => cached || Response.error());
 
   if (cached) {
     event.waitUntil(networkPromise);
@@ -158,6 +158,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+  if (!['http:', 'https:'].includes(url.protocol)) return;
   if (shouldBypass(url)) return;
 
   if (request.mode === 'navigate') {

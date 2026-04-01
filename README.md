@@ -11,7 +11,7 @@
 [![Math](https://img.shields.io/badge/Math-KaTeX%20%2B%20MathJax-2563EB?style=for-the-badge&logo=latex&logoColor=white)](https://spectrix.netlify.app)
 [![Backend](https://img.shields.io/badge/Backend-Cloudflare%20Workers-F6821F?style=for-the-badge&logo=cloudflare&logoColor=white)](https://spectrix.netlify.app)
 [![Models](https://img.shields.io/badge/Models-OpenRouter%20Multi--Model-7C3AED?style=for-the-badge&logo=openai&logoColor=white)](https://spectrix.netlify.app)
-[![Storage](https://img.shields.io/badge/Storage-IndexedDB-0EA5E9?style=for-the-badge&logo=databricks&logoColor=white)](https://spectrix.netlify.app)
+[![Storage](https://img.shields.io/badge/Storage-IndexedDB%20%2B%20Firebase%20Backup-0EA5E9?style=for-the-badge&logo=databricks&logoColor=white)](https://spectrix.netlify.app)
 [![Memory](https://img.shields.io/badge/AI%20Memory-Persistent-7C3AED?style=for-the-badge&logo=brain&logoColor=white)](https://spectrix.netlify.app)
 
 <br/>
@@ -33,7 +33,7 @@
 | 🚀 [spectrix.netlify.app](https://spectrix.netlify.app) | Primary deployment |
 | 🌍 [taezeem.is-a.dev/spectrix](https://taezeem.is-a.dev/spectrix) | Custom domain mirror |
 
-> ⚡ No login needed. Just open and go.
+> ⚡ Local-first by default. Sign in with Google to enable cloud backup + multi-device sync.
 
 ---
 
@@ -59,7 +59,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 |------|-------|
 | 🗓️ Build Duration | 3 months |
 | 🔁 Commits | 530+ |
-| 🚀 Deployments | 250+ |
+| 🚀 Deployments | 280+ |
 | 📦 Framework | None (Vanilla JS) |
 | ⚙️ Backend | Cloudflare Workers |
 
@@ -88,6 +88,8 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Voice input** (Web Speech API)
 - **Text-to-Speech** output
 - **Retry + Edit system** for messages
+- **Keyboard shortcuts** — `Ctrl+B` / `Cmd+B` starts a new chat
+- **No crusty browser popups** — clean in-app modals for alerts, confirms, and prompts
 
 ### 🧮 Math & Code
 - **KaTeX + MathJax** dual-engine math rendering
@@ -95,9 +97,19 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Markdown** full support
 
 ### 📱 App Experience
+- **Google Sign-In via Firebase Auth** (launch popup + top-nav profile/backup control)
+- **Top-nav profile actions** — backup chats, edit profile, or sign out from one button
+- **Single-file app architecture** (monolithic `index.html`, zero framework)
 - **Installable PWA** — works like a native app
 - **Offline-ready** — service worker caching
-- **Persistent chat history** — IndexedDB storage
+- **Local-first chat history** — IndexedDB is primary source of truth
+- **Automatic cloud chat sync** — Firebase Firestore mirrors create/update/delete when logged in
+- **Auto-sync loop** — signed-in chats refresh from cloud every ~30s for multi-device continuity
+- **Local-first delete safety** — deleted chats do not resurrect from stale cloud snapshots
+- **Persistent custom profile** — name/photo stored locally and injected into AI memory context
+- **Profile control hub** — backup, edit profile, sign out, and image upload in one place
+- **Incognito mode** — no chat/memory/profile persistence (local or cloud) while active
+- **Smart confirmations** — delete-chat supports one-tap "Do not ask again"
 - **/img & /vid commands** — media generation
 
 ---
@@ -185,7 +197,8 @@ http://127.0.0.1:5500
 | Layer | Tech |
 |-------|------|
 | Frontend | HTML, CSS, Vanilla JavaScript |
-| Storage | IndexedDB (chats + AI memory) |
+| Storage | IndexedDB (primary) + Firebase Firestore (chat backup/multi-device sync) |
+| Auth | Firebase Auth |
 | PWA | Service Workers |
 | Voice | Web Speech API |
 | Math | KaTeX + MathJax |

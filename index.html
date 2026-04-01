@@ -20,6 +20,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="google-site-verification" content="JhkPJl6nEawBgQ9fu1ExQ6RrsLKD0XNVLIzmC-_uD_E" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
 <script src="https://js.puter.com/v2/"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
@@ -941,6 +942,12 @@ body.dark .voice-btn.recording {
   background: rgba(16,185,129,0.08);
 }
 
+#incognitoToggle.active {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.12);
+}
+
 #imageModel {
   max-width: 145px;
   white-space: nowrap;
@@ -1503,6 +1510,136 @@ body.dark .voice-btn.recording {
   transform: translateX(16px);
 }
 
+/* ===== APP MODAL ===== */
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(6px);
+  z-index: 10010;
+  display: none;
+}
+
+.app-modal-overlay.visible {
+  display: block;
+}
+
+.app-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.96);
+  width: min(92vw, 460px);
+  background: linear-gradient(180deg, var(--panel), var(--chat));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 10011;
+  display: none;
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.app-modal.visible {
+  display: block;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.app-modal-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+}
+
+.app-modal-body {
+  padding: 16px;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.app-modal-input {
+  width: 100%;
+  margin-top: 10px;
+  background: var(--chat);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+  font-family: inherit;
+}
+
+.app-modal-input:focus {
+  border-color: var(--user);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.app-modal-aux {
+  padding: 0 16px 10px;
+  color: var(--muted);
+  font-size: 13px;
+  display: none;
+}
+
+.app-modal-aux.visible {
+  display: block;
+}
+
+.app-modal-aux label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.app-modal-footer {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.app-modal-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.app-modal-btn.primary {
+  background: var(--user);
+  border-color: var(--user);
+  color: #fff;
+}
+
+.app-modal-btn:hover {
+  transform: translateY(-1px);
+}
+
+#profileActionsModal .app-modal-body {
+  color: var(--muted);
+  padding-bottom: 10px;
+}
+
+#profileActionsModal .app-modal-footer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  justify-content: stretch;
+}
+
+#profileActionsModal .app-modal-btn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+}
+
 </style>
 
 <style>
@@ -1513,7 +1650,12 @@ body.dark .voice-btn.recording {
 .btn:hover { transform: scale(1.03); }
 .neon-highlight.math-display { box-shadow: 0 0 10px #0ff; }
 </style>
-</head>
+
+    <!-- Firebase Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    </head>
 
 <body class="dark">
 
@@ -1530,13 +1672,13 @@ body.dark .voice-btn.recording {
   ">
     <div style="max-width:380px;padding:32px;background:rgba(255,255,255,0.06);border-radius:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(20px);">
     <h2 style="margin-bottom:8px;font-weight:700;font-size:22px;letter-spacing:-0.02em;">Welcome to Spectrix AI</h2>
-    <p style="margin-bottom:28px;color:#8b8fa3;font-size:14px;line-height:1.6;">Create or sign into your Puter account to unlock the full experience.</p>
-    <button id="goToPuter" style="
+    <p style="margin-bottom:28px;color:#8b8fa3;font-size:14px;line-height:1.6;">Sign in with Google to unlock cloud backup and multi-device chat sync.</p>
+    <button id="goToPuter" onclick="signInWithGoogle()" style="
       background:#3b82f6;color:#fff;padding:12px 28px;border:none;
       border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;
-      font-family:inherit;letter-spacing:0.01em;transition:all 0.2s;
+      font-family:'Raleway', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;letter-spacing:0.01em;transition:all 0.2s;
       width:100%;
-    ">Get Started</button>
+    ">Sign in with Google</button>
     </div>
   </div>
 
@@ -1546,7 +1688,7 @@ body.dark .voice-btn.recording {
     <div class="sidebar-header">
       <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search chats..." aria-label="Search chats">
       <div class="sidebar-controls">
-        <button class="new-chat-btn" onclick="newChat()" aria-label="Create new chat">+ New</button>
+        <button class="new-chat-btn" id="newChatBtn" onclick="newChat()" aria-label="Create new chat">+ New</button>
         <button class="export-btn" onclick="exportAll()" aria-label="Export all chats">📥</button>
         <button class="import-btn" onclick="importAll()" aria-label="Import chats">📤</button>
       </div>
@@ -1557,7 +1699,7 @@ body.dark .voice-btn.recording {
   <div class="app">
     <header>
       <div style="display:flex;align-items:center;gap:10px">
-        <button class="menu-btn" onclick="toggleSidebar()" aria-label="Open sidebar">☰</button>
+        <button class="menu-btn" onclick="toggleSidebar()" aria-label="Open sidebar" aria-expanded="false">☰</button>
         <span id="headerTitle" ondblclick="editTitle()">Spectrix AI</span>
       </div>
       <div class="controls">
@@ -1565,6 +1707,7 @@ body.dark .voice-btn.recording {
         <button class="toggle" onclick="copyAll()" aria-label="Copy all messages">📋</button>
         <button class="toggle" onclick="clearChat()" aria-label="Clear current chat">🗑️</button>
         <button class="toggle memory-toggle" onclick="toggleMemoryPanel()" aria-label="AI Memory" title="AI Memory">🧠<span class="memory-badge" id="memoryBadge" style="display:none;">0</span></button>
+        <button class="toggle" id="incognitoToggle" onclick="toggleIncognitoMode()" aria-label="Toggle incognito mode" title="Incognito: OFF">🕶️</button>
         <button class="toggle" onclick="toggleTheme()" aria-label="Toggle theme">🌗</button>
         <button class="toggle tts-toggle" id="ttsToggle" onclick="toggleTTS()" title="Toggle Text-to-Speech">🔊</button>
         <div class="select-wrap">
@@ -1621,7 +1764,39 @@ body.dark .voice-btn.recording {
   </div>
 </div>
 
+<div class="app-modal-overlay" id="appModalOverlay"></div>
+<div class="app-modal" id="appModal" role="dialog" aria-modal="true" aria-labelledby="appModalTitle">
+  <div class="app-modal-header" id="appModalTitle">Notice</div>
+  <div class="app-modal-body" id="appModalBody"></div>
+  <div class="app-modal-aux" id="appModalAux">
+    <label>
+      <input type="checkbox" id="appModalDontAsk">
+      <span>Do not ask again</span>
+    </label>
+  </div>
+  <div class="app-modal-footer">
+    <button class="app-modal-btn" id="appModalCancel" type="button">Cancel</button>
+    <button class="app-modal-btn primary" id="appModalOk" type="button">OK</button>
+  </div>
+</div>
+
+<div class="app-modal-overlay" id="profileActionsOverlay" onclick="closeProfileActions()"></div>
+<div class="app-modal" id="profileActionsModal" role="dialog" aria-modal="true" aria-labelledby="profileActionsTitle">
+  <div class="app-modal-header" id="profileActionsTitle">Profile Actions</div>
+  <div class="app-modal-body">
+    Choose what you want to do:
+  </div>
+  <div class="app-modal-footer">
+    <button class="app-modal-btn primary" type="button" onclick="handleProfileAction('backup')">Backup Chats to Google</button>
+    <button class="app-modal-btn" type="button" onclick="handleProfileAction('edit')">Edit Name / Photo URL</button>
+    <button class="app-modal-btn" type="button" onclick="handleProfileAction('upload')">Upload Picture from Device</button>
+    <button class="app-modal-btn" type="button" onclick="handleProfileAction('signout')">Sign Out</button>
+    <button class="app-modal-btn" type="button" onclick="closeProfileActions()">Close</button>
+  </div>
+</div>
+
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+<input type="file" id="profilePicUpload" accept="image/*" style="display:none">
 
 <script>
 // ===== INDEXEDDB SETUP =====
@@ -1662,7 +1837,8 @@ async function openDB() {
   });
 }
 
-async function saveChat(chatData) {
+async function saveChatLocal(chatData) {
+  if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('chats', 'readwrite');
   const store = tx.objectStore('chats');
@@ -1670,6 +1846,15 @@ async function saveChat(chatData) {
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function saveChat(chatData) {
+  await saveChatLocal(chatData);
+  if (incognitoEnabled) return;
+  // Keep IndexedDB as primary local store and mirror to cloud asynchronously.
+  syncChatToCloud(chatData).catch((err) => {
+    console.warn('Deferred cloud sync failed:', err);
   });
 }
 
@@ -1685,6 +1870,7 @@ async function getChat(id) {
 }
 
 async function getAllChats() {
+  if (incognitoEnabled) return [];
   if (!db) await openDB();
   const tx = db.transaction('chats', 'readonly');
   const store = tx.objectStore('chats');
@@ -1696,6 +1882,7 @@ async function getAllChats() {
 }
 
 async function deleteChatFromDB(id) {
+  if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('chats', 'readwrite');
   const store = tx.objectStore('chats');
@@ -1707,6 +1894,7 @@ async function deleteChatFromDB(id) {
 }
 
 async function saveMedia(id, blob) {
+  if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('media', 'readwrite');
   const store = tx.objectStore('media');
@@ -1730,6 +1918,7 @@ async function getMedia(id) {
 
 // ===== AI MEMORY INDEXEDDB OPERATIONS =====
 async function saveMemory(memoryData) {
+  if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('memories', 'readwrite');
   const store = tx.objectStore('memories');
@@ -1741,6 +1930,7 @@ async function saveMemory(memoryData) {
 }
 
 async function getAllMemories() {
+  if (incognitoEnabled) return [];
   if (!db) await openDB();
   const tx = db.transaction('memories', 'readonly');
   const store = tx.objectStore('memories');
@@ -1752,6 +1942,7 @@ async function getAllMemories() {
 }
 
 async function deleteMemory(id) {
+  if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('memories', 'readwrite');
   const store = tx.objectStore('memories');
@@ -1763,6 +1954,7 @@ async function deleteMemory(id) {
 }
 
 async function clearAllMemoriesFromDB() {
+  if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('memories', 'readwrite');
   const store = tx.objectStore('memories');
@@ -1788,6 +1980,10 @@ const THEME_KEY = "Spectrix_theme";
 const TTS_KEY = 'Spectrix_tts';
 const IOS_HINT_KEY = 'Spectrix_ios_hint_dismissed';
 const MEMORY_ENABLED_KEY = 'Spectrix_memory_enabled';
+const PROFILE_KEY = 'Spectrix_user_profile';
+const DELETE_CONFIRM_SKIP_KEY = 'Spectrix_skip_delete_confirm';
+const DELETED_CHAT_TOMBSTONES_KEY = 'Spectrix_deleted_chat_ids';
+const INCOGNITO_KEY = 'Spectrix_incognito_mode';
 const MAX_PROMPT_CHARS = 10000;
 const MATH_FORMAT_SYSTEM_PROMPT = `
 When writing mathematics, use valid MathJax / KaTeX LaTeX syntax.
@@ -1813,6 +2009,22 @@ let isGenerating = false;
 let installPrompt;
 let webSearchEnabled = false;
 let memoryEnabled = localStorage.getItem(MEMORY_ENABLED_KEY) !== 'false';
+let incognitoEnabled = localStorage.getItem(INCOGNITO_KEY) === 'true';
+let activeMediaObjectUrls = [];
+let cloudSyncTimer = null;
+let cloudSyncUnsubscribe = null;
+let cloudSyncInFlight = false;
+const deletedChatTombstones = new Set(
+  (() => {
+    try {
+      const raw = localStorage.getItem(DELETED_CHAT_TOMBSTONES_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.map(String) : [];
+    } catch {
+      return [];
+    }
+  })()
+);
 const themeColorMeta = document.getElementById('themeColorMeta');
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1822,6 +2034,135 @@ const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
 let recognition = null;
 let ttsEnabled = localStorage.getItem(TTS_KEY) === 'true';
 let currentUtterance = null;
+let signInInProgress = false;
+
+function getStoredProfile() {
+  if (incognitoEnabled) return { name: '', avatarUrl: '' };
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (!raw) return { name: '', avatarUrl: '' };
+    const parsed = JSON.parse(raw);
+    return {
+      name: String(parsed?.name || '').trim(),
+      avatarUrl: String(parsed?.avatarUrl || '').trim()
+    };
+  } catch {
+    return { name: '', avatarUrl: '' };
+  }
+}
+
+function setStoredProfile(profile) {
+  if (incognitoEnabled) return;
+  const safe = {
+    name: String(profile?.name || '').trim(),
+    avatarUrl: String(profile?.avatarUrl || '').trim()
+  };
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(safe));
+}
+
+function persistDeletedChatTombstones() {
+  if (incognitoEnabled) return;
+  localStorage.setItem(DELETED_CHAT_TOMBSTONES_KEY, JSON.stringify(Array.from(deletedChatTombstones)));
+}
+
+function updateIncognitoUI() {
+  const btn = document.getElementById('incognitoToggle');
+  if (!btn) return;
+  btn.classList.toggle('active', incognitoEnabled);
+  btn.title = `Incognito: ${incognitoEnabled ? 'ON' : 'OFF'}`;
+  btn.setAttribute('aria-label', `Toggle incognito mode (${incognitoEnabled ? 'on' : 'off'})`);
+}
+
+function stopCloudAutoSync() {
+  if (cloudSyncTimer) {
+    clearInterval(cloudSyncTimer);
+    cloudSyncTimer = null;
+  }
+  if (typeof cloudSyncUnsubscribe === 'function') {
+    cloudSyncUnsubscribe();
+    cloudSyncUnsubscribe = null;
+  }
+}
+
+function startCloudAutoSync() {
+  stopCloudAutoSync();
+  if (incognitoEnabled) return;
+  const user = firebase?.auth?.().currentUser;
+  if (!user) return;
+
+  const runSync = () => {
+    if (cloudSyncInFlight) return;
+    cloudSyncInFlight = true;
+    syncChats(user.uid)
+      .catch((err) => console.warn('Auto-sync failed:', err))
+      .finally(() => {
+        cloudSyncInFlight = false;
+      });
+  };
+
+  // Primary auto-sync path: realtime firestore listener.
+  try {
+    const ref = firebase.firestore().collection('users').doc(user.uid).collection('chats');
+    cloudSyncUnsubscribe = ref.onSnapshot(
+      (snapshot) => {
+        if (cloudSyncInFlight) return;
+        cloudSyncInFlight = true;
+        handleRealtimeSync(snapshot).catch(err => console.warn('Realtime sync failed:', err)).finally(() => {
+          cloudSyncInFlight = false;
+        });
+      },
+      (err) => {
+        console.warn('Realtime sync listener error:', err);
+        const msg = String(err?.message || err || '').toLowerCase();
+        if (msg.includes('blocked_by_client') || msg.includes('blocked by client')) {
+          showStatus('Realtime cloud sync blocked by extension. Falling back to timer sync.');
+        }
+      }
+    );
+  } catch (err) {
+    console.warn('Realtime sync setup failed:', err);
+  }
+
+  // Fallback/backup sync path.
+  cloudSyncTimer = setInterval(runSync, 30000);
+}
+
+async function toggleIncognitoMode() {
+  incognitoEnabled = !incognitoEnabled;
+  localStorage.setItem(INCOGNITO_KEY, incognitoEnabled ? 'true' : 'false');
+  updateIncognitoUI();
+
+  if (incognitoEnabled) {
+    stopCloudAutoSync();
+    sessions = {};
+    currentId = null;
+    chat.innerHTML = '';
+    await createNewChat();
+    renderHistory();
+    updateHeaderTitle();
+    await loadChatMessages();
+    showStatus('Incognito ON: chats, memory, and profile changes will not be saved.');
+    return;
+  }
+
+  await loadAllSessions();
+  if (!currentId || !sessions[currentId]) {
+    currentId = Object.keys(sessions)[0] || null;
+    if (currentId) {
+      localStorage.setItem(CURRENT_KEY, currentId);
+    }
+  }
+  renderHistory();
+  updateHeaderTitle();
+  await loadChatMessages();
+
+  const user = firebase?.auth?.().currentUser;
+  if (user) {
+    await syncChats(user.uid);
+  }
+  startCloudAutoSync();
+  showStatus('Incognito OFF: persistence restored.');
+}
 
 const ALLOWED_TAGS = new Set([
   'a', 'p', 'br', 'strong', 'em', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li',
@@ -1841,6 +2182,7 @@ async function initApp() {
   await openDB();
   await loadAllSessions();
   applySavedTheme();
+  updateIncognitoUI();
 
   // 🔥 HARD SAFETY CHECK
   if (!currentId || !sessions[currentId]) {
@@ -1848,7 +2190,7 @@ async function initApp() {
     if (!currentId) {
       await createNewChat();
     } else {
-      localStorage.setItem(CURRENT_KEY, currentId);
+      if (!incognitoEnabled) localStorage.setItem(CURRENT_KEY, currentId);
     }
   }
 
@@ -1861,6 +2203,7 @@ async function initApp() {
   initCompatibilityEnhancements();
   updateThemeColorMeta();
   initMemorySystem();
+  startCloudAutoSync();
 }
 
 
@@ -1877,7 +2220,15 @@ async function loadAllSessions() {
 }
 
 async function createNewChat() {
-  currentId = Date.now().toString();
+  let nextId = '';
+  do {
+    nextId = Date.now().toString() + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  } while (sessions[nextId]);
+  currentId = nextId;
+  if (deletedChatTombstones.has(currentId)) {
+    deletedChatTombstones.delete(currentId);
+    persistDeletedChatTombstones();
+  }
   const newSession = {
     id: currentId,
     title: "New Chat",
@@ -1888,7 +2239,7 @@ async function createNewChat() {
   };
   sessions[currentId] = newSession;
   await saveChat(newSession);
-  localStorage.setItem(CURRENT_KEY, currentId);
+  if (!incognitoEnabled) localStorage.setItem(CURRENT_KEY, currentId);
 }
 
 function getCurrentSession() {
@@ -1897,7 +2248,7 @@ function getCurrentSession() {
   const first = Object.keys(sessions)[0];
   if (first) {
     currentId = first;
-    localStorage.setItem(CURRENT_KEY, first);
+    if (!incognitoEnabled) localStorage.setItem(CURRENT_KEY, first);
     return sessions[first];
   }
 
@@ -1961,9 +2312,9 @@ function initVoice() {
       
       if (event.error === 'no-speech') return;
       if (event.error === 'not-allowed') {
-        alert('Mic permission denied, dawg. Check browser settings 🎤❌');
+        showAppAlert('Mic permission denied, dawg. Check browser settings 🎤❌', 'Voice Permission');
       } else {
-        alert(`Voice input error: ${event.error}`);
+        showAppAlert(`Voice input error: ${event.error}`, 'Voice Error');
       }
     };
     recognition.onend = () => {
@@ -1985,9 +2336,9 @@ function initVoice() {
   }
 }
 
-function toggleVoiceInput() {
+async function toggleVoiceInput() {
   if (!recognition) {
-    alert('Speech recognition not supported in your browser 😢');
+    await showAppAlert('Speech recognition not supported in your browser 😢', 'Unsupported');
     return;
   }
 
@@ -2107,7 +2458,7 @@ function renderMath(d) {
 
 // ===== CLEAR PUTER =====
 async function clearPuter() {
-  [CURRENT_KEY, PREPOPUP_KEY, THEME_KEY, TTS_KEY, IOS_HINT_KEY].forEach((key) => {
+  [CURRENT_KEY, PREPOPUP_KEY, THEME_KEY, TTS_KEY, IOS_HINT_KEY, PROFILE_KEY, DELETED_CHAT_TOMBSTONES_KEY].forEach((key) => {
     localStorage.removeItem(key);
   });
 
@@ -2122,7 +2473,7 @@ async function clearPuter() {
 
   indexedDB.deleteDatabase(DB_NAME);
 
-  alert("Don't Get Greedy, Now Enjoy 💀");
+  await showAppAlert("Don't Get Greedy, Now Enjoy 💀", 'Spectrix Reset');
   location.reload();
 }
 
@@ -2132,8 +2483,6 @@ async function retryLast() {
     showStatus("Please wait for current generation to finish.");
     return;
   }
-
-  isGenerating = false;
 
   const session = getCurrentSession();
   if (!session || !Array.isArray(session.messages) || session.messages.length === 0) return;
@@ -2186,7 +2535,7 @@ async function editMessage(messageIndex, oldContent) {
     return;
   }
 
-  const edited = window.prompt("Edit your message", String(oldContent || ""));
+  const edited = await showAppPrompt("Edit your message", String(oldContent || ""), { title: 'Edit Message', okText: 'Update' });
   if (edited === null) return;
 
   const updatedContent = edited.trim();
@@ -2382,15 +2731,21 @@ function editChatTitle(id, titleSpan, parentDiv) {
 }
 
 async function newChat() {
-  await createNewChat();
-  chat.innerHTML = "";
-  renderHistory();
-  updateHeaderTitle();
+  try {
+    await createNewChat();
+    chat.innerHTML = "";
+    renderHistory();
+    updateHeaderTitle();
+    showStatus('New chat ready');
+  } catch (err) {
+    console.error('New chat failed:', err);
+    showStatus('Failed to create new chat');
+  }
 }
 
 async function loadChatHandler(id) {
   currentId = id;
-  localStorage.setItem(CURRENT_KEY, currentId);
+  if (!incognitoEnabled) localStorage.setItem(CURRENT_KEY, currentId);
   updateHeaderTitle();
   await loadChatMessages();
   renderHistory();
@@ -2398,6 +2753,7 @@ async function loadChatHandler(id) {
 }
 
 async function loadChatMessages() {
+  cleanupActiveMediaUrls();
   chat.innerHTML = "";
   const session = getCurrentSession();
   if (!session) return;
@@ -2408,6 +2764,7 @@ async function loadChatMessages() {
       const blob = await getMedia(m.content.mediaId);
       if (blob) {
         const url = URL.createObjectURL(blob);
+        activeMediaObjectUrls.push(url);
         render(m.role, { ...m.content, src: url }, false, idx);
       }
     } else {
@@ -2418,10 +2775,28 @@ async function loadChatMessages() {
   scrollToBottom();
 }
 
+function cleanupActiveMediaUrls() {
+  for (const url of activeMediaObjectUrls) {
+    URL.revokeObjectURL(url);
+  }
+  activeMediaObjectUrls = [];
+}
+
 async function deleteChatHandler(id) {
-  if (!confirm("Delete this chat? 💀")) return;
+  if (localStorage.getItem(DELETE_CONFIRM_SKIP_KEY) !== 'true') {
+    const shouldDelete = await showAppConfirm("Delete this chat? 💀", {
+      title: 'Delete Chat',
+      okText: 'Delete',
+      dontAskAgainKey: DELETE_CONFIRM_SKIP_KEY
+    });
+    if (!shouldDelete) return;
+  }
+
+  deletedChatTombstones.add(String(id));
+  persistDeletedChatTombstones();
   
   await deleteChatFromDB(id);
+  await deleteChatFromCloud(id);
   delete sessions[id];
   
   if (id === currentId) {
@@ -2436,7 +2811,11 @@ async function deleteChatHandler(id) {
 }
 
 async function clearChat() {
-  if (!confirm("Clear current chat? This cannot be undone 💀")) return;
+  const shouldClear = await showAppConfirm("Clear current chat? This cannot be undone 💀", {
+    title: 'Clear Chat',
+    okText: 'Clear'
+  });
+  if (!shouldClear) return;
   const session = getCurrentSession();
   session.messages = [];
   session.title = "New Chat";
@@ -2450,10 +2829,19 @@ function toggleSidebar() {
   sidebar.classList.toggle("is-hidden");
   const overlay = document.getElementById("sidebarOverlay");
   if (overlay) overlay.style.display = (window.innerWidth <= 768 && !sidebar.classList.contains("is-hidden")) ? "block" : "none";
+  const menuBtn = document.querySelector('.menu-btn');
+  if (menuBtn) {
+    menuBtn.setAttribute('aria-expanded', sidebar.classList.contains('is-hidden') ? 'false' : 'true');
+  }
 }
 
 if (window.innerWidth <= 768) {
   sidebar.classList.add("is-hidden");
+}
+
+const initialMenuBtn = document.querySelector('.menu-btn');
+if (initialMenuBtn) {
+  initialMenuBtn.setAttribute('aria-expanded', sidebar.classList.contains('is-hidden') ? 'false' : 'true');
 }
 
 function toggleWebSearch() {
@@ -2499,7 +2887,7 @@ function copyAll() {
   });
   
   navigator.clipboard.writeText(text);
-  alert("📋 Entire chat copied to clipboard!");
+  showStatus("📋 Chat copied!");
 }
 
 async function exportAll() {
@@ -2525,7 +2913,11 @@ async function handleImport(e) {
   reader.onload = async (ev) => {
     try {
       const imported = JSON.parse(ev.target.result);
-      if (confirm("Import chats? This will merge with existing chats.")) {
+      const shouldImport = await showAppConfirm("Import chats? This will merge with existing chats.", {
+        title: 'Import Chats',
+        okText: 'Import'
+      });
+      if (shouldImport) {
         for (const id in imported) {
           if (!sessions[id]) {
             sessions[id] = imported[id];
@@ -2538,10 +2930,10 @@ async function handleImport(e) {
           }
         }
         renderHistory();
-        alert("✅ Chats imported successfully!");
+        await showAppAlert("✅ Chats imported successfully!", 'Import Complete');
       }
     } catch {
-      alert("❌ Invalid file format!");
+      await showAppAlert("❌ Invalid file format!", 'Import Failed');
     }
   };
   reader.readAsText(file);
@@ -3049,60 +3441,6 @@ function render(role, content, saveIt = true, messageIndex = null) {
   return d;
 }
 
-// ===== REAL STREAMING =====
-async function streamResponse(res, session) {
-  const d = document.createElement("div");
-  d.className = "msg bot";
-  chat.appendChild(d);
-
-  await saveMessage("bot", "");
-  const botIndex = session.messages.length - 1;
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let fullText = "";
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop(); // keep last incomplete line
-
-    for (const line of lines) {
-      if (!line.startsWith("data: ")) continue;
-      const raw = line.slice(6).trim();
-      if (raw === "[DONE]") break;
-
-      let chunk;
-      try { chunk = JSON.parse(raw); } catch { continue; }
-
-      const delta = chunk.choices?.[0]?.delta?.content;
-      if (!delta) continue;
-
-      fullText += delta;
-
-      if (window.marked) {
-        d.innerHTML = renderMarkdownSafely(fullText);
-        promoteInlineCodeMath(d);
-      } else {
-        d.textContent = fullText;
-      }
-      renderMath(d);
-      chat.scrollTop = chat.scrollHeight;
-      session.messages[botIndex].content = fullText;
-    }
-  }
-
-  speakText(fullText);
-  setTimeout(() => decorateCodeBlocks(d), 80);
-  await saveChat(session);
-  await saveSessions();
-
-  return fullText;
-}
 // ===== STREAMING =====
 async function streamBotInChunks(fullText, baseChunkSize = 50) {
   const d = document.createElement("div");
@@ -3111,7 +3449,8 @@ async function streamBotInChunks(fullText, baseChunkSize = 50) {
 
   let renderedText = "";
   const session = getCurrentSession();
-  await saveMessage("bot", "");
+  session.messages.push({ role: "bot", content: "" });
+  session.timestamp = Date.now();
   const botIndex = session.messages.length - 1;
 
   // 🗣️ PLAY AUDIO IMMEDIATELY! Do not wait for the visual typing loop to finish.
@@ -3138,18 +3477,15 @@ async function streamBotInChunks(fullText, baseChunkSize = 50) {
     chat.scrollTop = chat.scrollHeight;
 
     session.messages[botIndex].content = renderedText;
-    
-    // Save less frequently for long responses
-    if (i % (chunkSize * 5) === 0 || i + chunkSize >= fullText.length) {
-      await saveChat(session);
-    }
 
     await new Promise(r => setTimeout(r, totalLength > 5000 ? 5 : 15));
   }
   
   setTimeout(() => decorateCodeBlocks(d), 80);
 
-  await saveSessions();
+  await saveChat(session);
+  renderHistory();
+  updateHeaderTitle();
 }
 
 // ===== FULL AUTO TITLE =====
@@ -3160,7 +3496,7 @@ async function generateTitle(userPrompt, botReply) {
       headers: { "Content-Type": "application/json" },
       timeoutMs: 22000,
       body: JSON.stringify({
-        model: FIXED_TEXT_MODEL,
+        model: localStorage.getItem('Spectrix_text_model') || "stepfun/step-3.5-flash:free",
         messages: [
           {
             role: "system",
@@ -3232,7 +3568,7 @@ async function send(options = {}) {
   } = options;
 
   if (isGenerating) {
-    alert("Generation already in progress");
+    await showAppAlert("Generation already in progress", 'Please Wait');
     return;
   }
 
@@ -3267,6 +3603,7 @@ if (ttsEnabled && 'speechSynthesis' in window) {
   input.value = "";
   input.style.height = "";
   charCounter.textContent = "0 chars";
+  charCounter.style.color = "var(--muted)";
 
   const isImage = prompt.startsWith("/img ");
   const isVideo = prompt.startsWith("/vid ");
@@ -3285,60 +3622,74 @@ if (ttsEnabled && 'speechSynthesis' in window) {
 
   try {
     if (isImage) {
-      if (!window.puter?.ai) {
-        throw new Error("Puter SDK not loaded");
-      }
+      try {
+        if (!window.puter?.ai) {
+          throw new Error("Puter SDK not loaded");
+        }
 
-      const model = document.getElementById("imageModel").value;
-      const img = await puter.ai.txt2img(prompt, { model, disable_safety_checker: true });
-      loading.remove();
-      isGenerating = false;
+        const model = document.getElementById("imageModel").value;
+        const img = await puter.ai.txt2img(prompt, { model, disable_safety_checker: true });
+        loading.remove();
+        isGenerating = false;
 
-      img.classList.add("ai-img");
-      const base64 = img.src;
-      const mediaId = `img_${Date.now()}`;
-      const blob = await (await fetch(base64)).blob();
-      await saveMedia(mediaId, blob);
-      await saveMessage("bot", { type: "image", src: base64, mediaId });
+        img.classList.add("ai-img");
+        const base64 = img.src;
+        const mediaId = `img_${Date.now()}`;
+        const blob = await (await fetch(base64)).blob();
+        await saveMedia(mediaId, blob);
+        await saveMessage("bot", { type: "image", src: base64, mediaId });
 
-      const div = document.createElement("div");
-      div.className = "msg bot";
-      div.appendChild(img);
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-    }
-    else if (isVideo) {
-      if (!window.puter?.ai) {
-        throw new Error("Puter SDK not loaded");
-      }
-
-      const video = await puter.ai.txt2vid(prompt, { model: FIXED_VIDEO_MODEL, seconds: 8 });
-      loading.remove();
-      isGenerating = false;
-
-      const blob = await fetch(video.src).then(r => r.blob());
-      const reader = new FileReader();
-      reader.onloadend = async () => {
         const div = document.createElement("div");
         div.className = "msg bot";
-
-        const savedVideo = document.createElement("video");
-        savedVideo.src = reader.result;
-        savedVideo.controls = true;
-        savedVideo.autoplay = true;
-        savedVideo.loop = true;
-        savedVideo.style.maxWidth = "100%";
-        savedVideo.style.borderRadius = "12px";
-
-        div.appendChild(savedVideo);
+        div.appendChild(img);
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
+      } catch (err) {
+        console.error("Send error:", err);
+        isGenerating = false;
+        loading.remove();
+        render("bot", "**Error generating response 💀** " + err.message);
+      }
+    }
+    else if (isVideo) {
+      try {
+        if (!window.puter?.ai) {
+          throw new Error("Puter SDK not loaded");
+        }
 
-        const mediaId = `vid_${Date.now()}`;
-        await saveMedia(mediaId, blob);
-        await saveMessage("bot", { type: "video", src: reader.result, mediaId });
-      };
-      reader.readAsDataURL(blob);
+        const video = await puter.ai.txt2vid(prompt, { model: FIXED_VIDEO_MODEL, seconds: 8 });
+        loading.remove();
+        isGenerating = false;
+
+        const blob = await fetch(video.src).then(r => r.blob());
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const div = document.createElement("div");
+          div.className = "msg bot";
+
+          const savedVideo = document.createElement("video");
+          savedVideo.src = reader.result;
+          savedVideo.controls = true;
+          savedVideo.autoplay = true;
+          savedVideo.loop = true;
+          savedVideo.style.maxWidth = "100%";
+          savedVideo.style.borderRadius = "12px";
+
+          div.appendChild(savedVideo);
+          chat.appendChild(div);
+          chat.scrollTop = chat.scrollHeight;
+
+          const mediaId = `vid_${Date.now()}`;
+          await saveMedia(mediaId, blob);
+          await saveMessage("bot", { type: "video", src: reader.result, mediaId });
+        };
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error("Send error:", err);
+        isGenerating = false;
+        loading.remove();
+        render("bot", "**Error generating response 💀** " + err.message);
+      }
     }
     else {
       const model = FIXED_TEXT_MODEL;
@@ -3398,6 +3749,7 @@ isGenerating = false;
 
   const titledSessionId = currentId;
   setTimeout(async () => {
+    if (currentId !== titledSessionId) return;
     try {
       const title = await generateTitle(firstUserPrompt, answer);
       if (title && sessions[titledSessionId]) {
@@ -3413,7 +3765,7 @@ isGenerating = false;
 }
 
       // 🧠 Extract memories from this exchange
-      if (memoryEnabled) {
+      if (memoryEnabled && !incognitoEnabled) {
   			setTimeout(() => {
     		extractMemories(prompt, answer).catch(err => console.warn('Memory extraction failed:', err));
  		 }, 3000);
@@ -3454,6 +3806,131 @@ function showStatus(message, timeout = 2600) {
   showStatus._timer = setTimeout(() => {
     banner.style.display = 'none';
   }, timeout);
+}
+
+function openAppModal({
+  title = 'Notice',
+  message = '',
+  mode = 'alert',
+  defaultValue = '',
+  okText = 'OK',
+  cancelText = 'Cancel',
+  dontAskAgainKey = ''
+} = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('appModalOverlay');
+    const modal = document.getElementById('appModal');
+    const titleEl = document.getElementById('appModalTitle');
+    const bodyEl = document.getElementById('appModalBody');
+    const auxEl = document.getElementById('appModalAux');
+    const dontAsk = document.getElementById('appModalDontAsk');
+    const cancelBtn = document.getElementById('appModalCancel');
+    const okBtn = document.getElementById('appModalOk');
+
+    if (!overlay || !modal || !titleEl || !bodyEl || !auxEl || !dontAsk || !cancelBtn || !okBtn) {
+      resolve(mode === 'confirm' ? false : mode === 'prompt' ? null : true);
+      return;
+    }
+
+    titleEl.textContent = title;
+    bodyEl.textContent = message;
+    okBtn.textContent = okText;
+    cancelBtn.textContent = cancelText;
+    dontAsk.checked = false;
+
+    const isAlert = mode === 'alert';
+    const isPrompt = mode === 'prompt';
+    const showDontAsk = mode === 'confirm' && !!dontAskAgainKey;
+
+    cancelBtn.style.display = isAlert ? 'none' : 'inline-flex';
+    auxEl.classList.toggle('visible', showDontAsk);
+
+    let inputEl = null;
+    if (isPrompt) {
+      inputEl = document.createElement('input');
+      inputEl.type = 'text';
+      inputEl.className = 'app-modal-input';
+      inputEl.value = String(defaultValue || '');
+      bodyEl.appendChild(inputEl);
+    }
+
+    const cleanup = () => {
+      overlay.classList.remove('visible');
+      modal.classList.remove('visible');
+      document.removeEventListener('keydown', onKeyDown);
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+      if (inputEl) inputEl.remove();
+    };
+
+    const onOk = () => {
+      if (showDontAsk && dontAsk.checked) {
+        localStorage.setItem(dontAskAgainKey, 'true');
+      }
+      const value = isPrompt ? (inputEl ? inputEl.value : '') : true;
+      cleanup();
+      resolve(value);
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(isPrompt ? null : false);
+    };
+
+    const onOverlay = () => {
+      if (isAlert) onOk();
+      else onCancel();
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (isAlert) onOk();
+        else onCancel();
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onOk();
+      }
+    };
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+    document.addEventListener('keydown', onKeyDown);
+
+    overlay.classList.add('visible');
+    modal.classList.add('visible');
+    if (inputEl) inputEl.focus();
+    else okBtn.focus();
+  });
+}
+
+function showAppAlert(message, title = 'Notice') {
+  return openAppModal({ title, message, mode: 'alert', okText: 'Got it' });
+}
+
+function showAppConfirm(message, options = {}) {
+  return openAppModal({
+    title: options.title || 'Confirm',
+    message,
+    mode: 'confirm',
+    okText: options.okText || 'Confirm',
+    cancelText: options.cancelText || 'Cancel',
+    dontAskAgainKey: options.dontAskAgainKey || ''
+  });
+}
+
+function showAppPrompt(message, defaultValue = '', options = {}) {
+  return openAppModal({
+    title: options.title || 'Input',
+    message,
+    mode: 'prompt',
+    defaultValue,
+    okText: options.okText || 'Save',
+    cancelText: options.cancelText || 'Cancel'
+  });
 }
 
 function showIOSInstallHint() {
@@ -3511,7 +3988,7 @@ async function applyLaunchParams() {
 
   if (launchText) {
     input.value = launchText;
-    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('input', { bubbles: true }));
     input.focus();
   }
 }
@@ -3540,7 +4017,11 @@ function initEventListeners() {
   }
 });
 
-  searchBox.addEventListener("input", renderHistory);
+  let searchTimeout = null;
+  searchBox.addEventListener("input", () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(renderHistory, 200);
+  });
 
   chat.addEventListener("scroll", () => {
     const atBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 50;
@@ -3548,13 +4029,21 @@ function initEventListeners() {
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.key === "b") {
+    const key = String(e.key || '').toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && key === "b") {
       e.preventDefault();
       newChat();
     }
-    if (e.ctrlKey && e.key === "/") {
+    if ((e.ctrlKey || e.metaKey) && key === "/") {
       e.preventDefault();
       searchBox.focus();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    if (window.innerWidth > 768 && sidebarOverlay) {
+      sidebarOverlay.style.display = 'none';
     }
   });
 }
@@ -3666,7 +4155,7 @@ async function updateMemoryBadge() {
 }
 
 async function addManualMemory() {
-  const content = prompt('What should the AI remember about you?');
+  const content = await showAppPrompt('What should the AI remember about you?', '', { title: 'Add Memory', okText: 'Save' });
   if (!content || !content.trim()) return;
 
   const memory = {
@@ -3684,7 +4173,11 @@ async function addManualMemory() {
 }
 
 async function clearAllMemories() {
-  if (!confirm('Delete all AI memories? This cannot be undone. 💀')) return;
+  const shouldClear = await showAppConfirm('Delete all AI memories? This cannot be undone. 💀', {
+    title: 'Clear AI Memory',
+    okText: 'Delete'
+  });
+  if (!shouldClear) return;
   await clearAllMemoriesFromDB();
   await renderMemoryList();
   await updateMemoryBadge();
@@ -3693,8 +4186,14 @@ async function clearAllMemories() {
 
 async function buildMemoryContext() {
   try {
+    if (incognitoEnabled) return '';
     const memories = await getAllMemories();
-    if (memories.length === 0) return '';
+    const profile = getStoredProfile();
+    const profileLines = [];
+    if (profile.name) profileLines.push(`- User preferred name: ${profile.name}`);
+    if (profile.avatarUrl) profileLines.push(`- User profile photo URL: ${profile.avatarUrl}`);
+
+    if (memories.length === 0 && profileLines.length === 0) return '';
 
     const memLines = memories
       .sort((a, b) => b.timestamp - a.timestamp)
@@ -3702,12 +4201,14 @@ async function buildMemoryContext() {
       .map(m => `- ${m.content}`)
       .join('\n');
 
+    const combinedLines = [...profileLines, memLines].filter(Boolean).join('\n');
+
     return `
 ## User Memory Context
 You have persistent memory about this user. Use this context to personalize your responses.
 Do NOT repeat these facts back to the user unless relevant. Use them naturally.
 
-${memLines}
+${combinedLines}
 `;
   } catch (err) {
     console.warn('Failed to build memory context:', err);
@@ -3725,7 +4226,7 @@ async function extractMemories(userMessage, botReply) {
       headers: { 'Content-Type': 'application/json' },
       timeoutMs: 18000,
       body: JSON.stringify({
-        model: FIXED_TEXT_MODEL,
+        model: localStorage.getItem('Spectrix_text_model') || "stepfun/step-3.5-flash:free",
         messages: [
           {
             role: 'system',
@@ -3905,11 +4406,7 @@ if (prePopup && localStorage.getItem(PREPOPUP_KEY) === "true") {
 }
 
 if (goToPuter && prePopup) {
-  goToPuter.addEventListener("click", () => {
-    localStorage.setItem(PREPOPUP_KEY, "true");
-    prePopup.style.display = "none";
-    window.open("https://puter.com/dashboard", "_blank");
-  });
+  // onclick on the button already calls signInWithGoogle; keep a single trigger.
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -4090,5 +4587,477 @@ document.addEventListener('click', (e) => {
         }, 2000);
     });
 });
+
+// ================= FIREBASE =================
+// PASTE YOUR FIREBASE CONFIG HERE:
+const firebaseConfig = {
+    apiKey: "AIzaSyDQDDj9fCClcSJTiTYjkb1D5hiDZ6MMX0M",
+    authDomain: "spectrix-962fe.firebaseapp.com",
+    projectId: "spectrix-962fe",
+    storageBucket: "spectrix-962fe.firebasestorage.app",
+    messagingSenderId: "787740621955",
+    appId: "1:787740621955:web:cab4da9aa0a986d2f06fb6",
+    measurementId: "G-Y5YGQTFM8D"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
+try {
+  firebase.firestore().settings({
+    experimentalAutoDetectLongPolling: true,
+    useFetchStreams: false
+  });
+} catch (err) {
+  console.warn('Firestore transport tuning skipped:', err);
+}
+
+const provider = new firebase.auth.GoogleAuthProvider();
+async function signInWithGoogle() {
+  if (signInInProgress) return;
+  signInInProgress = true;
+
+  try {
+    await firebase.auth().signInWithPopup(provider);
+  } catch (e) {
+    const msg = String(e?.message || e || 'Sign-in failed');
+    const code = String(e?.code || '');
+
+    // If popup is blocked/cancelled/COOP interferes, fallback to redirect flow.
+    const needsRedirect = code.includes('popup') || msg.toLowerCase().includes('popup') || msg.toLowerCase().includes('window.closed');
+    if (needsRedirect) {
+      try {
+        await firebase.auth().signInWithRedirect(provider);
+        return;
+      } catch (redirectErr) {
+        await showAppAlert(String(redirectErr?.message || redirectErr || msg), 'Sign-In Error');
+      }
+    } else {
+      await showAppAlert(msg, 'Sign-In Error');
+    }
+  } finally {
+    signInInProgress = false;
+  }
+}
+
+async function rememberProfileName(name) {
+  const clean = String(name || '').trim();
+  if (!clean) return;
+  const all = await getAllMemories();
+  const fact = `My preferred name is ${clean}.`;
+  const exists = all.some(m => String(m.content || '').toLowerCase() === fact.toLowerCase());
+  if (exists) return;
+  await saveMemory({
+    id: 'mem_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    content: fact,
+    category: 'personal',
+    timestamp: Date.now(),
+    source: 'profile'
+  });
+  await updateMemoryBadge();
+}
+
+async function editProfileInfo() {
+  const user = firebase.auth().currentUser;
+  const stored = getStoredProfile();
+  const currentName = stored.name || user?.displayName || '';
+  const currentAvatar = stored.avatarUrl || user?.photoURL || '';
+
+  const name = await showAppPrompt('Set display name for Spectrix + AI memory:', currentName, { title: 'Edit Profile Name', okText: 'Next' });
+  if (name === null) return;
+  const avatarUrl = await showAppPrompt('Set profile photo URL (optional):', currentAvatar, { title: 'Edit Profile Photo', okText: 'Save' });
+  if (avatarUrl === null) return;
+
+  const profile = {
+    name: String(name || '').trim(),
+    avatarUrl: String(avatarUrl || '').trim()
+  };
+
+  setStoredProfile(profile);
+
+  if (user) {
+    try {
+      await user.updateProfile({
+        displayName: profile.name || user.displayName || '',
+        photoURL: profile.avatarUrl || user.photoURL || ''
+      });
+    } catch (err) {
+      console.warn('Firebase profile update skipped:', err);
+    }
+    updateUserUI(user);
+  }
+
+  if (profile.name) {
+    await rememberProfileName(profile.name);
+  }
+  showStatus('Profile updated. AI will recognize your name.');
+}
+
+async function uploadProfilePictureFromDevice() {
+  const picker = document.getElementById('profilePicUpload');
+  if (!picker) return;
+
+  const file = await new Promise((resolve) => {
+    const onChange = () => {
+      picker.removeEventListener('change', onChange);
+      resolve((picker.files && picker.files[0]) ? picker.files[0] : null);
+    };
+    picker.value = '';
+    picker.addEventListener('change', onChange, { once: true });
+    picker.click();
+  });
+
+  if (!file) return;
+  if (!file.type || !file.type.startsWith('image/')) {
+    await showAppAlert('Please choose an image file.', 'Invalid File');
+    return;
+  }
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error || new Error('Read failed'));
+    reader.readAsDataURL(file);
+  });
+
+  const stored = getStoredProfile();
+  const profile = {
+    name: stored.name,
+    avatarUrl: dataUrl
+  };
+  setStoredProfile(profile);
+
+  const user = firebase.auth().currentUser;
+  if (user) {
+    try {
+      await user.updateProfile({
+        displayName: profile.name || user.displayName || '',
+        photoURL: profile.avatarUrl
+      });
+    } catch (err) {
+      console.warn('Firebase profile photo update skipped:', err);
+    }
+    updateUserUI(user);
+  }
+
+  showStatus('Profile picture updated.');
+}
+
+async function openProfileActions() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    signInWithGoogle();
+    return;
+  }
+
+  const overlay = document.getElementById('profileActionsOverlay');
+  const modal = document.getElementById('profileActionsModal');
+  if (!overlay || !modal) return;
+  overlay.classList.add('visible');
+  modal.classList.add('visible');
+}
+
+function closeProfileActions() {
+  const overlay = document.getElementById('profileActionsOverlay');
+  const modal = document.getElementById('profileActionsModal');
+  if (overlay) overlay.classList.remove('visible');
+  if (modal) modal.classList.remove('visible');
+}
+
+async function handleProfileAction(action) {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    closeProfileActions();
+    signInWithGoogle();
+    return;
+  }
+
+  if (action === 'upload') {
+    closeProfileActions();
+    await uploadProfilePictureFromDevice();
+    return;
+  }
+
+  closeProfileActions();
+  if (action === 'backup') {
+    await backupAllLocalChatsToCloud(true);
+    return;
+  }
+  if (action === 'edit') {
+    await editProfileInfo();
+    return;
+  }
+  if (action === 'signout') {
+    await firebase.auth().signOut();
+  }
+}
+
+function updateUserUI(user) {
+  const parent = document.querySelector('header .controls');
+  if (!parent) return;
+    let pill = document.querySelector('.auth-pill');
+    if (!pill) {
+    pill = document.createElement('button');
+    pill.type = 'button';
+        pill.className = 'auth-pill';
+      pill.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 12px;cursor:pointer;background:var(--bg-card);border-radius:100px;border:1px solid var(--border);margin-left:auto;font-family:\'Raleway\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif;';
+    parent.appendChild(pill);
+    }
+    
+    if (user) {
+      const profile = getStoredProfile();
+      const safeName = (profile.name || user.displayName || user.email || 'Account').split(' ')[0];
+      const avatar = profile.avatarUrl || user.photoURL || '';
+      pill.onclick = openProfileActions;
+      pill.oncontextmenu = null;
+      pill.title = 'Profile actions: backup, edit profile, sign out';
+    pill.innerHTML = `<img src="${avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;"> ${safeName} · Backup`;
+    } else {
+    pill.oncontextmenu = null;
+        pill.onclick = signInWithGoogle;
+        pill.innerHTML = `<span>Sign in with Google</span>`;
+    pill.title = 'Sign in with Google';
+    }
+}
+
+firebase.auth().onAuthStateChanged(async user => {
+  updateUserUI(user);
+  if (prePopup) {
+    prePopup.style.display = user ? 'none' : (localStorage.getItem(PREPOPUP_KEY) === 'true' ? 'none' : 'flex');
+  }
+  if (user && !incognitoEnabled) {
+    localStorage.setItem(PREPOPUP_KEY, 'true');
+    await backupAllLocalChatsToCloud(false);
+    await syncChats(user.uid);
+    startCloudAutoSync();
+  } else {
+    stopCloudAutoSync();
+  }
+});
+
+async function handleRealtimeSync(snapshot) {
+  if (incognitoEnabled) return;
+  let changed = false;
+
+  for (const change of snapshot.docChanges()) {
+    const data = change.doc.data();
+    if (!data || !data.id) continue;
+
+    if (change.type === 'removed') {
+      if (sessions[data.id]) {
+        delete sessions[data.id];
+        await deleteChatFromDB(data.id);
+        deletedChatTombstones.add(String(data.id));
+        persistDeletedChatTombstones();
+        changed = true;
+      }
+    } else {
+      if (deletedChatTombstones.has(String(data.id))) continue;
+      
+      const local = sessions[data.id];
+      if (!local) {
+        sessions[data.id] = data;
+        await saveChatLocal(data);
+        changed = true;
+      } else {
+        const cloudTs = Number(data.timestamp || 0);
+        const localTs = Number(local.timestamp || 0);
+        if (cloudTs > localTs) {
+          sessions[data.id] = data;
+          await saveChatLocal(data);
+          changed = true;
+        } else if (localTs > cloudTs) {
+          await syncChatToCloud(local);
+        }
+      }
+    }
+  }
+
+  if (changed) {
+    if (!sessions[currentId] || (sessions[currentId] && sessions[currentId].messages.length === 0 && sessions[currentId].title === "New Chat" && Object.keys(sessions).length > 1)) {
+      const sorted = Object.values(sessions).sort((a, b) => b.timestamp - a.timestamp);
+      let nextId = sorted[0]?.id;
+      
+      if (sessions[currentId] && sessions[currentId].messages.length === 0 && sessions[currentId].title === "New Chat" && nextId !== currentId) {
+        const dummyId = currentId;
+        delete sessions[dummyId];
+        await deleteChatFromDB(dummyId);
+        await deleteChatFromCloud(dummyId);
+        // Recalculate next safely just in case it was the dummy we deleted
+        const remaining = Object.values(sessions).sort((a, b) => b.timestamp - a.timestamp);
+        nextId = remaining[0]?.id;
+      }
+      
+      if (nextId) {
+        await loadChatHandler(nextId);
+      } else {
+        await newChat();
+      }
+    } else {
+      renderHistory();
+      updateHeaderTitle();
+      await loadChatMessages();
+    }
+  }
+}
+
+async function syncChats(uid) {
+  if (incognitoEnabled) return;
+  try {
+    const dbF = firebase.firestore();
+    const snap = await dbF.collection('users').doc(uid).collection('chats').get();
+    
+    // Simulate handleRealtimeSync by deducing changes
+    let changed = false;
+    const cloudIds = new Set();
+
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (!data || !data.id) continue;
+      cloudIds.add(data.id);
+      
+      if (deletedChatTombstones.has(String(data.id))) continue;
+
+      const local = sessions[data.id];
+      if (!local) {
+        sessions[data.id] = data;
+        await saveChatLocal(data);
+        changed = true;
+        continue;
+      }
+
+      const cloudTs = Number(data.timestamp || 0);
+      const localTs = Number(local.timestamp || 0);
+      if (cloudTs > localTs) {
+        sessions[data.id] = data;
+        await saveChatLocal(data);
+        changed = true;
+      } else if (localTs > cloudTs) {
+        await syncChatToCloud(local);
+      }
+    }
+
+    // Identify chats that are missing from cloud
+    const localIds = Object.keys(sessions);
+    for (const localId of localIds) {
+       if (!cloudIds.has(localId) && !deletedChatTombstones.has(String(localId))) {
+          // If a chat exists locally but not in cloud, it was either:
+          // 1) Deleted on another device (which means we should delete it here unless we are offline and created it)
+          // 2) Created offline locally and never synced (we should push it)
+          // Without complex vector clocks, we'll assume if it's older than 5 minutes and not in cloud, it was remotely deleted.
+          // Otherwise, maybe it's just a newly created chat that failed to upload.
+          const local = sessions[localId];
+          const localTs = Number(local.timestamp || 0);
+          if (Date.now() - localTs < 300000) {
+              await syncChatToCloud(local); // Push to cloud again
+          } else {
+              // Delete locally
+              delete sessions[localId];
+              await deleteChatFromDB(localId);
+              deletedChatTombstones.add(String(localId));
+              persistDeletedChatTombstones();
+              changed = true;
+          }
+       }
+    }
+
+    if (changed) {
+      if (!sessions[currentId] || (sessions[currentId] && sessions[currentId].messages.length === 0 && sessions[currentId].title === "New Chat" && Object.keys(sessions).length > 1)) {
+        const sorted = Object.values(sessions).sort((a, b) => b.timestamp - a.timestamp);
+        let nextId = sorted[0]?.id;
+        
+        if (sessions[currentId] && sessions[currentId].messages.length === 0 && sessions[currentId].title === "New Chat" && nextId !== currentId) {
+          const dummyId = currentId;
+          delete sessions[dummyId];
+          await deleteChatFromDB(dummyId);
+          await deleteChatFromCloud(dummyId);
+          const remaining = Object.values(sessions).sort((a, b) => b.timestamp - a.timestamp);
+          nextId = remaining[0]?.id;
+        }
+        
+        if (nextId) {
+          await loadChatHandler(nextId);
+        } else {
+          await newChat();
+        }
+      } else {
+        renderHistory();
+        updateHeaderTitle();
+        await loadChatMessages();
+      }
+    }
+  } catch(e) {
+    console.error("Sync error: ", e);
+    const msg = String(e?.message || e || '').toLowerCase();
+    if (msg.includes('blocked_by_client') || msg.includes('blocked by client')) {
+      showStatus('Cloud sync blocked by a browser extension. Local IndexedDB is still working.');
+    }
+  }
+}
+
+async function syncChatToCloud(chatData) {
+  if (incognitoEnabled) return;
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user || !chatData || !chatData.id) return;
+    await firebase.firestore().collection('users').doc(user.uid).collection('chats').doc(chatData.id).set(chatData);
+  } catch (e) {
+    console.warn('Cloud sync skipped:', e);
+    const msg = String(e?.message || e || '').toLowerCase();
+    if (msg.includes('blocked_by_client') || msg.includes('blocked by client')) {
+      showStatus('Cloud write blocked by an extension. Try disabling ad/tracker blockers for this site.');
+    }
+  }
+}
+
+async function deleteChatFromCloud(chatId) {
+  if (incognitoEnabled) return;
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user || !chatId) return;
+    await firebase.firestore().collection('users').doc(user.uid).collection('chats').doc(String(chatId)).delete();
+  } catch (e) {
+    console.warn('Cloud delete skipped:', e);
+  }
+}
+
+async function backupAllLocalChatsToCloud(showToast = false) {
+  if (incognitoEnabled) {
+    if (showToast) showStatus('Incognito is ON. Cloud backup is disabled.');
+    return;
+  }
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      if (showToast) showStatus('Sign in first to back up chats.');
+      return;
+    }
+
+    const localChats = Object.values(sessions || {});
+    if (!localChats.length) {
+      if (showToast) showStatus('No local chats to back up yet.');
+      return;
+    }
+
+    const chatsRef = firebase.firestore().collection('users').doc(user.uid).collection('chats');
+    let backedUpCount = 0;
+    for (const data of localChats) {
+      if (!data || !data.id) continue;
+      // Do not backup a purely empty dummy chat generated on load unless it has content.
+      if (data.messages && data.messages.length === 0 && data.title === "New Chat") continue;
+      
+      await chatsRef.doc(String(data.id)).set(data, { merge: true });
+      backedUpCount++;
+    }
+
+    if (showToast) {
+      showStatus(`Backed up ${backedUpCount} chat${backedUpCount === 1 ? '' : 's'} to Google.`);
+    }
+  } catch (e) {
+    console.error('Backup error:', e);
+    if (showToast) showStatus('Backup failed. Try again.');
+  }
+}
 </script>
 </html>
