@@ -207,7 +207,7 @@ User Browser
           └── OpenRouter  →  Multi-model AI routing
                               ├── Stepfun 3.5 Flash (Quick)
                               ├── Qwen 3.6 Plus (Smart)
-                              ├── Nemotron 120B (Reasoning)
+                              ├── Nemotron 3 Super 120B (Reasoning)
                               └── Firecrawl (Web Search)
 
 ```
