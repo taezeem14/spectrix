@@ -197,6 +197,7 @@ User Browser
     │     ├── Web Speech API         → Voice input + TTS output
     │     ├── KaTeX + MathJax        → Dual-engine math rendering
     │     ├── Firebase Auth          → Google Sign-In
+    |     ├── Image/Video model endpoints → Puter.js
     │     └── Firebase Firestore     → Cloud chat backup + real-time sync
     │
     └── Cloudflare Workers (Edge Backend)
@@ -207,8 +208,8 @@ User Browser
                               ├── Stepfun 3.5 Flash (Quick)
                               ├── Qwen 3.6 Plus (Smart)
                               ├── Nemotron 120B (Reasoning)
-                              ├── Firecrawl (Web Search)
-                              └── Image/Video model endpoints
+                              └── Firecrawl (Web Search)
+
 ```
 
 ---
