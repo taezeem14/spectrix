@@ -4062,12 +4062,20 @@ async function streamBotFromSSE(payload) {
             throw new Error(eventData.message || "Streaming failed");
           }
 
-          if (eventData?.type === "delta" && typeof eventData.delta === "string") {
-            renderedText += eventData.delta;
+          // Support both wrapped Spectrix events ({type:"delta"}) and
+          // raw OpenRouter stream chunks ({choices:[{delta:{content:"..."}}]}).
+          const wrappedDelta = (eventData?.type === "delta" && typeof eventData.delta === "string")
+            ? eventData.delta
+            : "";
+          const rawDelta = eventData?.choices?.[0]?.delta?.content;
+          const nextDelta = wrappedDelta || (typeof rawDelta === "string" ? rawDelta : "");
+
+          if (nextDelta) {
+            renderedText += nextDelta;
             scheduleRender();
           }
 
-          if (eventData?.type === "done") {
+          if (eventData?.type === "done" || eventData?.choices?.[0]?.finish_reason) {
             streamDone = true;
             break;
           }
