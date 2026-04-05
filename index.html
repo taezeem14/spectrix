@@ -48,13 +48,6 @@ window.MathJax = {
 	box-sizing:border-box;
 	margin:0;
 	padding:0;
-	transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    color 0.2s ease,
-    opacity 0.2s ease,
-    transform 0.15s ease;
 }
 
 html, body {
@@ -77,6 +70,10 @@ html, body {
   --bg:#f8f9fa; --panel:#ffffff; --chat:#f1f3f5;
   --border:#e2e8f0; --user:#2563eb; --bot:#ffffff;
   --text:#1a1a2e; --muted:#64748b;
+  --code-bg:#0f172a; --code-bg-2:#1e293b;
+  --code-border:rgba(15,23,42,0.28);
+  --code-toolbar:rgba(15,23,42,0.58);
+  --code-text:#e2e8f0;
   --link:#2563eb; --sidebar:#f8f9fa;
   --radius-lg:20px;
   --radius-md:14px;
@@ -94,20 +91,27 @@ html, body {
 
 /* ===== CODE BLOCK SCROLLBAR (HORIZONTAL) ===== */
 pre::-webkit-scrollbar {
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 pre::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(148,163,184,0.08);
+  border-radius: 10px;
 }
 
 pre::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.15);
-  border-radius: 6px;
+  background: rgba(148,163,184,0.38);
+  border-radius: 10px;
 }
 
 pre::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.25);
+  background: rgba(148,163,184,0.6);
+}
+
+pre {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148,163,184,0.55) rgba(148,163,184,0.1);
 }
 
 button.toggle:hover {
@@ -120,6 +124,10 @@ body.dark{
   --bg:#0c0c14; --panel:#16161e; --chat:#1a1a24;
   --border:rgba(255,255,255,0.08); --user:#3b82f6; --bot:#1e1e2a;
   --text:#e8e8ed; --muted:#8b8fa3;
+  --code-bg:#0b1020; --code-bg-2:#11192e;
+  --code-border:rgba(148,163,184,0.24);
+  --code-toolbar:rgba(2,6,23,0.64);
+  --code-text:#e2e8f0;
   --link:#60a5fa; --sidebar:#111118;
   --shadow-sm:0 1px 3px rgba(0,0,0,0.3);
   --shadow-md:0 4px 16px rgba(0,0,0,0.4);
@@ -373,31 +381,96 @@ select,button.toggle{
   overflow-wrap: anywhere;
   font-size:15px;
   border:1px solid transparent;
-  backdrop-filter: blur(6px);
+  backdrop-filter: none;
 }
 
 .msg:hover .msg-actions{opacity:1;}
 
 .msg-actions{
-  position:absolute;top:6px;right:6px;
-  display:flex;gap:4px;opacity:0;
-  transition:opacity 0.2s;
+  position:static;
+  display:inline-flex;
+  justify-content:flex-end;
+  gap:6px;
+  opacity:1;
+  padding:0;
+  border:none;
+  background:transparent;
+  backdrop-filter:none;
+  transition:none;
+  transform:none;
+  margin-left:auto;
 }
 
 .msg-btn{
-  background:var(--chat);
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:4px 10px;border-radius:6px;
-  cursor:pointer;font-size:11px;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  background:linear-gradient(180deg, rgba(15,23,42,0.88), rgba(15,23,42,0.62));
+  border:1px solid rgba(148,163,184,0.34);
+  color:#e2e8f0;
+  padding:5px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:10px;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
   font-family:inherit;
-  font-weight:600;
-  transition:all 0.15s;
+  font-weight:700;
+  transition:transform 0.12s, border-color 0.12s, background 0.12s;
+  box-shadow:none;
 }
 
 .msg-btn:hover{
-  border-color:var(--user);
-  background:var(--accent-glow);
+  transform:translateY(-1px);
+  border-color:rgba(191,219,254,0.44);
+}
+
+.msg:hover .msg-actions{
+  transform: none;
+}
+
+.msg-meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+  line-height:1;
+}
+
+.user .msg-meta {
+  margin-top: 0;
+  gap: 6px;
+}
+
+.msg-meta .timestamp{
+  margin-top:0;
+}
+
+.msg-btn:focus-visible {
+  outline: 2px solid var(--user);
+  outline-offset: 1px;
+}
+
+.msg-btn.edit-btn {
+  border-color: rgba(56,189,248,0.42);
+  color: #dbeafe;
+}
+
+.msg-btn.retry-btn {
+  border-color: rgba(34,197,94,0.44);
+  color: #dcfce7;
+}
+
+.msg-btn.edit-btn::before {
+  content: "✎";
+  font-size: 11px;
+  line-height: 1;
+}
+
+.msg-btn.retry-btn::before {
+  content: "↻";
+  font-size: 12px;
+  line-height: 1;
 }
 
 .user{
@@ -407,6 +480,8 @@ select,button.toggle{
 	box-shadow: var(--shadow-sm);
 	border-bottom-right-radius: 4px;
   border-color: transparent;
+  padding:10px 14px;
+  line-height:1.5;
 }
 .bot{
 	align-self:flex-start;
@@ -424,11 +499,18 @@ body.dark .bot {
 .msg a{color: var(--link);text-decoration: none;font-weight:600;}
 .msg a:hover{text-decoration:underline;opacity:0.85;}
 
-.timestamp{font-size:10px;color:var(--muted);margin-top:8px;font-weight:500;opacity:0.7;}
+.timestamp{font-size:10px;color:var(--muted);margin-top:8px;font-weight:500;opacity:0.7;line-height:1.1;display:inline-flex;align-items:center;}
 
 .user .timestamp {
   color: #fff;
   opacity: 0.92;
+  margin-top: 0;
+}
+
+.user .msg-btn {
+  min-height: 20px;
+  padding: 3px 8px;
+  font-size: 9px;
 }
 
 #input {
@@ -466,40 +548,135 @@ body.dark .bot {
 
 pre{
   position:relative;
-  background:#1e1e2e;
+  background:
+    linear-gradient(180deg, var(--code-toolbar), rgba(0,0,0,0) 54px),
+    linear-gradient(180deg, var(--code-bg-2), var(--code-bg));
   border-radius:var(--radius-sm);
-  padding:16px;
+  padding:44px 14px 14px;
   margin-top:10px;
   overflow-x:auto;
   max-height:400px;
-  transition:max-height 0.3s;
-  border: 1px solid rgba(255,255,255,0.06);
+  transition:max-height 0.26s ease;
+  border:1px solid var(--code-border);
+  box-shadow: 0 12px 30px rgba(2,6,23,0.24);
 }
 
 pre.collapsed{max-height:80px;overflow:hidden;}
 
+pre.collapsed::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:42px;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(15,23,42,0), var(--code-bg));
+}
+
+pre::before{
+  content:attr(data-lang);
+  position:absolute;
+  top:9px;
+  left:12px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:#cbd5e1;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(15,23,42,0.36);
+}
+
 pre code{
+  display:block;
+  width:max-content;
+  min-width:100%;
   font-size:13px;
   font-family:'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
-  line-height:1.6;
+  line-height:1.7;
+  color:var(--code-text);
+  white-space:pre;
 }
 
-.copy-btn, .collapse-btn{
-  position:absolute;top:8px;
-  background:rgba(255,255,255,0.1);border:none;color:#e8e8ed;
-  font-size:11px;padding:5px 10px;
-  border-radius:6px;cursor:pointer;
+pre .line-number-gutter{
+  position:absolute;
+  top:44px;
+  left:0;
+  bottom:14px;
+  width:42px;
+  padding:0 8px 0 10px;
+  border-right:1px solid rgba(255,255,255,0.08);
+  color:rgba(203,213,225,0.72);
+  font-size:13px;
+  font-family:'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  line-height:1.7;
+  text-align:right;
+  overflow:hidden;
+  user-select:none;
+  pointer-events:none;
+  display:none;
+  background:linear-gradient(180deg, rgba(15,23,42,0.16), rgba(15,23,42,0.05));
+}
+
+pre .line-number-gutter span{
+  display:block;
+  height:1.7em;
+}
+
+pre.line-numbers{
+  padding-left:56px;
+}
+
+pre.line-numbers .line-number-gutter{
+  display:block;
+}
+
+pre code.hljs,
+pre .hljs {
+  background: transparent !important;
+  color: var(--code-text);
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.copy-btn, .collapse-btn, .lines-btn{
+  position:absolute;
+  top:8px;
+  min-height:24px;
+  background:linear-gradient(180deg, rgba(15,23,42,0.86), rgba(15,23,42,0.64));
+  border:1px solid rgba(148,163,184,0.34);
+  color:#e8e8ed;
+  font-size:10px;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  padding:4px 9px;
+  border-radius:7px;
+  cursor:pointer;
   font-family:inherit;
-  font-weight:600;
-  transition:background 0.15s;
+  font-weight:700;
+  transition:background 0.15s, transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  backdrop-filter: none;
+  box-shadow:none;
 }
 
-.copy-btn:hover, .collapse-btn:hover{
-  background:rgba(255,255,255,0.2);
+.copy-btn:hover, .collapse-btn:hover, .lines-btn:hover{
+  background:linear-gradient(180deg, rgba(30,41,59,0.92), rgba(15,23,42,0.8));
+  border-color:rgba(191,219,254,0.44);
+  transform: translateY(-1px);
+  box-shadow:none;
 }
 
-.copy-btn{right:6px;}
-.collapse-btn{right:60px;}
+.lines-btn.active{
+  background:linear-gradient(180deg, rgba(14,116,144,0.56), rgba(15,23,42,0.9));
+  border-color:rgba(56,189,248,0.52);
+  color:#dbeafe;
+}
+
+.copy-btn{right:8px;}
+.lines-btn{right:72px;}
+.collapse-btn{right:136px;}
 
 .scroll-bottom{
   position:absolute;
@@ -648,6 +825,38 @@ button.send:active{
   transform:translateY(0);
 }
 
+.stop-btn {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.stop-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.stop-btn:active {
+  transform: translateY(0);
+}
+
+.stop-btn.hidden {
+  display: none;
+}
+
 .spinner{
   width:20px;height:20px;
   border:2.5px solid var(--border);
@@ -694,6 +903,12 @@ button.send:active{
 /* ===== MARKDOWN TYPOGRAPHY ===== */
 .msg p { margin: 0 0 10px 0; }
 .msg p:last-child { margin-bottom: 0; }
+.msg p:last-of-type { margin-bottom: 0; }
+.msg p:last-of-type + .msg-meta { margin-top: 4px; }
+
+.user p:last-of-type + .msg-meta {
+  margin-top: 2px;
+}
 
 .msg strong { font-weight: 700; }
 .msg em { font-style: italic; }
@@ -741,6 +956,14 @@ body.dark .msg code:not(pre code) {
 .msg h4 { font-size: 1.05em; }
 .msg h5, .msg h6 { font-size: 1em; color: var(--muted); }
 .msg h1:first-child, .msg h2:first-child, .msg h3:first-child { margin-top: 0; }
+
+@media (max-width: 900px) {
+  .container,
+  header,
+  .msg {
+    backdrop-filter: none;
+  }
+}
 
 .msg hr {
   border: none;
@@ -1412,10 +1635,37 @@ body.dark .voice-btn.recording {
   .msg pre {
     font-size: 12px;
     max-height: 250px;
+    padding: 38px 12px 12px;
   }
   
   .msg pre code {
     font-size: 11px;
+  }
+
+  .copy-btn, .collapse-btn, .lines-btn {
+    top: 6px;
+    padding: 4px 7px;
+    font-size: 9px;
+  }
+
+  .copy-btn { right: 6px; }
+  .lines-btn { right: 58px; }
+  .collapse-btn { right: 110px; }
+
+  .msg pre .line-number-gutter {
+    top: 38px;
+    width: 34px;
+    padding: 0 6px 0 8px;
+    font-size: 11px;
+  }
+
+  .msg pre.line-numbers {
+    padding-left: 46px;
+  }
+
+  .msg-actions {
+    opacity: 1;
+    transform: none;
   }
   
   footer {
@@ -2122,6 +2372,7 @@ body.dark .voice-btn.recording {
         <textarea id="input" placeholder="Type or speak... (Ctrl+B for new chat)" aria-label="Message input"></textarea>
         <div class="char-counter" id="charCounter">0 chars</div>
       </div>
+      <button class="stop-btn hidden" id="stopBtn" onclick="stopGeneration()" aria-label="Stop generation">Stop</button>
       <button class="send" onclick="send()" aria-label="Send message">Send</button>
     </footer>
   </div>
@@ -2298,7 +2549,7 @@ async function getMedia(id) {
 }
 
 // ===== AI MEMORY INDEXEDDB OPERATIONS =====
-async function saveMemory(memoryData) {
+async function saveMemoryLocal(memoryData) {
   if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('memories', 'readwrite');
@@ -2307,6 +2558,14 @@ async function saveMemory(memoryData) {
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function saveMemory(memoryData) {
+  await saveMemoryLocal(memoryData);
+  if (incognitoEnabled) return;
+  syncMemoryToCloud(memoryData).catch((err) => {
+    console.warn('Memory cloud sync skipped:', err);
   });
 }
 
@@ -2322,7 +2581,7 @@ async function getAllMemories() {
   });
 }
 
-async function deleteMemory(id) {
+async function deleteMemoryLocal(id) {
   if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('memories', 'readwrite');
@@ -2331,6 +2590,14 @@ async function deleteMemory(id) {
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function deleteMemory(id) {
+  await deleteMemoryLocal(id);
+  if (incognitoEnabled) return;
+  deleteMemoryFromCloud(id).catch((err) => {
+    console.warn('Memory cloud delete skipped:', err);
   });
 }
 
@@ -2353,6 +2620,7 @@ const sidebar = document.getElementById("sidebar");
 const historyList = document.getElementById("historyList");
 const searchBox = document.getElementById("searchBox");
 const scrollBottom = document.getElementById("scrollBottom");
+const stopBtn = document.getElementById("stopBtn");
 const charCounter = document.getElementById("charCounter");
 const headerTitle = document.getElementById("headerTitle");
 const CURRENT_KEY = "Spectrix_current";
@@ -2382,8 +2650,201 @@ CRITICAL RULES:
 - Use \\begin{aligned} ... \\end{aligned} for multi-line equations.
 `;
 const API_WORKER_HOST = ['hac', 'koai-worker.tariqmtaezeem.workers.dev'].join('');
-const CHAT_API_URL = `https://${API_WORKER_HOST}/chat`;
-const CHAT_STREAM_API_URL = `https://${API_WORKER_HOST}/chat/stream`;
+const API_BASE_URL = `https://${API_WORKER_HOST}`;
+const API_FALLBACK_ORIGIN_KEY = 'Spectrix_api_origin';
+const DEFAULT_API_FALLBACK_ORIGIN = API_BASE_URL;
+const CHAT_ROUTE_FALLBACK_STATUSES = new Set([404, 405, 501]);
+
+function normalizeOrigin(origin) {
+  return String(origin || '').trim().replace(/\/+$/, '');
+}
+
+function isLocalHost(hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0' || hostname === '::1';
+}
+
+function buildChatApiCandidates(pathSuffixes) {
+  const candidates = [];
+  const primaryOrigin = normalizeOrigin(API_BASE_URL);
+
+  pathSuffixes.forEach((suffix) => {
+    candidates.push(primaryOrigin + suffix);
+  });
+
+  // In local static dev, allow a configurable remote fallback origin.
+  if (isLocalHost(window.location.hostname)) {
+    const fallbackOrigin = normalizeOrigin(localStorage.getItem(API_FALLBACK_ORIGIN_KEY) || DEFAULT_API_FALLBACK_ORIGIN);
+    if (fallbackOrigin && fallbackOrigin !== primaryOrigin) {
+      pathSuffixes.forEach((suffix) => {
+        candidates.push(fallbackOrigin + suffix);
+      });
+    }
+  }
+
+  return [...new Set(candidates)];
+}
+
+function parseHttpStatusFromError(error) {
+  const match = /HTTP\s+(\d{3})/i.exec(String(error?.message || ''));
+  if (!match) return null;
+  const status = Number.parseInt(match[1], 10);
+  return Number.isFinite(status) ? status : null;
+}
+
+function shouldFallbackToNextChatRoute(error) {
+  if (!error) return false;
+  if (error.isRateLimit || error.isUserAbort) return false;
+  const status = parseHttpStatusFromError(error);
+  if (status == null) return true;
+  return CHAT_ROUTE_FALLBACK_STATUSES.has(status);
+}
+
+const CHAT_API_URL_CANDIDATES = buildChatApiCandidates(['/chat', '/api/chat']);
+const CHAT_STREAM_API_URL_CANDIDATES = buildChatApiCandidates(['/chat/stream', '/api/chat/stream']);
+let activeChatApiUrl = CHAT_API_URL_CANDIDATES[0];
+let activeChatStreamApiUrl = CHAT_STREAM_API_URL_CANDIDATES[0];
+const MARKED_SCRIPT_CANDIDATES = [
+  'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
+  'https://unpkg.com/marked/marked.min.js'
+];
+const HLJS_STYLE_CANDIDATES = [
+  'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css',
+  'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github-dark.min.css'
+];
+const HLJS_SCRIPT_CANDIDATES = [
+  'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js',
+  'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/highlight.min.js'
+];
+const HLJS_GO_LANG_SCRIPT_CANDIDATES = [
+  'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js'
+];
+let markdownRuntimeLoadPromise = null;
+
+function withRetryQuery(url) {
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}spectrix_retry=${Date.now()}`;
+}
+
+function appendExternalScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.defer = true;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+async function loadScriptFromCandidates(candidates, isReady) {
+  if (isReady()) return true;
+
+  for (const baseUrl of candidates) {
+    try {
+      await appendExternalScript(withRetryQuery(baseUrl));
+      if (isReady()) return true;
+    } catch {
+      // Try next candidate.
+    }
+  }
+
+  return isReady();
+}
+
+async function ensureHighlightStylesheet() {
+  if (document.querySelector('link[rel="stylesheet"][href*="highlight.js"]')) {
+    return true;
+  }
+
+  for (const href of HLJS_STYLE_CANDIDATES) {
+    try {
+      await ensureStylesheetLoaded(href);
+      return true;
+    } catch {
+      // Try next CDN.
+    }
+  }
+
+  return false;
+}
+
+async function ensureMarkdownRuntimeLoaded(options = {}) {
+  const { timeoutMs = 2200, silent = false } = options;
+  if (window.marked && window.hljs) return true;
+
+  if (!markdownRuntimeLoadPromise) {
+    const activePromise = (async () => {
+      if (!window.marked) {
+        await loadScriptFromCandidates(MARKED_SCRIPT_CANDIDATES, () => Boolean(window.marked));
+      }
+
+      if (!window.hljs) {
+        await ensureHighlightStylesheet();
+        await loadScriptFromCandidates(HLJS_SCRIPT_CANDIDATES, () => Boolean(window.hljs));
+      }
+
+      if (window.hljs?.getLanguage && !window.hljs.getLanguage('go')) {
+        await loadScriptFromCandidates(
+          HLJS_GO_LANG_SCRIPT_CANDIDATES,
+          () => Boolean(window.hljs?.getLanguage && window.hljs.getLanguage('go'))
+        );
+      }
+
+      return Boolean(window.marked);
+    })();
+
+    markdownRuntimeLoadPromise = activePromise;
+    activePromise.finally(() => {
+      if (markdownRuntimeLoadPromise === activePromise) {
+        markdownRuntimeLoadPromise = null;
+      }
+    });
+  }
+
+  try {
+    if (timeoutMs > 0) {
+      return await Promise.race([
+        markdownRuntimeLoadPromise,
+        new Promise((resolve) => setTimeout(() => resolve(false), timeoutMs))
+      ]);
+    }
+    return await markdownRuntimeLoadPromise;
+  } catch (error) {
+    if (!silent) {
+      console.warn('Markdown runtime load warning:', error);
+    }
+    return false;
+  }
+}
+
+async function fetchChatApiWithFallback(options = {}, retryCount = 1) {
+  const orderedCandidates = [
+    activeChatApiUrl,
+    ...CHAT_API_URL_CANDIDATES.filter((url) => url !== activeChatApiUrl)
+  ];
+
+  let lastError = null;
+
+  for (let index = 0; index < orderedCandidates.length; index++) {
+    const url = orderedCandidates[index];
+
+    try {
+      const response = await fetchWithTimeoutRetry(url, options, retryCount);
+      activeChatApiUrl = url;
+      return response;
+    } catch (error) {
+      lastError = error;
+      const hasNext = index < orderedCandidates.length - 1;
+      if (hasNext && shouldFallbackToNextChatRoute(error)) {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError || new Error('Chat request failed');
+}
 let FIXED_TEXT_MODEL = localStorage.getItem('Spectrix_text_model') || "stepfun/step-3.5-flash:free";
 const FIXED_VIDEO_MODEL = "ByteDance/Seedance-1.0-lite";
 
@@ -2398,7 +2859,10 @@ let incognitoEnabled = localStorage.getItem(INCOGNITO_KEY) === 'true';
 let activeMediaObjectUrls = [];
 let cloudSyncTimer = null;
 let cloudSyncUnsubscribe = null;
+let cloudMemorySyncUnsubscribe = null;
 let cloudSyncInFlight = false;
+let cloudMemorySyncInFlight = false;
+let activeStreamAbortController = null;
 let autoScrollToLatest = true;
 let lastAutoScrollTs = 0;
 const AUTO_SCROLL_NEAR_BOTTOM_PX = 80;
@@ -2471,6 +2935,10 @@ function stopCloudAutoSync() {
     cloudSyncUnsubscribe();
     cloudSyncUnsubscribe = null;
   }
+  if (typeof cloudMemorySyncUnsubscribe === 'function') {
+    cloudMemorySyncUnsubscribe();
+    cloudMemorySyncUnsubscribe = null;
+  }
 }
 
 function startCloudAutoSync() {
@@ -2480,12 +2948,14 @@ function startCloudAutoSync() {
   if (!user) return;
 
   const runSync = () => {
-    if (cloudSyncInFlight) return;
+    if (cloudSyncInFlight || cloudMemorySyncInFlight) return;
     cloudSyncInFlight = true;
-    syncChats(user.uid)
+    cloudMemorySyncInFlight = true;
+    Promise.all([syncChats(user.uid), syncMemories(user.uid)])
       .catch((err) => console.warn('Auto-sync failed:', err))
       .finally(() => {
         cloudSyncInFlight = false;
+        cloudMemorySyncInFlight = false;
       });
   };
 
@@ -2510,6 +2980,28 @@ function startCloudAutoSync() {
     );
   } catch (err) {
     console.warn('Realtime sync setup failed:', err);
+  }
+
+  try {
+    const memRef = firebase.firestore().collection('users').doc(user.uid).collection('memories');
+    cloudMemorySyncUnsubscribe = memRef.onSnapshot(
+      (snapshot) => {
+        if (cloudMemorySyncInFlight) return;
+        cloudMemorySyncInFlight = true;
+        handleMemoryRealtimeSync(snapshot).catch(err => console.warn('Realtime memory sync failed:', err)).finally(() => {
+          cloudMemorySyncInFlight = false;
+        });
+      },
+      (err) => {
+        console.warn('Realtime memory listener error:', err);
+        const msg = String(err?.message || err || '').toLowerCase();
+        if (msg.includes('blocked_by_client') || msg.includes('blocked by client')) {
+          showStatus('Realtime memory sync blocked by extension. Falling back to timer sync.');
+        }
+      }
+    );
+  } catch (err) {
+    console.warn('Realtime memory sync setup failed:', err);
   }
 
   // Fallback/backup sync path.
@@ -2548,6 +3040,7 @@ async function toggleIncognitoMode() {
   const user = firebase?.auth?.().currentUser;
   if (user) {
     await syncChats(user.uid);
+    await syncMemories(user.uid);
   }
   startCloudAutoSync();
   showStatus('Incognito OFF: persistence restored.');
@@ -2572,6 +3065,7 @@ async function initApp() {
   await loadAllSessions();
   applySavedTheme();
   updateIncognitoUI();
+  await ensureMarkdownRuntimeLoaded({ timeoutMs: 2500, silent: true });
 
   // 🔥 HARD SAFETY CHECK
   if (!currentId || !sessions[currentId]) {
@@ -3483,6 +3977,9 @@ function scrollChatToLatest({ smooth = false, force = false } = {}) {
   if (smooth && !force && now - lastAutoScrollTs < 120) return;
   lastAutoScrollTs = now;
 
+  const targetTop = chat.scrollHeight - chat.clientHeight;
+  if (Math.abs(targetTop - chat.scrollTop) < 2) return;
+
   chat.scrollTo({ top: chat.scrollHeight, behavior: smooth ? "smooth" : "auto" });
 }
 
@@ -3491,17 +3988,114 @@ function scrollToBottom() {
   scrollChatToLatest({ smooth: true, force: true });
 }
 
+function setStopButtonVisible(visible) {
+  if (!stopBtn) return;
+  stopBtn.classList.toggle('hidden', !visible);
+}
+
+function stopGeneration() {
+  if (!isGenerating) return;
+  if (activeStreamAbortController) {
+    activeStreamAbortController.abort('user-stop');
+    showStatus('Stopping generation...');
+  }
+}
+
+async function fetchBotAnswerViaJson(payload) {
+  const res = await fetchChatApiWithFallback({
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    timeoutMs: 90000,
+    body: JSON.stringify(payload)
+  }, 1);
+
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("Server returned invalid response");
+  }
+
+  const answer = data?.choices?.[0]?.message?.content || "";
+  if (!answer.trim()) {
+    throw new Error("Empty response from model");
+  }
+  return answer;
+}
+
+function removePendingStreamBubble() {
+  const pending = chat.querySelector('.msg.bot:last-child');
+  if (!pending) return;
+  if (pending.querySelector('.timestamp')) return;
+  pending.remove();
+}
+
 function time() {
   const d = new Date();
   return d.getHours().toString().padStart(2, '0') + ":" +
          d.getMinutes().toString().padStart(2, '0');
 }
 
+function normalizeCodeFenceMarkup(text) {
+  let normalized = String(text || '');
+
+  // Convert triple-quote style fences to markdown fences.
+  normalized = normalized
+    .replace(/^[ \t]*[“”"']{0,2}"""\s*([a-zA-Z0-9_#+.-]+)\s+([^\n]+)$/gm, '```$1\n$2')
+    .replace(/^[ \t]*[“”"']{0,2}"""\s*([a-zA-Z0-9_#+.-]+)?\s*[“”"']{0,2}[ \t]*$/gm, (match, lang) => `\`\`\`${lang || ''}`)
+    .replace(/^[ \t]*[“”"']{0,2}'''\s*([a-zA-Z0-9_#+.-]+)\s+([^\n]+)$/gm, '```$1\n$2')
+    .replace(/^[ \t]*[“”"']{0,2}'''\s*([a-zA-Z0-9_#+.-]+)?\s*[“”"']{0,2}[ \t]*$/gm, (match, lang) => `\`\`\`${lang || ''}`);
+
+  // Remove stray quotes directly attached to markdown fences.
+  normalized = normalized
+    .replace(/(^|\n)[ \t]*[“”"']+\s*```/g, '$1```')
+    .replace(/```[ \t]*[“”"']+(?=\s*(\n|$))/g, '```')
+    .replace(/^[ \t]*[“”"']+\s*```([a-zA-Z0-9_#+.-]*)\s*[“”"']+[ \t]*$/gm, '```$1');
+
+  return normalized;
+}
+
+function normalizeFenceBoundaryLines(text) {
+  const lines = String(text || '').replace(/\r\n/g, '\n').split('\n');
+  const output = [];
+  let inFence = false;
+
+  for (const line of lines) {
+    const trimmedStart = line.trimStart();
+    const indent = line.slice(0, line.length - trimmedStart.length);
+
+    if (!trimmedStart.startsWith('```')) {
+      output.push(line);
+      continue;
+    }
+
+    const rest = trimmedStart.slice(3);
+
+    // If we are already inside a fence and the line is like
+    // "``` Then run...", treat it as a closing fence followed by text.
+    if (inFence && rest.trim()) {
+      output.push(indent + '```');
+      output.push(indent + rest.trimStart());
+      inFence = false;
+      continue;
+    }
+
+    output.push(line);
+    inFence = !inFence;
+  }
+
+  return output.join('\n');
+}
+
 function preprocess(text) {
-  const normalizedText = text
+  const normalizedText = normalizeFenceBoundaryLines(normalizeCodeFenceMarkup(text))
     .replace(/\[CODE\]/gi, '```')
     .replace(/\[\/CODE\]/gi, '```')
     .replace(/\[code\s+lang=["']?(\w+)["']?\]/gi, '```$1')
+    .replace(/[“”]\s*```/g, '```')
+    .replace(/```\s*[“”]/g, '```')
+    .replace(/([^\n])\s*```(?=\s|$)/g, '$1\n```')
     .replace(/<\/?(s|del|strike)>/gi, "");
 
   return normalizeMathMarkup(normalizedText);
@@ -3759,42 +4353,158 @@ function renderMarkdownSafely(content) {
   return result;
 }
 
+function formatCodeLanguageLabel(lang) {
+  const key = String(lang || '').toLowerCase().trim();
+  const map = {
+    javascript: 'JS',
+    typescript: 'TS',
+    python: 'PY',
+    bash: 'SHELL',
+    shell: 'SHELL',
+    sh: 'SHELL',
+    html: 'HTML',
+    css: 'CSS',
+    json: 'JSON',
+    markdown: 'MD',
+    md: 'MD',
+    jsx: 'JSX',
+    tsx: 'TSX',
+    csharp: 'C#',
+    cpp: 'C++',
+    c: 'C',
+    java: 'JAVA',
+    go: 'GO',
+    rust: 'RUST',
+    sql: 'SQL',
+    yaml: 'YAML',
+    yml: 'YAML',
+    xml: 'XML',
+    plaintext: 'TEXT',
+    text: 'TEXT'
+  };
+
+  if (map[key]) return map[key];
+  if (!key) return 'CODE';
+  return key.slice(0, 12).toUpperCase();
+}
+
+function buildLineNumberGutter(block, pre) {
+  const existing = pre.querySelector('.line-number-gutter');
+  if (existing) existing.remove();
+
+  const normalized = String(block.textContent || '').replace(/\r\n/g, '\n').replace(/\n+$/, '');
+  const lineCount = normalized ? normalized.split('\n').length : 1;
+
+  const gutter = document.createElement('div');
+  gutter.className = 'line-number-gutter';
+
+  for (let line = 1; line <= lineCount; line++) {
+    const lineEl = document.createElement('span');
+    lineEl.textContent = String(line);
+    gutter.appendChild(lineEl);
+  }
+
+  pre.appendChild(gutter);
+}
+
+function syncLineNumberGutter(pre) {
+  if (!pre) return;
+  const gutter = pre.querySelector('.line-number-gutter');
+  if (!gutter) return;
+  gutter.style.transform = `translateY(${-pre.scrollTop}px)`;
+}
+
 function decorateCodeBlocks(container) {
   if (!window.hljs) return;
 
   const blocks = container.querySelectorAll("pre code");
   blocks.forEach((block) => {
+    // Normalize common markdown fence padding so numbering starts on real content.
+    const rawBlockText = String(block.textContent || '');
+    const normalizedBlockText = rawBlockText
+      .replace(/\r\n/g, '\n')
+      .replace(/^\n+/, '')
+      .replace(/\n+$/, '');
+    if (normalizedBlockText !== rawBlockText) {
+      block.textContent = normalizedBlockText;
+    }
+
     hljs.highlightElement(block);
     const pre = block.parentElement;
     if (!pre || pre.dataset.enhanced === 'true') return;
+
+    const langFromClass = Array.from(block.classList)
+      .find((cls) => cls.startsWith('language-'));
+    const resolvedLang = langFromClass
+      ? langFromClass.replace('language-', '')
+      : (block.getAttribute('data-language') || 'code');
+    pre.dataset.lang = formatCodeLanguageLabel(resolvedLang);
+
+    buildLineNumberGutter(block, pre);
+    syncLineNumberGutter(pre);
+
+    if (pre.dataset.lineScrollBound !== 'true') {
+      pre.addEventListener('scroll', () => syncLineNumberGutter(pre), { passive: true });
+      pre.dataset.lineScrollBound = 'true';
+    }
+
     pre.dataset.enhanced = 'true';
 
     const collapseBtn = document.createElement("button");
     collapseBtn.className = "collapse-btn";
-    collapseBtn.textContent = "▼";
+    collapseBtn.textContent = "Fold";
+    collapseBtn.title = "Collapse code block";
     collapseBtn.onclick = () => {
       pre.classList.toggle("collapsed");
-      collapseBtn.textContent = pre.classList.contains("collapsed") ? "▶" : "▼";
+      const isCollapsed = pre.classList.contains("collapsed");
+      collapseBtn.textContent = isCollapsed ? "Unfold" : "Fold";
+      collapseBtn.title = isCollapsed ? "Expand code block" : "Collapse code block";
+    };
+
+    const linesBtn = document.createElement("button");
+    linesBtn.className = "lines-btn";
+    linesBtn.textContent = "Lines";
+    linesBtn.title = "Toggle line numbers";
+    linesBtn.setAttribute('aria-pressed', 'false');
+    linesBtn.onclick = () => {
+      const enabled = pre.classList.toggle("line-numbers");
+      linesBtn.classList.toggle('active', enabled);
+      linesBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
     };
 
     const copyBtn = document.createElement("button");
     copyBtn.className = "copy-btn";
-    copyBtn.textContent = "COPY";
+    copyBtn.textContent = "Copy";
+    copyBtn.title = "Copy code";
     copyBtn.onclick = async () => {
       try {
         await navigator.clipboard.writeText(block.textContent || '');
-        copyBtn.textContent = "COPIED";
+        copyBtn.textContent = "Copied";
       } catch {
-        copyBtn.textContent = "FAILED";
+        copyBtn.textContent = "Failed";
       }
       setTimeout(() => {
-        copyBtn.textContent = "COPY";
+        copyBtn.textContent = "Copy";
       }, 1200);
     };
 
     pre.appendChild(collapseBtn);
+    pre.appendChild(linesBtn);
     pre.appendChild(copyBtn);
   });
+}
+
+function scheduleNonCriticalTask(task, timeout = 180) {
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(() => task(), { timeout });
+    return;
+  }
+  setTimeout(task, timeout);
+}
+
+function queueCodeBlockEnhancement(container) {
+  if (!container || !container.querySelector || !container.querySelector('pre code')) return;
+  scheduleNonCriticalTask(() => decorateCodeBlocks(container), 220);
 }
 
 async function fetchWithTimeoutRetry(url, options = {}, retryCount = 1) {
@@ -3836,7 +4546,9 @@ async function fetchWithTimeoutRetry(url, options = {}, retryCount = 1) {
       // Don't retry rate limit errors — propagate immediately
       if (error.isRateLimit) throw error;
       lastError = error;
-      if (attempt < retryCount) {
+      const status = parseHttpStatusFromError(error);
+      const shouldRetry = status == null || status >= 500;
+      if (attempt < retryCount && shouldRetry) {
         const backoffMs = Math.min(1000 * Math.pow(2, attempt), 8000);
         await new Promise((resolve) => setTimeout(resolve, backoffMs));
       }
@@ -3854,6 +4566,7 @@ async function fetchWithTimeoutRetry(url, options = {}, retryCount = 1) {
 function render(role, content, saveIt = true, messageIndex = null) {
   const d = document.createElement("div");
   d.className = "msg " + role;
+  let actions = null;
 
   if (typeof content === "object" && content.type === "image") {
     const img = document.createElement("img");
@@ -3883,7 +4596,7 @@ function render(role, content, saveIt = true, messageIndex = null) {
   }
 
   if (role === "user" && typeof content === "string") {
-    const actions = document.createElement("div");
+    actions = document.createElement("div");
     actions.className = "msg-actions";
 
     let resolvedIndex = Number.isInteger(messageIndex) ? messageIndex : null;
@@ -3895,35 +4608,41 @@ function render(role, content, saveIt = true, messageIndex = null) {
     }
 
     const editBtn = document.createElement("button");
-    editBtn.className = "msg-btn";
-    editBtn.textContent = "✏️ Edit";
+    editBtn.className = "msg-btn edit-btn";
+    editBtn.textContent = "Edit";
     editBtn.onclick = () => {
       editMessage(resolvedIndex, content);
     };
 
     actions.appendChild(editBtn);
-    d.appendChild(actions);
   }
 
   if (role === "bot" && typeof content === "string") {
-    const actions = document.createElement("div");
+    actions = document.createElement("div");
     actions.className = "msg-actions";
 
     const retryBtn = document.createElement("button");
-    retryBtn.className = "msg-btn";
-    retryBtn.textContent = "🔄 Retry";
+    retryBtn.className = "msg-btn retry-btn";
+    retryBtn.textContent = "Retry";
     retryBtn.onclick = retryLast;
 
     actions.appendChild(retryBtn);
-    d.appendChild(actions);
   }
 
-  setTimeout(() => decorateCodeBlocks(d), 80);
+  queueCodeBlockEnhancement(d);
 
   const t = document.createElement("div");
   t.className = "timestamp";
   t.textContent = time();
-  d.appendChild(t);
+  if (actions) {
+    const meta = document.createElement("div");
+    meta.className = "msg-meta";
+    meta.appendChild(t);
+    meta.appendChild(actions);
+    d.appendChild(meta);
+  } else {
+    d.appendChild(t);
+  }
 
   chat.appendChild(d);
   scrollChatToLatest({ smooth: false });
@@ -3977,13 +4696,67 @@ async function streamBotInChunks(fullText, baseChunkSize = 50) {
 }
 */
 
-async function streamBotFromSSE(payload) {
-  const res = await fetchWithTimeoutRetry(CHAT_STREAM_API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    timeoutMs: 120000,
-    body: JSON.stringify(payload)
-  }, 1);
+async function streamBotFromSSE(payload, options = {}) {
+  const signal = options.signal;
+  const streamCandidates = [
+    activeChatStreamApiUrl,
+    ...CHAT_STREAM_API_URL_CANDIDATES.filter((url) => url !== activeChatStreamApiUrl)
+  ];
+
+  const requestBody = JSON.stringify(payload);
+  let res = null;
+  let lastStreamError = null;
+
+  for (let index = 0; index < streamCandidates.length; index++) {
+    const url = streamCandidates[index];
+    try {
+      const attempt = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: requestBody,
+        signal
+      });
+
+      const hasNext = index < streamCandidates.length - 1;
+      if (hasNext && CHAT_ROUTE_FALLBACK_STATUSES.has(attempt.status)) {
+        continue;
+      }
+
+      activeChatStreamApiUrl = url;
+      res = attempt;
+      break;
+    } catch (error) {
+      if (signal?.aborted) {
+        const abortError = new Error('Generation stopped');
+        abortError.isUserAbort = true;
+        throw abortError;
+      }
+
+      lastStreamError = error;
+      if (index < streamCandidates.length - 1) continue;
+      throw error;
+    }
+  }
+
+  if (!res) {
+    throw lastStreamError || new Error('Streaming endpoint unavailable');
+  }
+
+  if (res.status === 429) {
+    let retryAfter = 30;
+    try {
+      const errBody = await res.clone().json();
+      if (errBody.retryAfter) retryAfter = errBody.retryAfter;
+    } catch {}
+    const err = new Error(`Rate limited — please wait ~${retryAfter}s and try again.`);
+    err.isRateLimit = true;
+    err.retryAfter = retryAfter;
+    throw err;
+  }
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
 
   if (!res.body) {
     throw new Error("Streaming is not supported in this browser.");
@@ -4001,19 +4774,46 @@ async function streamBotFromSSE(payload) {
   let renderedText = "";
   let buffer = "";
   let streamDone = false;
+  let abortedByUser = false;
   let frameScheduled = false;
 
   const decoder = new TextDecoder();
   const reader = res.body.getReader();
+  const STREAM_IDLE_TIMEOUT_MS = 20000;
+
+  const readChunkWithTimeout = async () => {
+    let timeoutId;
+    try {
+      return await Promise.race([
+        reader.read(),
+        new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Stream stalled.')), STREAM_IDLE_TIMEOUT_MS);
+        })
+      ]);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  };
+
+  let lastStreamRenderAt = 0;
+  const STREAM_RENDER_MIN_INTERVAL_MS = 40;
 
   const renderCurrentState = () => {
+    // During stream, render plain text for smoother FPS; finalize markdown once at the end.
+    d.textContent = renderedText;
+    scrollChatToLatest({ smooth: false });
+  };
+
+  const finalizeRenderedMessage = async () => {
+    await ensureMarkdownRuntimeLoaded({ timeoutMs: 1500, silent: true });
     if (window.marked) {
       d.innerHTML = renderMarkdownSafely(renderedText);
       promoteInlineCodeMath(d);
     } else {
       d.textContent = renderedText;
     }
-    scrollChatToLatest({ smooth: false });
+    await renderMath(d);
+    queueCodeBlockEnhancement(d);
   };
 
   const scheduleRender = () => {
@@ -4021,12 +4821,25 @@ async function streamBotFromSSE(payload) {
     frameScheduled = true;
     requestAnimationFrame(() => {
       frameScheduled = false;
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      if (now - lastStreamRenderAt < STREAM_RENDER_MIN_INTERVAL_MS) return;
+      lastStreamRenderAt = now;
       renderCurrentState();
     });
   };
 
   while (!streamDone) {
-    const chunk = await reader.read();
+    let chunk;
+    try {
+      chunk = await readChunkWithTimeout();
+    } catch (error) {
+      if (signal?.aborted) {
+        abortedByUser = true;
+        break;
+      }
+      throw error;
+    }
+
     if (chunk.done) break;
 
     buffer += decoder.decode(chunk.value, { stream: true });
@@ -4062,8 +4875,6 @@ async function streamBotFromSSE(payload) {
             throw new Error(eventData.message || "Streaming failed");
           }
 
-          // Support both wrapped Spectrix events ({type:"delta"}) and
-          // raw OpenRouter stream chunks ({choices:[{delta:{content:"..."}}]}).
           const wrappedDelta = (eventData?.type === "delta" && typeof eventData.delta === "string")
             ? eventData.delta
             : "";
@@ -4086,14 +4897,29 @@ async function streamBotFromSSE(payload) {
     }
   }
 
+  if (abortedByUser) {
+    if (!renderedText.trim()) {
+      d.remove();
+      const abortError = new Error('Generation stopped');
+      abortError.isUserAbort = true;
+      throw abortError;
+    }
+
+    await finalizeRenderedMessage();
+    session.messages.push({ role: "bot", content: renderedText });
+    session.timestamp = Date.now();
+    await saveChat(session);
+    renderHistory();
+    updateHeaderTitle();
+    showStatus('Generation stopped');
+    return renderedText;
+  }
+
   if (!renderedText.trim()) {
     throw new Error("Empty response from model");
   }
 
-  renderCurrentState();
-  await renderMath(d);
-
-  setTimeout(() => decorateCodeBlocks(d), 80);
+  await finalizeRenderedMessage();
 
   // Play TTS once final text is complete.
   speakText(renderedText);
@@ -4110,7 +4936,7 @@ async function streamBotFromSSE(payload) {
 // ===== FULL AUTO TITLE =====
 async function generateTitle(userPrompt, botReply) {
   try {
-    const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
+    const res = await fetchChatApiWithFallback({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       timeoutMs: 22000,
@@ -4198,7 +5024,10 @@ async function send(options = {}) {
     return;
   }
 
+  await ensureMarkdownRuntimeLoaded({ timeoutMs: 1800, silent: true });
+
   isGenerating = true;
+  setStopButtonVisible(true);
   lastUserPrompt = prompt;
 
   const firstUserPrompt = prompt;
@@ -4348,8 +5177,28 @@ if (webSearchEnabled) {
 }
 
 loading.remove();
-const answer = await streamBotFromSSE(payload);
+let answer;
+try {
+  activeStreamAbortController = new AbortController();
+  answer = await streamBotFromSSE(payload, { signal: activeStreamAbortController.signal });
+} catch (streamError) {
+  if (streamError?.isUserAbort) {
+    isGenerating = false;
+    setStopButtonVisible(false);
+    return;
+  }
+  if (streamError?.isRateLimit) {
+    throw streamError;
+  }
+
+  removePendingStreamBubble();
+  showStatus('Stream interrupted. Switching to standard response...');
+  answer = await fetchBotAnswerViaJson(payload);
+  render("bot", answer);
+}
+activeStreamAbortController = null;
 isGenerating = false;
+setStopButtonVisible(false);
 
      if (shouldAutoTitle) {
   // Mark as titled IMMEDIATELY to prevent double-firing
@@ -4383,6 +5232,8 @@ isGenerating = false;
   } catch (err) {
     console.error("Send error:", err);
     isGenerating = false;
+    activeStreamAbortController = null;
+    setStopButtonVisible(false);
     loading.remove();
 
     if (err.isRateLimit) {
@@ -4898,6 +5749,7 @@ async function clearAllMemories() {
   });
   if (!shouldClear) return;
   await clearAllMemoriesFromDB();
+  await clearAllMemoriesFromCloud();
   await renderMemoryList();
   await updateMemoryBadge();
   showStatus('All memories cleared 🗑️');
@@ -4952,7 +5804,7 @@ async function extractMemories(userMessage, botReply) {
     const existingMemories = await getAllMemories();
     const existingFacts = existingMemories.map(m => m.content.toLowerCase());
 
-    const res = await fetchWithTimeoutRetry(CHAT_API_URL, {
+    const res = await fetchChatApiWithFallback({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       timeoutMs: 18000,
@@ -5402,17 +6254,19 @@ mjx-container[display='true']:hover .math-copy-btn {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     let originalRenderMath = window.renderMath;
-    window.renderMath = function(d) {
-        if (originalRenderMath) originalRenderMath(d);
-        if (!d || !d.querySelectorAll) return;
-        
-        d.querySelectorAll('.katex-display, mjx-container[display="true"]').forEach(el => {
-            if (el.querySelector('.math-copy-btn')) return;
-            const btn = document.createElement('button');
-            btn.className = 'math-copy-btn';
-            btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy LaTeX`;
-            el.appendChild(btn);
-        });
+  window.renderMath = async function(d) {
+    if (originalRenderMath) {
+      await Promise.resolve(originalRenderMath(d));
+    }
+    if (!d || !d.querySelectorAll) return;
+
+    d.querySelectorAll('.katex-display, mjx-container[display="true"]').forEach(el => {
+      if (el.querySelector('.math-copy-btn')) return;
+      const btn = document.createElement('button');
+      btn.className = 'math-copy-btn';
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy LaTeX`;
+      el.appendChild(btn);
+    });
     };
 });
 
@@ -5656,6 +6510,8 @@ async function handleProfileAction(action) {
   closeProfileActions();
   if (action === 'backup') {
     await backupAllLocalChatsToCloud(true);
+    await syncMemories(user.uid);
+    showStatus('Memories synced to Google.');
     return;
   }
   if (action === 'edit') {
@@ -5713,11 +6569,61 @@ firebase.auth().onAuthStateChanged(async user => {
     localStorage.setItem(PREPOPUP_KEY, 'true');
     await backupAllLocalChatsToCloud(false);
     await syncChats(user.uid);
+    await syncMemories(user.uid);
     startCloudAutoSync();
   } else {
     stopCloudAutoSync();
   }
 });
+
+async function handleMemoryRealtimeSync(snapshot) {
+  if (incognitoEnabled) return;
+
+  const localMemories = await getAllMemories();
+  const localMap = new Map(localMemories.map((m) => [String(m.id), m]));
+  let changed = false;
+
+  for (const change of snapshot.docChanges()) {
+    const data = change.doc.data();
+    if (!data || !data.id) continue;
+    const memoryId = String(data.id);
+
+    if (change.type === 'removed') {
+      if (localMap.has(memoryId)) {
+        await deleteMemoryLocal(memoryId);
+        localMap.delete(memoryId);
+        changed = true;
+      }
+      continue;
+    }
+
+    const local = localMap.get(memoryId);
+    if (!local) {
+      await saveMemoryLocal(data);
+      localMap.set(memoryId, data);
+      changed = true;
+      continue;
+    }
+
+    const cloudTs = Number(data.timestamp || 0);
+    const localTs = Number(local.timestamp || 0);
+    if (cloudTs > localTs) {
+      await saveMemoryLocal(data);
+      localMap.set(memoryId, data);
+      changed = true;
+    } else if (localTs > cloudTs) {
+      await syncMemoryToCloud(local);
+    }
+  }
+
+  if (changed) {
+    await updateMemoryBadge();
+    const panel = document.getElementById('memoryPanel');
+    if (panel?.classList.contains('visible')) {
+      await renderMemoryList();
+    }
+  }
+}
 
 async function handleRealtimeSync(snapshot) {
   if (incognitoEnabled) return;
@@ -5867,6 +6773,67 @@ async function syncChats(uid) {
   }
 }
 
+async function syncMemories(uid) {
+  if (incognitoEnabled) return;
+  try {
+    const dbF = firebase.firestore();
+    const memRef = dbF.collection('users').doc(uid).collection('memories');
+    const snap = await memRef.get();
+
+    const localMemories = await getAllMemories();
+    const localMap = new Map(localMemories.map((m) => [String(m.id), m]));
+    const cloudIds = new Set();
+    let changed = false;
+
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (!data || !data.id) continue;
+      const memoryId = String(data.id);
+      cloudIds.add(memoryId);
+
+      const local = localMap.get(memoryId);
+      if (!local) {
+        await saveMemoryLocal(data);
+        localMap.set(memoryId, data);
+        changed = true;
+        continue;
+      }
+
+      const cloudTs = Number(data.timestamp || 0);
+      const localTs = Number(local.timestamp || 0);
+      if (cloudTs > localTs) {
+        await saveMemoryLocal(data);
+        localMap.set(memoryId, data);
+        changed = true;
+      } else if (localTs > cloudTs) {
+        await syncMemoryToCloud(local);
+      }
+    }
+
+    for (const local of localMemories) {
+      const memoryId = String(local?.id || '');
+      if (!memoryId) continue;
+      if (!cloudIds.has(memoryId)) {
+        await syncMemoryToCloud(local);
+      }
+    }
+
+    if (changed) {
+      await updateMemoryBadge();
+      const panel = document.getElementById('memoryPanel');
+      if (panel?.classList.contains('visible')) {
+        await renderMemoryList();
+      }
+    }
+  } catch (e) {
+    console.error('Memory sync error: ', e);
+    const msg = String(e?.message || e || '').toLowerCase();
+    if (msg.includes('blocked_by_client') || msg.includes('blocked by client')) {
+      showStatus('Memory cloud sync blocked by an extension. Local memory still works.');
+    }
+  }
+}
+
 async function syncChatToCloud(chatData) {
   if (incognitoEnabled) return;
   try {
@@ -5879,6 +6846,51 @@ async function syncChatToCloud(chatData) {
     if (msg.includes('blocked_by_client') || msg.includes('blocked by client')) {
       showStatus('Cloud write blocked by an extension. Try disabling ad/tracker blockers for this site.');
     }
+  }
+}
+
+async function syncMemoryToCloud(memoryData) {
+  if (incognitoEnabled) return;
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user || !memoryData || !memoryData.id) return;
+    await firebase.firestore().collection('users').doc(user.uid).collection('memories').doc(String(memoryData.id)).set(memoryData, { merge: true });
+  } catch (e) {
+    console.warn('Memory cloud write skipped:', e);
+    const msg = String(e?.message || e || '').toLowerCase();
+    if (msg.includes('blocked_by_client') || msg.includes('blocked by client')) {
+      showStatus('Memory cloud write blocked by an extension.');
+    }
+  }
+}
+
+async function deleteMemoryFromCloud(memoryId) {
+  if (incognitoEnabled) return;
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user || !memoryId) return;
+    await firebase.firestore().collection('users').doc(user.uid).collection('memories').doc(String(memoryId)).delete();
+  } catch (e) {
+    console.warn('Memory cloud delete skipped:', e);
+  }
+}
+
+async function clearAllMemoriesFromCloud() {
+  if (incognitoEnabled) return;
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const dbF = firebase.firestore();
+    const memRef = dbF.collection('users').doc(user.uid).collection('memories');
+    const snap = await memRef.get();
+    if (snap.empty) return;
+
+    const batch = dbF.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+  } catch (e) {
+    console.warn('Memory cloud clear skipped:', e);
   }
 }
 

@@ -44,7 +44,7 @@ export default {
       "https://spectrix.netlify.app",
       "https://spectrix-ultra.netlify.app",
       "http://127.0.0.1:5500",
-      "https://taezeem.is-a.dev/Spectrix/"
+      "https://taezeem.is-a.dev"
     ];
     const origin = request.headers.get("Origin");
 
