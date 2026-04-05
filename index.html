@@ -21,6 +21,9 @@
 <meta name="google-site-verification" content="JhkPJl6nEawBgQ9fu1ExQ6RrsLKD0XNVLIzmC-_uD_E" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap">
 <script src="https://js.puter.com/v2/"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
@@ -43,7 +46,6 @@ window.MathJax = {
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
 *{
 	box-sizing:border-box;
 	margin:0;
@@ -367,7 +369,7 @@ select,button.toggle{
     linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04)),
     var(--chat);
   position:relative;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 .msg{
@@ -382,6 +384,8 @@ select,button.toggle{
   font-size:15px;
   border:1px solid transparent;
   backdrop-filter: none;
+  content-visibility:auto;
+  contain-intrinsic-size: 0 170px;
 }
 
 .msg:hover .msg-actions{opacity:1;}
@@ -559,6 +563,7 @@ pre{
   transition:max-height 0.26s ease;
   border:1px solid var(--code-border);
   box-shadow: 0 12px 30px rgba(2,6,23,0.24);
+  overscroll-behavior: contain;
 }
 
 pre.collapsed{max-height:80px;overflow:hidden;}
@@ -618,6 +623,7 @@ pre .line-number-gutter{
   pointer-events:none;
   display:none;
   background:linear-gradient(180deg, rgba(15,23,42,0.16), rgba(15,23,42,0.05));
+  will-change: transform;
 }
 
 pre .line-number-gutter span{
@@ -639,9 +645,10 @@ pre .hljs {
   color: var(--code-text);
   padding: 0 !important;
   margin: 0 !important;
+  line-height: 1.7 !important;
 }
 
-.copy-btn, .collapse-btn, .lines-btn{
+.copy-btn, .collapse-btn, .lines-btn, .preview-btn{
   position:absolute;
   top:8px;
   min-height:24px;
@@ -661,22 +668,51 @@ pre .hljs {
   box-shadow:none;
 }
 
-.copy-btn:hover, .collapse-btn:hover, .lines-btn:hover{
+.copy-btn:hover, .collapse-btn:hover, .lines-btn:hover, .preview-btn:hover{
   background:linear-gradient(180deg, rgba(30,41,59,0.92), rgba(15,23,42,0.8));
   border-color:rgba(191,219,254,0.44);
   transform: translateY(-1px);
   box-shadow:none;
 }
 
-.lines-btn.active{
+.lines-btn.active, .preview-btn.active{
   background:linear-gradient(180deg, rgba(14,116,144,0.56), rgba(15,23,42,0.9));
   border-color:rgba(56,189,248,0.52);
   color:#dbeafe;
 }
 
+.lines-btn:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+  transform:none !important;
+  box-shadow:none !important;
+}
+
 .copy-btn{right:8px;}
 .lines-btn{right:72px;}
 .collapse-btn{right:136px;}
+.preview-btn{right:204px;}
+
+.html-preview-wrap{
+  display:none;
+  margin-top:9px;
+  border:1px solid var(--code-border);
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+  background:linear-gradient(180deg, rgba(15,23,42,0.38), rgba(2,6,23,0.62));
+}
+
+.html-preview-wrap.active{
+  display:block;
+}
+
+.html-preview-frame{
+  display:block;
+  width:100%;
+  height:300px;
+  border:0;
+  background:#ffffff;
+}
 
 .scroll-bottom{
   position:absolute;
@@ -1642,7 +1678,7 @@ body.dark .voice-btn.recording {
     font-size: 11px;
   }
 
-  .copy-btn, .collapse-btn, .lines-btn {
+  .copy-btn, .collapse-btn, .lines-btn, .preview-btn {
     top: 6px;
     padding: 4px 7px;
     font-size: 9px;
@@ -1651,6 +1687,11 @@ body.dark .voice-btn.recording {
   .copy-btn { right: 6px; }
   .lines-btn { right: 58px; }
   .collapse-btn { right: 110px; }
+  .preview-btn { right: 162px; }
+
+  .html-preview-frame {
+    height: 220px;
+  }
 
   .msg pre .line-number-gutter {
     top: 38px;
@@ -2865,6 +2906,8 @@ let cloudMemorySyncInFlight = false;
 let activeStreamAbortController = null;
 let autoScrollToLatest = true;
 let lastAutoScrollTs = 0;
+let pendingChatAutoScrollRaf = 0;
+let streamPointerBoostUntil = 0;
 const AUTO_SCROLL_NEAR_BOTTOM_PX = 80;
 const deletedChatTombstones = new Set(
   (() => {
@@ -3980,12 +4023,29 @@ function scrollChatToLatest({ smooth = false, force = false } = {}) {
   const targetTop = chat.scrollHeight - chat.clientHeight;
   if (Math.abs(targetTop - chat.scrollTop) < 2) return;
 
-  chat.scrollTo({ top: chat.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+  if (smooth) {
+    chat.scrollTo({ top: targetTop, behavior: "smooth" });
+    return;
+  }
+
+  if (force) {
+    chat.scrollTop = targetTop;
+    return;
+  }
+
+  if (pendingChatAutoScrollRaf) return;
+  pendingChatAutoScrollRaf = requestAnimationFrame(() => {
+    pendingChatAutoScrollRaf = 0;
+    const latestTop = chat.scrollHeight - chat.clientHeight;
+    if (latestTop - chat.scrollTop > 1) {
+      chat.scrollTop = latestTop;
+    }
+  });
 }
 
 function scrollToBottom() {
   autoScrollToLatest = true;
-  scrollChatToLatest({ smooth: true, force: true });
+  scrollChatToLatest({ smooth: !isGenerating, force: true });
 }
 
 function setStopButtonVisible(visible) {
@@ -4388,12 +4448,60 @@ function formatCodeLanguageLabel(lang) {
   return key.slice(0, 12).toUpperCase();
 }
 
+const HTML_PREVIEW_LANGS = new Set(['html', 'htm', 'xhtml', 'xml', 'markup']);
+const HTML_PREVIEW_MAX_CHARS = 120000;
+const CODE_HIGHLIGHT_MAX_CHARS = 32000;
+const CODE_LINE_GUTTER_MAX_LINES = 1200;
+
+function looksLikeHtmlSnippet(codeText) {
+  if (!codeText) return false;
+  const snippet = String(codeText).trim();
+  if (!snippet) return false;
+  return /^<!doctype\s+html/i.test(snippet)
+    || /<html[\s>]/i.test(snippet)
+    || /<body[\s>]/i.test(snippet)
+    || /<(div|section|main|header|footer|article|nav|style|script)[\s>]/i.test(snippet)
+    || /<\/\w+>/.test(snippet);
+}
+
+function canUseHtmlPreview(resolvedLang, codeText) {
+  if (!codeText || codeText.length > HTML_PREVIEW_MAX_CHARS) return false;
+  const lang = String(resolvedLang || '').toLowerCase().trim();
+  if (HTML_PREVIEW_LANGS.has(lang)) return true;
+  return looksLikeHtmlSnippet(codeText);
+}
+
+function getOrCreateHtmlPreviewWrap(pre) {
+  const sibling = pre.nextElementSibling;
+  if (sibling && sibling.classList && sibling.classList.contains('html-preview-wrap')) {
+    return sibling;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'html-preview-wrap';
+  const frame = document.createElement('iframe');
+  frame.className = 'html-preview-frame';
+  frame.loading = 'lazy';
+  frame.referrerPolicy = 'no-referrer';
+  frame.sandbox = 'allow-scripts';
+  wrap.appendChild(frame);
+  pre.insertAdjacentElement('afterend', wrap);
+  return wrap;
+}
+
 function buildLineNumberGutter(block, pre) {
   const existing = pre.querySelector('.line-number-gutter');
   if (existing) existing.remove();
 
   const normalized = String(block.textContent || '').replace(/\r\n/g, '\n').replace(/\n+$/, '');
   const lineCount = normalized ? normalized.split('\n').length : 1;
+
+  if (lineCount > CODE_LINE_GUTTER_MAX_LINES) {
+    pre.dataset.linesAvailable = 'false';
+    return false;
+  }
+
+  pre.dataset.linesAvailable = 'true';
 
   const gutter = document.createElement('div');
   gutter.className = 'line-number-gutter';
@@ -4405,13 +4513,15 @@ function buildLineNumberGutter(block, pre) {
   }
 
   pre.appendChild(gutter);
+  return true;
 }
 
 function syncLineNumberGutter(pre) {
   if (!pre) return;
   const gutter = pre.querySelector('.line-number-gutter');
   if (!gutter) return;
-  gutter.style.transform = `translateY(${-pre.scrollTop}px)`;
+  const offsetY = Math.round(pre.scrollTop || 0);
+  gutter.style.transform = `translate3d(0, ${-offsetY}px, 0)`;
 }
 
 function decorateCodeBlocks(container) {
@@ -4429,9 +4539,22 @@ function decorateCodeBlocks(container) {
       block.textContent = normalizedBlockText;
     }
 
-    hljs.highlightElement(block);
     const pre = block.parentElement;
-    if (!pre || pre.dataset.enhanced === 'true') return;
+    if (!pre) return;
+    if (pre.dataset.enhanced === 'true') {
+      if (pre.classList.contains('line-numbers')) {
+        syncLineNumberGutter(pre);
+      }
+      return;
+    }
+
+    const shouldHighlight = normalizedBlockText.length <= CODE_HIGHLIGHT_MAX_CHARS;
+    if (shouldHighlight) {
+      hljs.highlightElement(block);
+    } else {
+      block.classList.remove('hljs');
+      block.removeAttribute('data-highlighted');
+    }
 
     const langFromClass = Array.from(block.classList)
       .find((cls) => cls.startsWith('language-'));
@@ -4440,11 +4563,19 @@ function decorateCodeBlocks(container) {
       : (block.getAttribute('data-language') || 'code');
     pre.dataset.lang = formatCodeLanguageLabel(resolvedLang);
 
-    buildLineNumberGutter(block, pre);
+    const hasLineNumberGutter = buildLineNumberGutter(block, pre);
+    pre.scrollTop = 0;
     syncLineNumberGutter(pre);
 
     if (pre.dataset.lineScrollBound !== 'true') {
-      pre.addEventListener('scroll', () => syncLineNumberGutter(pre), { passive: true });
+      let syncFrameId = 0;
+      pre.addEventListener('scroll', () => {
+        if (syncFrameId) return;
+        syncFrameId = requestAnimationFrame(() => {
+          syncFrameId = 0;
+          syncLineNumberGutter(pre);
+        });
+      }, { passive: true });
       pre.dataset.lineScrollBound = 'true';
     }
 
@@ -4464,9 +4595,16 @@ function decorateCodeBlocks(container) {
     const linesBtn = document.createElement("button");
     linesBtn.className = "lines-btn";
     linesBtn.textContent = "Lines";
-    linesBtn.title = "Toggle line numbers";
+    linesBtn.title = hasLineNumberGutter ? "Toggle line numbers" : "Line numbers disabled for very large code blocks";
     linesBtn.setAttribute('aria-pressed', 'false');
+    if (!hasLineNumberGutter) {
+      linesBtn.disabled = true;
+    }
     linesBtn.onclick = () => {
+      if (pre.dataset.linesAvailable !== 'true') {
+        showStatus('Line numbers are disabled for very large code blocks.');
+        return;
+      }
       const enabled = pre.classList.toggle("line-numbers");
       linesBtn.classList.toggle('active', enabled);
       linesBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
@@ -4488,6 +4626,34 @@ function decorateCodeBlocks(container) {
       }, 1200);
     };
 
+    if (canUseHtmlPreview(resolvedLang, normalizedBlockText)) {
+      const previewBtn = document.createElement('button');
+      previewBtn.className = 'preview-btn';
+      previewBtn.textContent = 'Live';
+      previewBtn.title = 'Show live HTML preview';
+      previewBtn.setAttribute('aria-pressed', 'false');
+      previewBtn.onclick = () => {
+        const wrap = getOrCreateHtmlPreviewWrap(pre);
+        const frame = wrap.querySelector('iframe');
+        const shouldShow = !wrap.classList.contains('active');
+
+        wrap.classList.toggle('active', shouldShow);
+        previewBtn.classList.toggle('active', shouldShow);
+        previewBtn.textContent = shouldShow ? 'Hide' : 'Live';
+        previewBtn.title = shouldShow ? 'Hide live HTML preview' : 'Show live HTML preview';
+        previewBtn.setAttribute('aria-pressed', shouldShow ? 'true' : 'false');
+
+        if (shouldShow && frame && wrap.dataset.loaded !== 'true') {
+          const htmlSnapshot = String(block.textContent || '');
+          scheduleNonCriticalTask(() => {
+            frame.srcdoc = htmlSnapshot;
+            wrap.dataset.loaded = 'true';
+          }, 60);
+        }
+      };
+      pre.appendChild(previewBtn);
+    }
+
     pre.appendChild(collapseBtn);
     pre.appendChild(linesBtn);
     pre.appendChild(copyBtn);
@@ -4504,7 +4670,12 @@ function scheduleNonCriticalTask(task, timeout = 180) {
 
 function queueCodeBlockEnhancement(container) {
   if (!container || !container.querySelector || !container.querySelector('pre code')) return;
-  scheduleNonCriticalTask(() => decorateCodeBlocks(container), 220);
+  if (container.dataset.codeEnhanceQueued === 'true') return;
+  container.dataset.codeEnhanceQueued = 'true';
+  scheduleNonCriticalTask(() => {
+    container.dataset.codeEnhanceQueued = 'false';
+    decorateCodeBlocks(container);
+  }, 220);
 }
 
 async function fetchWithTimeoutRetry(url, options = {}, retryCount = 1) {
@@ -4776,6 +4947,8 @@ async function streamBotFromSSE(payload, options = {}) {
   let streamDone = false;
   let abortedByUser = false;
   let frameScheduled = false;
+  let streamTextNode = null;
+  let pendingDeltaText = "";
 
   const decoder = new TextDecoder();
   const reader = res.body.getReader();
@@ -4797,14 +4970,38 @@ async function streamBotFromSSE(payload, options = {}) {
 
   let lastStreamRenderAt = 0;
   const STREAM_RENDER_MIN_INTERVAL_MS = 40;
+  const STREAM_RENDER_MIN_INTERVAL_WHILE_REVIEWING_MS = 85;
+  const STREAM_RENDER_MIN_INTERVAL_WHILE_POINTER_ACTIVE_MS = 95;
+  let streamParseEventsSinceYield = 0;
+  let lastStreamParseYieldAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const STREAM_PARSE_YIELD_EVENT_COUNT = 24;
+  const STREAM_PARSE_YIELD_BUDGET_MS = 8;
 
   const renderCurrentState = () => {
-    // During stream, render plain text for smoother FPS; finalize markdown once at the end.
-    d.textContent = renderedText;
+    // During stream, append incremental plain text for smoother FPS; finalize markdown once at the end.
+    if (!streamTextNode) {
+      d.textContent = "";
+      streamTextNode = document.createTextNode("");
+      d.appendChild(streamTextNode);
+    }
+    if (pendingDeltaText) {
+      streamTextNode.appendData(pendingDeltaText);
+      pendingDeltaText = "";
+    }
     scrollChatToLatest({ smooth: false });
   };
 
   const finalizeRenderedMessage = async () => {
+    if (pendingDeltaText) {
+      if (!streamTextNode) {
+        d.textContent = "";
+        streamTextNode = document.createTextNode("");
+        d.appendChild(streamTextNode);
+      }
+      streamTextNode.appendData(pendingDeltaText);
+      pendingDeltaText = "";
+    }
+
     await ensureMarkdownRuntimeLoaded({ timeoutMs: 1500, silent: true });
     if (window.marked) {
       d.innerHTML = renderMarkdownSafely(renderedText);
@@ -4822,7 +5019,14 @@ async function streamBotFromSSE(payload, options = {}) {
     requestAnimationFrame(() => {
       frameScheduled = false;
       const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-      if (now - lastStreamRenderAt < STREAM_RENDER_MIN_INTERVAL_MS) return;
+      const baseInterval = autoScrollToLatest
+        ? STREAM_RENDER_MIN_INTERVAL_MS
+        : STREAM_RENDER_MIN_INTERVAL_WHILE_REVIEWING_MS;
+      const pointerBoostActive = now < streamPointerBoostUntil;
+      const minInterval = pointerBoostActive
+        ? Math.max(baseInterval, STREAM_RENDER_MIN_INTERVAL_WHILE_POINTER_ACTIVE_MS)
+        : baseInterval;
+      if (now - lastStreamRenderAt < minInterval) return;
       lastStreamRenderAt = now;
       renderCurrentState();
     });
@@ -4883,6 +5087,7 @@ async function streamBotFromSSE(payload, options = {}) {
 
           if (nextDelta) {
             renderedText += nextDelta;
+            pendingDeltaText += nextDelta;
             scheduleRender();
           }
 
@@ -4890,6 +5095,22 @@ async function streamBotFromSSE(payload, options = {}) {
             streamDone = true;
             break;
           }
+        }
+      }
+
+      streamParseEventsSinceYield += 1;
+      const parseNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      if (
+        streamParseEventsSinceYield >= STREAM_PARSE_YIELD_EVENT_COUNT
+        || (parseNow - lastStreamParseYieldAt) > STREAM_PARSE_YIELD_BUDGET_MS
+      ) {
+        streamParseEventsSinceYield = 0;
+        lastStreamParseYieldAt = parseNow;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (signal?.aborted) {
+          abortedByUser = true;
+          streamDone = true;
+          break;
         }
       }
 
@@ -5571,15 +5792,36 @@ function initEventListeners() {
   });
 
   let scrollTicking = false;
+  let scrollBottomVisible = false;
+  const CHAT_SCROLL_THROTTLE_MS = 40;
   chat.addEventListener("scroll", () => {
     if (scrollTicking) return;
     scrollTicking = true;
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       const atBottom = isChatNearBottom();
       autoScrollToLatest = atBottom;
-      scrollBottom.classList.toggle("visible", !atBottom);
+      const nextVisible = !atBottom;
+      if (nextVisible !== scrollBottomVisible) {
+        scrollBottomVisible = nextVisible;
+        scrollBottom.classList.toggle("visible", nextVisible);
+      }
       scrollTicking = false;
-    });
+    }, CHAT_SCROLL_THROTTLE_MS);
+  }, { passive: true });
+
+  document.addEventListener('pointerdown', () => {
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    streamPointerBoostUntil = now + 550;
+  }, { passive: true });
+
+  chat.addEventListener('wheel', () => {
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    streamPointerBoostUntil = now + 450;
+  }, { passive: true });
+
+  chat.addEventListener('touchmove', () => {
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    streamPointerBoostUntil = now + 450;
   }, { passive: true });
 
   document.addEventListener("keydown", (e) => {
