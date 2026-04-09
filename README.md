@@ -160,7 +160,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Export/Import** — download chats as `.md` or `.json`, re-import anytime
 - **No browser popups** — clean custom modals for all alerts, confirms, and prompts
 - **Custom select dropdowns** — animated, keyboard-navigable, beautiful
-- **Composer alignment polish** — footer controls and `+` quick-actions menu stay cleanly aligned on desktop and mobile
+- **Composer alignment polish** — textarea, `+`, `Send`, and `Stop` stay visually aligned with balanced control sizing across desktop and mobile
 
 ### ☁️ Google Auth + Cloud Sync
 - **Google Sign-In** via Firebase Auth (popup with redirect fallback)
