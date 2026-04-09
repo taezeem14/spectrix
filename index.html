@@ -1433,6 +1433,86 @@ body.dark .voice-btn.recording {
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
+.attach-btn {
+  position: relative;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--chat);
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.attach-btn:hover {
+  border-color: var(--user);
+}
+
+.attachment-input {
+  display: none;
+}
+
+.attachment-tray {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.attachment-tray.visible {
+  display: flex;
+}
+
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(100%, 220px);
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.attachment-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-chip-remove,
+.attachment-clear-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.attachment-chip-remove:hover,
+.attachment-clear-btn:hover {
+  color: var(--user);
+}
+
+.attachment-clear-btn {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px dashed var(--border);
+  font-size: 11px;
+}
+
 .chat-search-bar {
   position: sticky;
   top: 0;
@@ -1757,6 +1837,12 @@ body.dark .voice-btn.recording {
     font-size: 14px;
   }
 
+  .attach-btn {
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+
   .search-toggle-btn {
     min-height: 38px;
     padding: 0 10px;
@@ -1810,6 +1896,12 @@ body.dark .voice-btn.recording {
     min-height: 36px;
     padding: 0 10px;
     font-size: 14px;
+  }
+
+  .attach-btn {
+    min-height: 36px;
+    padding: 0 8px;
+    font-size: 13px;
   }
 
   .search-toggle-btn {
@@ -2409,7 +2501,10 @@ body.dark .voice-btn.recording {
     <footer>
       <button class="search-toggle-btn" id="searchToggleBtn" onclick="toggleWebSearch()" aria-label="Toggle web search" title="Web Search: OFF">🌐</button>
       <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" aria-label="Start voice input">🎤</button>
+      <button class="attach-btn" id="attachBtn" onclick="openAttachmentPicker()" aria-label="Attach files" title="Attach files">📎</button>
       <div class="input-container">
+        <input class="attachment-input" id="attachmentInput" type="file" multiple onchange="handleAttachmentInput(event)" accept=".txt,.md,.markdown,.csv,.json,.xml,.yml,.yaml,.html,.htm,.css,.scss,.js,.jsx,.ts,.tsx,.mjs,.cjs,.py,.java,.go,.rs,.php,.rb,.kt,.swift,.sql,.sh,.ps1,.bat,.c,.cpp,.h,.hpp,.cs,.pdf,.docx,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tif,.tiff,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff">
+        <div class="attachment-tray" id="attachmentTray" aria-live="polite"></div>
         <textarea id="input" placeholder="Type or speak... (Ctrl+B for new chat)" aria-label="Message input"></textarea>
         <div class="char-counter" id="charCounter">0 chars</div>
       </div>
@@ -2663,6 +2758,8 @@ const searchBox = document.getElementById("searchBox");
 const scrollBottom = document.getElementById("scrollBottom");
 const stopBtn = document.getElementById("stopBtn");
 const charCounter = document.getElementById("charCounter");
+const attachmentInput = document.getElementById("attachmentInput");
+const attachmentTray = document.getElementById("attachmentTray");
 const headerTitle = document.getElementById("headerTitle");
 const CURRENT_KEY = "Spectrix_current";
 const PREPOPUP_KEY = "spectrix_prepopup_clicked";
@@ -2676,6 +2773,19 @@ const DELETE_CONFIRM_SKIP_KEY = 'Spectrix_skip_delete_confirm';
 const DELETED_CHAT_TOMBSTONES_KEY = 'Spectrix_deleted_chat_ids';
 const INCOGNITO_KEY = 'Spectrix_incognito_mode';
 const MAX_PROMPT_CHARS = 10000;
+const MAX_ATTACHMENT_FILES = 8;
+const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
+const MAX_ATTACHMENT_TEXT_PER_FILE = 2600;
+const MAX_ATTACHMENT_TOTAL_TEXT = 12000;
+const MAX_ATTACHMENT_PDF_PAGES = 8;
+const MAX_ATTACHMENT_OCR_IMAGE_DIMENSION = 1700;
+const ATTACHMENT_TEXT_EXTENSIONS = new Set([
+  'txt', 'md', 'markdown', 'csv', 'json', 'xml', 'yml', 'yaml',
+  'html', 'htm', 'css', 'scss', 'js', 'jsx', 'ts', 'tsx', 'mjs', 'cjs',
+  'py', 'java', 'go', 'rs', 'php', 'rb', 'kt', 'swift', 'sql', 'sh',
+  'ps1', 'bat', 'c', 'cpp', 'h', 'hpp', 'cs', 'ini', 'toml', 'env', 'log'
+]);
+const ATTACHMENT_IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tif', 'tiff']);
 const MEMORY_EXTRACT_MIN_CHARS = 100;
 const MEMORY_EXTRACT_COOLDOWN_MS = 5 * 60 * 1000;
 const MATH_FORMAT_SYSTEM_PROMPT = `
@@ -2761,7 +2871,26 @@ const HLJS_SCRIPT_CANDIDATES = [
 const HLJS_GO_LANG_SCRIPT_CANDIDATES = [
   'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/go.min.js'
 ];
+const PDFJS_SCRIPT_CANDIDATES = [
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'
+];
+const PDFJS_WORKER_CANDIDATES = [
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+];
+const MAMMOTH_SCRIPT_CANDIDATES = [
+  'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js',
+  'https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js'
+];
+const TESSERACT_SCRIPT_CANDIDATES = [
+  'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',
+  'https://unpkg.com/tesseract.js@5/dist/tesseract.min.js'
+];
 let markdownRuntimeLoadPromise = null;
+let pdfRuntimeLoadPromise = null;
+let docxRuntimeLoadPromise = null;
+let ocrRuntimeLoadPromise = null;
 
 function withRetryQuery(url) {
   const sep = url.includes('?') ? '&' : '?';
@@ -2861,6 +2990,445 @@ async function ensureMarkdownRuntimeLoaded(options = {}) {
   }
 }
 
+function openAttachmentPicker() {
+  if (!attachmentInput) return;
+  attachmentInput.click();
+}
+
+function getAttachmentExtension(name) {
+  const fileName = String(name || '');
+  const idx = fileName.lastIndexOf('.');
+  return idx >= 0 ? fileName.slice(idx + 1).toLowerCase() : '';
+}
+
+function getAttachmentKey(file) {
+  return `${file.name}::${file.size}::${file.lastModified}`;
+}
+
+function formatAttachmentSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
+  if (bytes < 1024) return `${Math.round(bytes)} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1)} MB`;
+  return `${(mb / 1024).toFixed(1)} GB`;
+}
+
+function isPdfAttachment(file) {
+  const ext = getAttachmentExtension(file?.name);
+  const type = String(file?.type || '').toLowerCase();
+  return ext === 'pdf' || type.includes('pdf');
+}
+
+function isDocxAttachment(file) {
+  const ext = getAttachmentExtension(file?.name);
+  const type = String(file?.type || '').toLowerCase();
+  return ext === 'docx' || type.includes('wordprocessingml.document');
+}
+
+function isImageAttachment(file) {
+  const ext = getAttachmentExtension(file?.name);
+  const type = String(file?.type || '').toLowerCase();
+  if (type.startsWith('image/')) return true;
+  return ATTACHMENT_IMAGE_EXTENSIONS.has(ext);
+}
+
+function isTextAttachment(file) {
+  const ext = getAttachmentExtension(file?.name);
+  const type = String(file?.type || '').toLowerCase();
+  if (type.startsWith('text/')) return true;
+  if (type.includes('json') || type.includes('xml') || type.includes('javascript')) return true;
+  return ATTACHMENT_TEXT_EXTENSIONS.has(ext);
+}
+
+function sanitizeAttachmentText(text) {
+  return String(text || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\u0000/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function clearPendingAttachments(options = {}) {
+  const { silent = false } = options;
+  pendingAttachments = [];
+  if (attachmentInput) attachmentInput.value = '';
+  renderAttachmentTray();
+  if (!silent) showStatus('Cleared attached files.');
+}
+
+function removePendingAttachment(attachmentId) {
+  const before = pendingAttachments.length;
+  pendingAttachments = pendingAttachments.filter((item) => item.id !== attachmentId);
+  if (pendingAttachments.length === before) return;
+  renderAttachmentTray();
+}
+
+function renderAttachmentTray() {
+  if (!attachmentTray) return;
+  attachmentTray.innerHTML = '';
+
+  if (!pendingAttachments.length) {
+    attachmentTray.classList.remove('visible');
+    return;
+  }
+
+  attachmentTray.classList.add('visible');
+
+  pendingAttachments.forEach((item) => {
+    const chip = document.createElement('div');
+    chip.className = 'attachment-chip';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'attachment-chip-name';
+    nameEl.title = item.name;
+    nameEl.textContent = `${item.name} (${formatAttachmentSize(item.size)})`;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'attachment-chip-remove';
+    removeBtn.type = 'button';
+    removeBtn.textContent = 'x';
+    removeBtn.setAttribute('aria-label', `Remove ${item.name}`);
+    removeBtn.addEventListener('click', () => removePendingAttachment(item.id));
+
+    chip.appendChild(nameEl);
+    chip.appendChild(removeBtn);
+    attachmentTray.appendChild(chip);
+  });
+
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'attachment-clear-btn';
+  clearBtn.type = 'button';
+  clearBtn.textContent = 'Clear';
+  clearBtn.setAttribute('aria-label', 'Clear attached files');
+  clearBtn.addEventListener('click', () => clearPendingAttachments());
+  attachmentTray.appendChild(clearBtn);
+}
+
+function handleAttachmentInput(event) {
+  const fileList = Array.from(event?.target?.files || []);
+  if (!fileList.length) return;
+
+  const seen = new Set(pendingAttachments.map((item) => item.key));
+  let added = 0;
+  let skippedForLimit = 0;
+
+  for (const file of fileList) {
+    if (pendingAttachments.length >= MAX_ATTACHMENT_FILES) {
+      skippedForLimit += 1;
+      continue;
+    }
+
+    const key = getAttachmentKey(file);
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    attachmentCounter += 1;
+    pendingAttachments.push({
+      id: `att_${Date.now()}_${attachmentCounter}`,
+      key,
+      file,
+      name: file.name,
+      size: file.size,
+      type: file.type || ''
+    });
+    added += 1;
+  }
+
+  if (attachmentInput) attachmentInput.value = '';
+  renderAttachmentTray();
+
+  if (added > 0) {
+    showStatus(`Attached ${added} file${added > 1 ? 's' : ''}.`, 1700);
+  }
+  if (skippedForLimit > 0) {
+    showStatus(`Attachment limit is ${MAX_ATTACHMENT_FILES} files.`, 2600);
+  }
+}
+
+async function ensurePdfRuntimeLoaded(options = {}) {
+  const { timeoutMs = 3000, silent = true } = options;
+
+  const hasRuntime = () => Boolean(window.pdfjsLib?.getDocument);
+  if (hasRuntime()) {
+    if (window.pdfjsLib?.GlobalWorkerOptions && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_CANDIDATES[0];
+    }
+    return true;
+  }
+
+  if (!pdfRuntimeLoadPromise) {
+    const activePromise = (async () => {
+      await loadScriptFromCandidates(PDFJS_SCRIPT_CANDIDATES, hasRuntime);
+      if (window.pdfjsLib?.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_CANDIDATES[0];
+      }
+      return hasRuntime();
+    })();
+
+    pdfRuntimeLoadPromise = activePromise;
+    activePromise.finally(() => {
+      if (pdfRuntimeLoadPromise === activePromise) {
+        pdfRuntimeLoadPromise = null;
+      }
+    });
+  }
+
+  try {
+    if (timeoutMs > 0) {
+      return await Promise.race([
+        pdfRuntimeLoadPromise,
+        new Promise((resolve) => setTimeout(() => resolve(false), timeoutMs))
+      ]);
+    }
+    return await pdfRuntimeLoadPromise;
+  } catch (error) {
+    if (!silent) console.warn('PDF runtime load warning:', error);
+    return false;
+  }
+}
+
+async function ensureDocxRuntimeLoaded(options = {}) {
+  const { timeoutMs = 2800, silent = true } = options;
+  const hasRuntime = () => Boolean(window.mammoth?.extractRawText);
+
+  if (hasRuntime()) return true;
+
+  if (!docxRuntimeLoadPromise) {
+    const activePromise = loadScriptFromCandidates(MAMMOTH_SCRIPT_CANDIDATES, hasRuntime);
+    docxRuntimeLoadPromise = activePromise;
+    activePromise.finally(() => {
+      if (docxRuntimeLoadPromise === activePromise) {
+        docxRuntimeLoadPromise = null;
+      }
+    });
+  }
+
+  try {
+    if (timeoutMs > 0) {
+      return await Promise.race([
+        docxRuntimeLoadPromise,
+        new Promise((resolve) => setTimeout(() => resolve(false), timeoutMs))
+      ]);
+    }
+    return await docxRuntimeLoadPromise;
+  } catch (error) {
+    if (!silent) console.warn('DOCX runtime load warning:', error);
+    return false;
+  }
+}
+
+async function ensureOcrRuntimeLoaded(options = {}) {
+  const { timeoutMs = 4200, silent = true } = options;
+  const hasRuntime = () => Boolean(window.Tesseract?.recognize);
+
+  if (hasRuntime()) return true;
+
+  if (!ocrRuntimeLoadPromise) {
+    const activePromise = loadScriptFromCandidates(TESSERACT_SCRIPT_CANDIDATES, hasRuntime);
+    ocrRuntimeLoadPromise = activePromise;
+    activePromise.finally(() => {
+      if (ocrRuntimeLoadPromise === activePromise) {
+        ocrRuntimeLoadPromise = null;
+      }
+    });
+  }
+
+  try {
+    if (timeoutMs > 0) {
+      return await Promise.race([
+        ocrRuntimeLoadPromise,
+        new Promise((resolve) => setTimeout(() => resolve(false), timeoutMs))
+      ]);
+    }
+    return await ocrRuntimeLoadPromise;
+  } catch (error) {
+    if (!silent) console.warn('OCR runtime load warning:', error);
+    return false;
+  }
+}
+
+async function buildOcrImageSource(file) {
+  if (typeof createImageBitmap !== 'function') return file;
+
+  const bitmap = await createImageBitmap(file);
+  try {
+    const largestSide = Math.max(bitmap.width, bitmap.height);
+    if (largestSide <= MAX_ATTACHMENT_OCR_IMAGE_DIMENSION) {
+      return file;
+    }
+
+    const scale = MAX_ATTACHMENT_OCR_IMAGE_DIMENSION / largestSide;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(resolve, 'image/png', 0.92);
+    });
+
+    return blob || file;
+  } finally {
+    if (typeof bitmap.close === 'function') bitmap.close();
+  }
+}
+
+async function extractTextFromPdfAttachment(file) {
+  const ready = await ensurePdfRuntimeLoaded();
+  if (!ready || !window.pdfjsLib?.getDocument) {
+    throw new Error('PDF parser unavailable');
+  }
+
+  const data = await file.arrayBuffer();
+  const loadingTask = window.pdfjsLib.getDocument({ data });
+  const pdf = await loadingTask.promise;
+  const pageCount = Math.min(pdf.numPages || 0, MAX_ATTACHMENT_PDF_PAGES);
+  let output = '';
+
+  for (let pageIndex = 1; pageIndex <= pageCount; pageIndex += 1) {
+    const page = await pdf.getPage(pageIndex);
+    const textContent = await page.getTextContent();
+    const pageText = sanitizeAttachmentText(textContent.items.map((item) => String(item.str || '')).join(' '));
+    if (!pageText) continue;
+    output += `[Page ${pageIndex}] ${pageText}\n`;
+    if (output.length >= MAX_ATTACHMENT_TEXT_PER_FILE * 2) break;
+  }
+
+  try {
+    await loadingTask.destroy();
+  } catch {
+    // Ignore parser cleanup issues.
+  }
+
+  return sanitizeAttachmentText(output);
+}
+
+async function extractTextFromDocxAttachment(file) {
+  const ready = await ensureDocxRuntimeLoaded();
+  if (!ready || !window.mammoth?.extractRawText) {
+    throw new Error('DOCX parser unavailable');
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await window.mammoth.extractRawText({ arrayBuffer });
+  return sanitizeAttachmentText(result?.value || '');
+}
+
+async function extractTextFromImageAttachment(file) {
+  const ready = await ensureOcrRuntimeLoaded();
+  if (!ready || !window.Tesseract?.recognize) {
+    throw new Error('OCR parser unavailable');
+  }
+
+  const source = await buildOcrImageSource(file);
+  const result = await window.Tesseract.recognize(source, 'eng', {
+    logger: () => {}
+  });
+  return sanitizeAttachmentText(result?.data?.text || '');
+}
+
+async function extractTextFromAttachment(file) {
+  if (isPdfAttachment(file)) {
+    return extractTextFromPdfAttachment(file);
+  }
+  if (isDocxAttachment(file)) {
+    return extractTextFromDocxAttachment(file);
+  }
+  if (isImageAttachment(file)) {
+    return extractTextFromImageAttachment(file);
+  }
+  if (isTextAttachment(file)) {
+    const rawText = await file.text();
+    return sanitizeAttachmentText(rawText);
+  }
+  return '';
+}
+
+function formatAttachmentSummary(items) {
+  const names = items.map((item) => item.name);
+  if (!names.length) return '';
+  if (names.length <= 2) {
+    return `Attached ${names.length} file${names.length > 1 ? 's' : ''}: ${names.join(', ')}`;
+  }
+  return `Attached ${names.length} files: ${names.slice(0, 2).join(', ')} +${names.length - 2} more`;
+}
+
+async function buildAttachmentContextBundle(attachments) {
+  const bundle = {
+    context: '',
+    summary: '',
+    readableCount: 0,
+    skippedCount: 0
+  };
+
+  if (!Array.isArray(attachments) || attachments.length === 0) {
+    return bundle;
+  }
+
+  const readable = [];
+  let totalChars = 0;
+
+  for (const attachment of attachments) {
+    const file = attachment?.file;
+    if (!file) {
+      bundle.skippedCount += 1;
+      continue;
+    }
+
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      bundle.skippedCount += 1;
+      continue;
+    }
+
+    try {
+      let text = await extractTextFromAttachment(file);
+      text = sanitizeAttachmentText(text);
+      if (!text) {
+        bundle.skippedCount += 1;
+        continue;
+      }
+
+      if (text.length > MAX_ATTACHMENT_TEXT_PER_FILE) {
+        text = `${text.slice(0, MAX_ATTACHMENT_TEXT_PER_FILE)}\n...[truncated]`;
+      }
+
+      const remaining = MAX_ATTACHMENT_TOTAL_TEXT - totalChars;
+      if (remaining <= 80) break;
+
+      if (text.length > remaining) {
+        text = `${text.slice(0, remaining)}\n...[truncated due to total limit]`;
+      }
+
+      totalChars += text.length;
+      readable.push({
+        name: attachment.name,
+        text
+      });
+    } catch {
+      bundle.skippedCount += 1;
+    }
+  }
+
+  bundle.readableCount = readable.length;
+  bundle.summary = formatAttachmentSummary(attachments);
+
+  if (!readable.length) {
+    return bundle;
+  }
+
+  bundle.context = [
+    'Attached file context from the user (may be truncated):',
+    ...readable.map((entry, index) => `File ${index + 1}: ${entry.name}\n${entry.text}`)
+  ].join('\n\n');
+
+  return bundle;
+}
+
 async function fetchChatApiWithFallback(options = {}, retryCount = 1) {
   const orderedCandidates = [
     activeChatApiUrl,
@@ -2934,6 +3502,8 @@ let ttsEnabled = localStorage.getItem(TTS_KEY) === 'true';
 let currentUtterance = null;
 let signInInProgress = false;
 let chatSearchBar = null;
+let attachmentCounter = 0;
+let pendingAttachments = [];
 
 function getStoredProfile() {
   if (incognitoEnabled) return { name: '', avatarUrl: '' };
@@ -5260,10 +5830,15 @@ async function send(options = {}) {
   }
 
   let prompt = String(promptOverride ?? input.value).trim();
-  if (!prompt) return;
+  const hasPendingAttachments = !skipUserSave && pendingAttachments.length > 0;
+  if (!prompt && !hasPendingAttachments) return;
   if (prompt.length > MAX_PROMPT_CHARS) {
     showStatus(`Message too long. Max ${MAX_PROMPT_CHARS} characters.`);
     return;
+  }
+
+  if (!prompt && hasPendingAttachments) {
+    prompt = 'Please analyze the attached files and answer based on them.';
   }
 
   await ensureMarkdownRuntimeLoaded({ timeoutMs: 1800, silent: true });
@@ -5286,13 +5861,22 @@ async function send(options = {}) {
   charCounter.textContent = "0 chars";
   charCounter.style.color = "var(--muted)";
 
+  const attachmentQueue = hasPendingAttachments ? pendingAttachments.slice() : [];
+  let attachmentContext = '';
+  let attachmentSummary = attachmentQueue.length ? formatAttachmentSummary(attachmentQueue) : '';
+  let promptForRender = prompt;
+
   const isImage = prompt.startsWith("/img ");
   const isVideo = prompt.startsWith("/vid ");
 
   if (isImage || isVideo) prompt = prompt.slice(5);
 
+  if (attachmentSummary) {
+    promptForRender = `${promptForRender}\n\n[${attachmentSummary}]`;
+  }
+
   if (!skipUserRender) {
-    render("user", prompt);
+    render("user", promptForRender);
     // Yield one frame so the user bubble paints immediately.
     await new Promise((resolve) => requestAnimationFrame(resolve));
   }
@@ -5313,6 +5897,10 @@ async function send(options = {}) {
   scrollChatToLatest({ smooth: false, force: true });
 
   try {
+    if (attachmentQueue.length && (isImage || isVideo)) {
+      showStatus('Attachments are currently supported for text chat only.', 2600);
+    }
+
     if (isImage) {
       try {
         if (!window.puter?.ai) {
@@ -5386,6 +5974,22 @@ async function send(options = {}) {
     else {
       const model = FIXED_TEXT_MODEL;
 
+      if (attachmentQueue.length) {
+        showStatus(`Processing ${attachmentQueue.length} attached file${attachmentQueue.length > 1 ? 's' : ''}...`, 2200);
+        const attachmentBundle = await buildAttachmentContextBundle(attachmentQueue);
+        attachmentContext = attachmentBundle.context;
+        if (attachmentBundle.summary) attachmentSummary = attachmentBundle.summary;
+        clearPendingAttachments({ silent: true });
+
+        if (attachmentBundle.skippedCount > 0) {
+          showStatus(`Used ${attachmentBundle.readableCount} file${attachmentBundle.readableCount === 1 ? '' : 's'} and skipped ${attachmentBundle.skippedCount}.`, 2800);
+        }
+
+        if (!attachmentContext && !prompt.trim()) {
+          throw new Error('No readable text could be extracted from the attached files.');
+        }
+      }
+
       const messages = session.messages
         .filter(m => typeof m.content === "string")
         .map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.content }));
@@ -5397,6 +6001,13 @@ async function send(options = {}) {
   		systemPrompt += '\n' + memoryContext;
 		}
       messages.unshift({ role: "system", content: systemPrompt });
+
+      if (attachmentContext) {
+        messages.push({
+          role: "user",
+          content: attachmentContext
+        });
+      }
 
       if (!skipUserSave) {
         messages.push({ role: "user", content: prompt });
@@ -5465,9 +6076,10 @@ setStopButtonVisible(false);
 }
 
       // 🧠 Extract memories from this exchange (length + cooldown throttled)
-      if (memoryEnabled && !incognitoEnabled && shouldExtractMemories(prompt)) {
+  const memoryPrompt = attachmentSummary ? `${prompt}\n\n${attachmentSummary}` : prompt;
+  if (memoryEnabled && !incognitoEnabled && shouldExtractMemories(memoryPrompt)) {
   			setTimeout(() => {
-    		extractMemories(prompt, answer).catch(err => console.warn('Memory extraction failed:', err));
+	    		extractMemories(memoryPrompt, answer).catch(err => console.warn('Memory extraction failed:', err));
  		 }, 3000);
 		}
     }
