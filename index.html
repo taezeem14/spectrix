@@ -2600,7 +2600,7 @@ body.dark .voice-btn.recording {
           <div class="select-wrap">
             <select id="textModelSelect" title="Choose text model">
 			  <option value="openai/gpt-oss-120b:free">GPT-OSS 120B (Fast • Strong)</option>
-			  <option value="minimax/minimax-m2.5:free">MiniMax M2.5 (Balanced • Productivity)</option>
+			  <option value="openai/gpt-oss-20b:free">GPT-OSS 20B (Fast • Lightweight)</option>
               <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 3 Super (Deep Reasoning)</option>
             </select>
           </div>
@@ -3580,7 +3580,7 @@ async function fetchChatApiWithFallback(options = {}, retryCount = 1) {
 const DEFAULT_TEXT_MODEL = "openai/gpt-oss-120b:free";
 const ALLOWED_TEXT_MODELS = new Set([
   "openai/gpt-oss-120b:free",
-  "minimax/minimax-m2.5:free",
+  "openai/gpt-oss-20b:free",
   "nvidia/nemotron-3-super-120b-a12b:free"
 ]);
 const DEPRECATED_TEXT_MODELS = new Set([
