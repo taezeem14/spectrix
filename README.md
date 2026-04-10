@@ -16,10 +16,10 @@
 
 <br/>
 
-![Commits](https://img.shields.io/github/commit-activity/m/taezeem14/Spectrix-vercel?style=flat-square&color=7C3AED)
-![Last Commit](https://img.shields.io/github/last-commit/taezeem14/Spectrix-vercel?style=flat-square&color=10B981)
-![Repo Size](https://img.shields.io/github/repo-size/taezeem14/Spectrix-vercel?style=flat-square&color=2563EB)
-![Stars](https://img.shields.io/github/stars/taezeem14/Spectrix-vercel?style=flat-square&color=FACC15)
+![Commits](https://img.shields.io/github/commit-activity/m/taezeem14/Spectrix?style=flat-square&color=7C3AED)
+![Last Commit](https://img.shields.io/github/last-commit/taezeem14/Spectrix?style=flat-square&color=10B981)
+![Repo Size](https://img.shields.io/github/repo-size/taezeem14/Spectrix?style=flat-square&color=2563EB)
+![Stars](https://img.shields.io/github/stars/taezeem14/Spectrix?style=flat-square&color=FACC15)
 
 </div>
 
