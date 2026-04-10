@@ -6,7 +6,6 @@
 
 [![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://spectrix.netlify.app)
 [![Offline](https://img.shields.io/badge/Offline-Ready-10B981?style=for-the-badge&logo=googlechrome&logoColor=white)](https://spectrix.netlify.app)
-[![Deploy](https://img.shields.io/badge/Deployed-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://spectrix.netlify.app)
 [![Framework](https://img.shields.io/badge/Framework-None%20%28Pure%20JS%29-F59E0B?style=for-the-badge&logo=javascript&logoColor=white)](https://spectrix.netlify.app)
 [![Math](https://img.shields.io/badge/Math-KaTeX%20%2B%20MathJax-2563EB?style=for-the-badge&logo=latex&logoColor=white)](https://spectrix.netlify.app)
 [![Backend](https://img.shields.io/badge/Backend-Vercel%20Functions-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://spectrix.netlify.app)
@@ -17,7 +16,6 @@
 
 <br/>
 
-![Deploy Status](https://api.netlify.com/api/v1/badges/ffee7a14-ee63-4633-b49f-388084446cdb/deploy-status)
 ![Commits](https://img.shields.io/github/commit-activity/m/taezeem14/Spectrix-vercel?style=flat-square&color=7C3AED)
 ![Last Commit](https://img.shields.io/github/last-commit/taezeem14/Spectrix-vercel?style=flat-square&color=10B981)
 ![Repo Size](https://img.shields.io/github/repo-size/taezeem14/Spectrix-vercel?style=flat-square&color=2563EB)
