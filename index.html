@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3598,8 +3599,8 @@ function normalizeTextModelId(modelId) {
 
 let FIXED_TEXT_MODEL = normalizeTextModelId(localStorage.getItem('Spectrix_text_model'));
 const FIXED_VIDEO_MODEL = "ByteDance/Seedance-1.0-lite";
-const FIXED_TITLE_MODEL = "openai/gpt-oss-120b:free";
-const FIXED_MEMORY_EXTRACT_MODEL = "openai/gpt-oss-120b:free";
+const FIXED_TITLE_MODEL = "liquid/lfm-2.5-1.2b-instruct:free";
+const FIXED_MEMORY_EXTRACT_MODEL = "liquid/lfm-2.5-1.2b-instruct:free";
 
 let sessions = {};
 let currentId = localStorage.getItem(CURRENT_KEY) || null;
@@ -3616,6 +3617,9 @@ let cloudMemorySyncUnsubscribe = null;
 let cloudSyncInFlight = false;
 let cloudMemorySyncInFlight = false;
 let activeStreamAbortController = null;
+let activeMediaGenerationToken = 0;
+const canceledMediaGenerationTokens = new Set();
+let activeGenerationLoadingNode = null;
 let autoScrollToLatest = true;
 let lastAutoScrollTs = 0;
 let pendingChatAutoScrollRaf = 0;
@@ -4809,6 +4813,20 @@ function stopGeneration() {
   if (activeStreamAbortController) {
     activeStreamAbortController.abort('user-stop');
     showStatus('Stopping generation...');
+    return;
+  }
+
+  const mediaToken = activeMediaGenerationToken;
+  if (mediaToken) {
+    canceledMediaGenerationTokens.add(mediaToken);
+    activeMediaGenerationToken = 0;
+    isGenerating = false;
+    setStopButtonVisible(false);
+    if (activeGenerationLoadingNode) {
+      activeGenerationLoadingNode.remove();
+      activeGenerationLoadingNode = null;
+    }
+    showStatus('Stopping media generation...');
   }
 }
 
@@ -6072,6 +6090,7 @@ async function send(options = {}) {
   loading.className = "msg bot";
   loading.innerHTML = "<div class='spinner'></div>";
   chat.appendChild(loading);
+  activeGenerationLoadingNode = loading;
   scrollChatToLatest({ smooth: false, force: true });
 
   try {
@@ -6080,6 +6099,7 @@ async function send(options = {}) {
     }
 
     if (isImage) {
+      const mediaToken = ++activeMediaGenerationToken;
       try {
         if (!window.puter?.ai) {
           throw new Error("Puter SDK not loaded");
@@ -6087,8 +6107,17 @@ async function send(options = {}) {
 
         const model = document.getElementById("imageModel").value;
         const img = await puter.ai.txt2img(prompt, { model, disable_safety_checker: true });
+        if (canceledMediaGenerationTokens.has(mediaToken)) {
+          canceledMediaGenerationTokens.delete(mediaToken);
+          loading.remove();
+          if (activeGenerationLoadingNode === loading) activeGenerationLoadingNode = null;
+          return;
+        }
         loading.remove();
+        if (activeGenerationLoadingNode === loading) activeGenerationLoadingNode = null;
+        activeMediaGenerationToken = 0;
         isGenerating = false;
+        setStopButtonVisible(false);
 
         img.classList.add("ai-img");
         const base64 = img.src;
@@ -6104,24 +6133,46 @@ async function send(options = {}) {
         scrollChatToLatest({ smooth: false, force: true });
       } catch (err) {
         console.error("Send error:", err);
+        activeMediaGenerationToken = 0;
+        canceledMediaGenerationTokens.delete(mediaToken);
         isGenerating = false;
+        setStopButtonVisible(false);
         loading.remove();
+        if (activeGenerationLoadingNode === loading) activeGenerationLoadingNode = null;
         render("bot", "**Error generating response 💀** " + err.message);
       }
     }
     else if (isVideo) {
+      const mediaToken = ++activeMediaGenerationToken;
       try {
         if (!window.puter?.ai) {
           throw new Error("Puter SDK not loaded");
         }
 
         const video = await puter.ai.txt2vid(prompt, { model: FIXED_VIDEO_MODEL, seconds: 8 });
+        if (canceledMediaGenerationTokens.has(mediaToken)) {
+          canceledMediaGenerationTokens.delete(mediaToken);
+          loading.remove();
+          if (activeGenerationLoadingNode === loading) activeGenerationLoadingNode = null;
+          return;
+        }
         loading.remove();
+        if (activeGenerationLoadingNode === loading) activeGenerationLoadingNode = null;
+        activeMediaGenerationToken = 0;
         isGenerating = false;
+        setStopButtonVisible(false);
 
         const blob = await fetch(video.src).then(r => r.blob());
+        if (canceledMediaGenerationTokens.has(mediaToken)) {
+          canceledMediaGenerationTokens.delete(mediaToken);
+          return;
+        }
         const reader = new FileReader();
         reader.onloadend = async () => {
+          if (canceledMediaGenerationTokens.has(mediaToken)) {
+            canceledMediaGenerationTokens.delete(mediaToken);
+            return;
+          }
           const div = document.createElement("div");
           div.className = "msg bot";
 
@@ -6144,12 +6195,17 @@ async function send(options = {}) {
         reader.readAsDataURL(blob);
       } catch (err) {
         console.error("Send error:", err);
+        activeMediaGenerationToken = 0;
+        canceledMediaGenerationTokens.delete(mediaToken);
         isGenerating = false;
+        setStopButtonVisible(false);
         loading.remove();
+        if (activeGenerationLoadingNode === loading) activeGenerationLoadingNode = null;
         render("bot", "**Error generating response 💀** " + err.message);
       }
     }
     else {
+      activeMediaGenerationToken = 0;
       const model = FIXED_TEXT_MODEL;
 
       if (attachmentQueue.length) {
@@ -6208,6 +6264,7 @@ if (webSearchEnabled) {
 }
 
 loading.remove();
+if (activeGenerationLoadingNode === loading) activeGenerationLoadingNode = null;
 let answer;
 try {
   activeStreamAbortController = new AbortController();
