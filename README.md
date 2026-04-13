@@ -47,7 +47,7 @@
 **Spectrix AI** is a high-performance, PWA-first AI chatbot engineered for students, developers, and power users.
 
 Built from scratch — **zero frameworks, zero bloat** — it combines:
-- 🤖 Multi-model AI routing via **OpenRouter** (GPT-OSS 120B, MiniMax M2.5, Nemotron 3 Super)
+- 🤖 Multi-model AI routing via **OpenRouter** (GPT-OSS 120B, GPT-OSS 20B, Nemotron 3 Super)
 - ⚡ Serverless backend on **Vercel Functions** with smart key rotation + route rewrites
 - 🧮 **Full LaTeX math rendering** via KaTeX + MathJax with copy-to-clipboard
 - 📡 **Offline-first** architecture with IndexedDB local persistence
@@ -87,19 +87,19 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Rate-limit UX** — friendly in-app message, not a dead crash
 - **Web search mode** — powered by Firecrawl via OpenRouter (`Ctrl+Shift+S` to toggle)
 - **Auto-titled chats** — AI names your conversations after the first exchange
-- **Title model pinned** — `openai/gpt-oss-120b:free`
+- **Title model pinned** — `liquid/lfm-2.5-1.2b-instruct:free`
 - **Direct-answer guardrails** — avoids made-up headings like "Quick Concept" / "Game Plan" unless requested
 - **Retry + Edit** — re-run any response or tweak your message mid-conversation
 
 ### 🧠 AI Memory
 - **Persistent memory** across conversations — the AI knows who you are
 - **Auto-extraction** — silently learns your name, preferences, goals, and tech stack
-- **Memory extraction model pinned** — `nvidia/nemotron-3-super-120b-a12b:free`
+- **Memory extraction model pinned** — `liquid/lfm-2.5-1.2b-instruct:free`
 - **Manual memory** — add facts yourself via the 🧠 panel
 - **Categorized** — personal, preference, technical, interest, context, general
 - **Full control** — view all memories, delete individually, or wipe clean
 - **Toggle on/off** — disable auto-learning anytime
-- **Cooldown-throttled** — extraction runs max once every 5 minutes, no spam
+- **Cooldown-throttled** — extraction runs max once every 90 seconds, no spam
 - **Deduplication** — near-identical facts are never saved twice
 - **Local-first IndexedDB** — fast on-device memory persistence
 - **Firestore memory sync** — auto-mirrors memories across signed-in devices
@@ -149,10 +149,10 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Chat pinning** — pin important conversations to the top
 - **Chat search** — fuzzy search across all history titles + message content
 - **In-chat message search** — highlight matching messages with `Ctrl+F`
-- **Export/Import** — download chats as `.md` or `.json`, re-import anytime
+- **Export/Import** — export current chat as `.md`, `.pdf`, or `.docx`, and import/export full backups via `.json`
 - **No browser popups** — clean custom modals for all alerts, confirms, and prompts
 - **Custom select dropdowns** — animated, keyboard-navigable, beautiful
-- **Composer alignment polish** — textarea, `+`, `Send`, and `Stop` stay visually aligned with balanced control sizing across desktop and mobile
+- **Composer alignment polish** — textarea, `+`, `Send`, `Stop`, and `Pause` stay visually aligned with balanced control sizing across desktop and mobile
 
 ### ☁️ Google Auth + Cloud Sync
 - **Google Sign-In** via Firebase Auth (popup with redirect fallback)
@@ -198,7 +198,7 @@ User sends message
 | Mode | Model | Best For |
 |------|-------|----------|
 | ⚡ Quick | `openai/gpt-oss-120b:free` | Fast chats, tools, and agent loops |
-| 🚀 Smart | `minimax/minimax-m2.5:free` | Coding and productivity workflows |
+| 🚀 Smart | `openai/gpt-oss-20b:free` | Coding and productivity workflows |
 | 🧠 Reasoning | `nvidia/nemotron-3-super-120b-a12b:free` | Deep reasoning and long-context tasks |
 
 > 💾 Model preference saved to `localStorage → Spectrix_text_model` and persists across sessions.
