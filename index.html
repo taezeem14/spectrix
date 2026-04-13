@@ -850,14 +850,15 @@ select:focus-visible {
 
 .status-banner {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(76px + var(--safe-bottom));
+  top: calc(14px + var(--safe-top));
+  right: calc(14px + var(--safe-right));
+  left: auto;
+  transform: none;
   z-index: 1200;
-  max-width: min(92vw, 560px);
-  width: max-content;
+  max-width: min(88vw, 460px);
+  width: auto;
   padding: 9px 16px;
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--border);
@@ -1847,12 +1848,32 @@ body.dark .voice-btn.recording {
     right: 16px;
     bottom: 90px;
     transform: none;
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+    aspect-ratio: 1 / 1;
     padding: 0;
     border-radius: 50%;
     display: grid;
     place-items: center;
+    line-height: 1;
+    font-size: 18px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .status-banner {
+    top: calc(8px + var(--safe-top));
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: min(92vw, 420px);
+    width: max-content;
+    border-radius: 999px;
+    text-align: center;
   }
   
   .app {
@@ -2142,6 +2163,24 @@ body.dark .voice-btn.recording {
 }
 
 @media(max-width:375px){
+    .scroll-bottom {
+      width: 38px;
+      min-width: 38px;
+      max-width: 38px;
+      height: 38px;
+      min-height: 38px;
+      max-height: 38px;
+      font-size: 16px;
+      right: 12px;
+      bottom: 84px;
+    }
+
+    .status-banner {
+      max-width: min(94vw, 340px);
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+
   body {
     font-size: 15px;
   }
