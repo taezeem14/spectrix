@@ -5007,7 +5007,7 @@ async function clearPuter() {
 }
 
 // ===== RETRY/EDIT =====
-async function retryLast() {
+async function retryMessageAt(targetBotIndex = null) {
   if (isGenerating) {
     showStatus("Please wait for current generation to finish.");
     return;
@@ -5016,26 +5016,33 @@ async function retryLast() {
   const session = getCurrentSession();
   if (!session || !Array.isArray(session.messages) || session.messages.length === 0) return;
 
-  let lastBotIndex = -1;
-  for (let i = session.messages.length - 1; i >= 0; i--) {
-    if (session.messages[i].role === "bot" && typeof session.messages[i].content === "string") {
-      lastBotIndex = i;
-      break;
+  let retryBotIndex = Number.isInteger(targetBotIndex) ? targetBotIndex : -1;
+  if (
+    retryBotIndex < 0
+    || retryBotIndex >= session.messages.length
+    || session.messages[retryBotIndex]?.role !== 'bot'
+    || typeof session.messages[retryBotIndex]?.content !== 'string'
+  ) {
+    for (let i = session.messages.length - 1; i >= 0; i--) {
+      if (session.messages[i].role === "bot" && typeof session.messages[i].content === "string") {
+        retryBotIndex = i;
+        break;
+      }
     }
   }
 
-  if (lastBotIndex === -1) {
+  if (retryBotIndex === -1) {
     showStatus("Nothing to retry yet.");
     return;
   }
 
-  session.messages.splice(lastBotIndex, 1);
-
   let retryPrompt = null;
-  for (let i = lastBotIndex - 1; i >= 0; i--) {
+  let retryUserIndex = -1;
+  for (let i = retryBotIndex - 1; i >= 0; i--) {
     const message = session.messages[i];
     if (message.role === "user" && typeof message.content === "string") {
       retryPrompt = message.content;
+      retryUserIndex = i;
       break;
     }
   }
@@ -5045,17 +5052,65 @@ async function retryLast() {
     return;
   }
 
-  lastUserPrompt = retryPrompt;
-  session.autoTitled = false;
-  session.timestamp = Date.now();
+  const contextMessages = session.messages
+    .slice(0, retryUserIndex + 1)
+    .filter((m) => typeof m.content === "string")
+    .map((m) => ({ role: m.role === "bot" ? "assistant" : "user", content: m.content }));
+
+  let systemPrompt = MATH_FORMAT_SYSTEM_PROMPT;
+  const memoryContext = await buildMemoryContext();
+  if (memoryContext) {
+    systemPrompt += '\n' + memoryContext;
+  }
+
+  const payload = {
+    model: webSearchEnabled ? FIXED_TEXT_MODEL + ":online" : FIXED_TEXT_MODEL,
+    messages: [{ role: "system", content: systemPrompt }, ...contextMessages]
+  };
+
+  if (webSearchEnabled) {
+    payload.plugins = [
+      {
+        id: "web",
+        engine: "firecrawl",
+        max_results: 5
+      }
+    ];
+  }
+
+  const retryingText = "⏳ Retrying this response...";
+  const previousBotContent = session.messages[retryBotIndex].content;
+  session.messages[retryBotIndex].content = retryingText;
   await saveSessions();
   await loadChatMessages();
 
-  await send({
-    promptOverride: retryPrompt,
-    skipUserRender: true,
-    skipUserSave: true
-  });
+  lastUserPrompt = retryPrompt;
+  isGenerating = true;
+  setStopButtonVisible(false);
+  setPauseButtonVisible(false);
+
+  try {
+    const answer = await fetchBotAnswerViaJson(payload);
+    session.messages[retryBotIndex].content = answer;
+    session.timestamp = Date.now();
+    await saveSessions();
+    await loadChatMessages();
+    showStatus('Retried selected response.');
+  } catch (err) {
+    session.messages[retryBotIndex].content = previousBotContent;
+    await saveSessions();
+    await loadChatMessages();
+    console.error('Retry failed:', err);
+    showStatus('Retry failed for this message.');
+  } finally {
+    isGenerating = false;
+    setStopButtonVisible(false);
+    setPauseButtonVisible(false);
+  }
+}
+
+async function retryLast() {
+  await retryMessageAt(null);
 }
 
 async function editMessage(messageIndex, oldContent) {
@@ -5335,6 +5390,13 @@ function createChatMessageNode(role, content, options = {}) {
   const d = document.createElement("div");
   d.className = "msg " + role;
   let actions = null;
+  let resolvedIndex = Number.isInteger(messageIndex) ? messageIndex : null;
+  if (!Number.isInteger(resolvedIndex) && saveIt) {
+    const session = getCurrentSession();
+    if (session?.messages) {
+      resolvedIndex = session.messages.length;
+    }
+  }
 
   if (typeof content === "object" && content.type === "image") {
     if (!content.src) {
@@ -5379,14 +5441,6 @@ function createChatMessageNode(role, content, options = {}) {
     actions = document.createElement("div");
     actions.className = "msg-actions";
 
-    let resolvedIndex = Number.isInteger(messageIndex) ? messageIndex : null;
-    if (!Number.isInteger(resolvedIndex) && saveIt) {
-      const session = getCurrentSession();
-      if (session?.messages) {
-        resolvedIndex = session.messages.length;
-      }
-    }
-
     const editBtn = document.createElement("button");
     editBtn.className = "msg-btn edit-btn";
     editBtn.textContent = "Edit";
@@ -5412,7 +5466,9 @@ function createChatMessageNode(role, content, options = {}) {
     const retryBtn = document.createElement("button");
     retryBtn.className = "msg-btn retry-btn";
     retryBtn.textContent = "Retry";
-    retryBtn.onclick = retryLast;
+    retryBtn.onclick = () => {
+      retryMessageAt(resolvedIndex);
+    };
 
     actions.appendChild(retryBtn);
   }

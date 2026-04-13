@@ -90,6 +90,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Title model pinned** — `liquid/lfm-2.5-1.2b-instruct:free`
 - **Direct-answer guardrails** — avoids made-up headings like "Quick Concept" / "Game Plan" unless requested
 - **Retry + Edit** — re-run any response or tweak your message mid-conversation
+- **Targeted Retry** — clicking Retry on a bot message regenerates that exact reply in place (later messages stay intact)
 
 ### 🧠 AI Memory
 - **Persistent memory** across conversations — the AI knows who you are
