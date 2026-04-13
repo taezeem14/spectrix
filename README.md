@@ -86,6 +86,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Smart API key rotation** — maximizes uptime and handles rate limits gracefully
 - **Rate-limit UX** — friendly in-app message, not a dead crash
 - **Web search mode** — powered by Firecrawl via OpenRouter (`Ctrl+Shift+S` to toggle)
+- **Anti-hallucination guardrails** — avoids made-up facts/specs, respects a June 1, 2024 knowledge cutoff, and asks for Web search when newer verification is needed
 - **Auto-titled chats** — AI names your conversations after the first exchange
 - **Title model pinned** — `liquid/lfm-2.5-1.2b-instruct:free`
 - **Direct-answer guardrails** — avoids made-up headings like "Quick Concept" / "Game Plan" unless requested

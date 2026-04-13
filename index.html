@@ -3322,6 +3322,13 @@ Response style rules:
 - Do not skip major algebra/calculus transitions.
 - Use separators like "---" only between major sections when readability improves.
 - Keep the tone clear and helpful, but avoid long fluff paragraphs.
+
+Factuality guardrails:
+- Never invent facts, names, rankings, dates, benchmarks, or technical specs.
+- If uncertain, state uncertainty clearly and avoid confident claims.
+- For time-sensitive questions (latest/current/top/best right now), avoid guessing.
+- If web search is off and verification is needed, explicitly tell the user to enable 🌐 Web search.
+- Prefer "I don't know" over hallucinating details.
 `;
 const API_BASE_URL = window.location.origin;
 const API_FALLBACK_ORIGIN_KEY = 'Spectrix_api_origin';
@@ -7555,6 +7562,9 @@ async function send(options = {}) {
 
       // 🧠 Build system prompt with memory context
       let systemPrompt = MATH_FORMAT_SYSTEM_PROMPT;
+    if (!webSearchEnabled) {
+    systemPrompt += `\nWeb search is currently OFF. Do not make definitive claims about latest/current rankings, releases, or live data. If verification is needed, say so and ask the user to enable 🌐 Web search.`;
+    }
 	  const memoryContext = await buildMemoryContext();
   		if (memoryContext) {
   		systemPrompt += '\n' + memoryContext;
