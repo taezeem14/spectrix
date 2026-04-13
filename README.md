@@ -157,7 +157,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **No browser popups** — clean custom modals for all alerts, confirms, and prompts
 - **Custom select dropdowns** — animated, keyboard-navigable, beautiful
 - **Composer alignment polish** — textarea, `+`, `Send`, `Stop`, and `Pause` stay visually aligned with balanced control sizing across desktop and mobile
-- **Fresh-start opening** — app opens to a New Chat on page load instead of restoring the previously active chat
+- **Fresh-start opening** — app opens to a draft New Chat on page load; it is created/saved only after the first message
 - **Role-based link colors** — links are black in user messages and green in Spectrix/bot messages
 
 ### ☁️ Google Auth + Cloud Sync

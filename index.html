@@ -3031,6 +3031,7 @@ async function openDB() {
 }
 
 async function saveChatLocal(chatData) {
+  if (!chatData || chatData.transient) return;
   if (incognitoEnabled) return;
   if (!db) await openDB();
   const tx = db.transaction('chats', 'readwrite');
@@ -3049,6 +3050,13 @@ async function saveChatLocal(chatData) {
 }
 
 async function saveChat(chatData) {
+  if (!chatData) return;
+  if (chatData.transient) {
+    const hasMessages = Array.isArray(chatData.messages) && chatData.messages.length > 0;
+    if (!hasMessages) return;
+    delete chatData.transient;
+  }
+
   await saveChatLocal(chatData);
   if (incognitoEnabled) return;
   // Keep IndexedDB as primary local store and mirror to cloud asynchronously.
@@ -4538,17 +4546,8 @@ async function initApp() {
   updateIncognitoUI();
   await ensureMarkdownRuntimeLoaded({ timeoutMs: 2500, silent: true });
 
-  // Startup behavior: always land on a New Chat view instead of restoring last opened chat.
-  const reusableNewChat = Object.values(sessions)
-    .filter((session) => session && session.title === 'New Chat' && (!Array.isArray(session.messages) || session.messages.length === 0))
-    .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))[0];
-
-  if (reusableNewChat?.id) {
-    currentId = reusableNewChat.id;
-    if (!incognitoEnabled) localStorage.setItem(CURRENT_KEY, currentId);
-  } else {
-    await createNewChat();
-  }
+  // Startup behavior: open a draft New Chat that is not saved until first message.
+  await createNewChat({ transient: true, persist: false });
 
   renderHistory();
   updateHeaderTitle();
@@ -4587,13 +4586,18 @@ async function loadAllSessions() {
 
   await loadChatSearchCache();
   scheduleChatSearchBackfill();
-  
-  if (Object.keys(sessions).length === 0) {
-    await createNewChat();
-  }
 }
 
-async function createNewChat() {
+async function createNewChat(options = {}) {
+  const transient = options.transient !== false;
+  const persist = options.persist === true || (!transient && options.persist !== false);
+
+  if (transient) {
+    Object.keys(sessions).forEach((id) => {
+      if (sessions[id]?.transient) delete sessions[id];
+    });
+  }
+
   let nextId = '';
   do {
     nextId = Date.now().toString() + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
@@ -4612,11 +4616,14 @@ async function createNewChat() {
     timestamp: Date.now(),
     pinned: false,
     autoTitled: false,
-    branchOf: ''
+    branchOf: '',
+    transient
   };
   sessions[currentId] = newSession;
-  await saveChat(newSession);
-  if (!incognitoEnabled) localStorage.setItem(CURRENT_KEY, currentId);
+  if (persist) {
+    await saveChat(newSession);
+    if (!incognitoEnabled) localStorage.setItem(CURRENT_KEY, currentId);
+  }
 }
 
 function getCurrentSession() {
@@ -4688,6 +4695,10 @@ async function saveSessions() {
 
 async function saveMessage(role, content) {
   const session = getCurrentSession();
+  if (!session) return;
+  if (session.transient) {
+    delete session.transient;
+  }
   session.messages.push({ role, content });
   session.timestamp = Date.now();
   await saveSessions();
@@ -5198,7 +5209,7 @@ function groupByTime(sessions) {
 
 function renderHistory() {
   const query = searchBox.value.toLowerCase().trim();
-  let filtered = Object.values(sessions);
+  let filtered = Object.values(sessions).filter((s) => !s?.transient);
   
   if (query) {
     filtered = filtered.filter((s) => {
@@ -9982,6 +9993,7 @@ async function syncMemories(uid) {
 
 async function syncChatToCloud(chatData) {
   if (incognitoEnabled) return;
+  if (!chatData || chatData.transient) return;
   const op = {
     type: 'chat_upsert',
     id: String(chatData?.id || '')
