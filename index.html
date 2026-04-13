@@ -6274,8 +6274,26 @@ function normalizeFenceBoundaryLines(text) {
   return output.join('\n');
 }
 
+function mergeAdjacentCodeFences(text) {
+  let output = String(text || '');
+  const adjacentFencePattern = /```([a-zA-Z0-9_#+.-]*)[ \t]*\n([\s\S]*?)\n```[ \t]*\n(?:[ \t]*\n)*```([a-zA-Z0-9_#+.-]*)[ \t]*\n([\s\S]*?)\n```/g;
+
+  let previous = '';
+  let iterations = 0;
+  while (output !== previous && iterations < 8) {
+    previous = output;
+    output = output.replace(adjacentFencePattern, (match, leftLang, leftBody, rightLang, rightBody) => {
+      if (leftLang !== rightLang) return match;
+      return `\`\`\`${leftLang}\n${leftBody}\n\n${rightBody}\n\`\`\``;
+    });
+    iterations += 1;
+  }
+
+  return output;
+}
+
 function preprocess(text) {
-  const normalizedText = normalizeFenceBoundaryLines(normalizeCodeFenceMarkup(text))
+  const normalizedText = mergeAdjacentCodeFences(normalizeFenceBoundaryLines(normalizeCodeFenceMarkup(text)))
     .replace(/\[CODE\]/gi, '```')
     .replace(/\[\/CODE\]/gi, '```')
     .replace(/\[code\s+lang=["']?(\w+)["']?\]/gi, '```$1')

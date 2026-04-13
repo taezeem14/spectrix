@@ -91,6 +91,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Auto-titled chats** — AI names your conversations after the first exchange
 - **Title model pinned** — `liquid/lfm-2.5-1.2b-instruct:free`
 - **Direct-answer guardrails** — avoids made-up headings like "Quick Concept" / "Game Plan" unless requested
+- **Continuous code-block formatting** — adjacent same-language code fences are auto-merged to prevent fragmented snippets
 - **Retry + Edit** — re-run any response or tweak your message mid-conversation
 - **Targeted Retry** — clicking Retry on a bot message regenerates that exact reply in place (later messages stay intact)
 
