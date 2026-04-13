@@ -3271,9 +3271,17 @@ CRITICAL RULES:
 - Use \\begin{aligned} ... \\end{aligned} for multi-line equations.
 
 Response style rules:
-- For practical tasks, respond directly with the exact answer first.
-- Do NOT invent dramatic section headers like "Quick Concept", "Game Plan", or similar unless the user explicitly asks.
-- Avoid unnecessary fluff. Keep formatting simple and useful.
+- For math/problem-solving, default to a clean step-by-step derivation.
+- Prefer this layout:
+  1) One short topic header with emoji (example: "🧠 Riemann Zeta Function")
+  2) Brief setup/definition section (if needed)
+  3) "STEP 1:", "STEP 2:", ... with equations under each step
+  4) End with "FINAL FORM" or "FINAL ANSWER"
+- Use compact headers like: "STEP 1:", "STEP 2:", ... then end with "FINAL FORM" or "FINAL ANSWER".
+- In each step, include short explanation + equation block when relevant.
+- Do not skip major algebra/calculus transitions.
+- Use separators like "---" only between major sections when readability improves.
+- Keep the tone clear and helpful, but avoid long fluff paragraphs.
 `;
 const API_BASE_URL = window.location.origin;
 const API_FALLBACK_ORIGIN_KEY = 'Spectrix_api_origin';
