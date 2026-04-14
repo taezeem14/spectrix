@@ -3396,6 +3396,7 @@ function shouldFallbackToNextChatRoute(error) {
 
 const CHAT_API_URL_CANDIDATES = buildChatApiCandidates(['/chat', '/api/chat']);
 const CHAT_STREAM_API_URL_CANDIDATES = buildChatApiCandidates(['/chat/stream', '/api/chat/stream']);
+const GEMMA_MULTIMODAL_MODEL = "google/gemma-4-31b-it:free";
 let activeChatApiUrl = CHAT_API_URL_CANDIDATES[0];
 let activeChatStreamApiUrl = CHAT_STREAM_API_URL_CANDIDATES[0];
 const MARKED_SCRIPT_CANDIDATES = [
@@ -3954,6 +3955,12 @@ async function extractTextFromAttachment(file) {
     showStatus(`Reading PDF: ${file.name}`);
     return extractTextFromPdfAttachment(file);
   }
+
+  // Gemma 4 is multimodal; disable fallback OCR/DOCX text extraction for this model.
+  if (isGemmaMultimodalSelected() && (isDocxAttachment(file) || isImageAttachment(file))) {
+    return '';
+  }
+
   if (isDocxAttachment(file)) {
     showStatus(`Reading DOCX: ${file.name}`);
     return extractTextFromDocxAttachment(file);
@@ -3983,7 +3990,8 @@ async function buildAttachmentContextBundle(attachments) {
     context: '',
     summary: '',
     readableCount: 0,
-    skippedCount: 0
+    skippedCount: 0,
+    gemmaBypassCount: 0
   };
 
   if (!Array.isArray(attachments) || attachments.length === 0) {
@@ -3992,6 +4000,7 @@ async function buildAttachmentContextBundle(attachments) {
 
   const readable = [];
   let totalChars = 0;
+  const gemmaSelected = isGemmaMultimodalSelected();
 
   for (const attachment of attachments) {
     const file = attachment?.file;
@@ -4001,6 +4010,12 @@ async function buildAttachmentContextBundle(attachments) {
     }
 
     if (file.size > MAX_ATTACHMENT_BYTES) {
+      bundle.skippedCount += 1;
+      continue;
+    }
+
+    if (gemmaSelected && (isDocxAttachment(file) || isImageAttachment(file))) {
+      bundle.gemmaBypassCount += 1;
       bundle.skippedCount += 1;
       continue;
     }
@@ -4079,7 +4094,7 @@ async function fetchChatApiWithFallback(options = {}, retryCount = 1) {
 const DEFAULT_TEXT_MODEL = "openai/gpt-oss-120b:free";
 const ALLOWED_TEXT_MODELS = new Set([
   "openai/gpt-oss-120b:free",
-  "google/gemma-4-31b-it:free",
+  GEMMA_MULTIMODAL_MODEL,
   "nvidia/nemotron-3-super-120b-a12b:free"
 ]);
 const LEGACY_TEXT_MODEL_MIGRATIONS = new Map([
@@ -4101,12 +4116,16 @@ function normalizeTextModelId(modelId) {
   return ALLOWED_TEXT_MODELS.has(candidate) ? candidate : DEFAULT_TEXT_MODEL;
 }
 
+function isGemmaMultimodalSelected(modelId = FIXED_TEXT_MODEL) {
+  return normalizeTextModelId(modelId) === GEMMA_MULTIMODAL_MODEL;
+}
+
 function resolveTextModelForRequest(modelId, webSearchOn = false) {
   const baseModel = normalizeTextModelId(modelId);
   if (!webSearchOn) return baseModel;
 
   // Gemma IT works better with standard model id + plugin search (no :online suffix).
-  if (baseModel === 'google/gemma-4-31b-it:free') {
+  if (baseModel === GEMMA_MULTIMODAL_MODEL) {
     return baseModel;
   }
 
@@ -7603,6 +7622,10 @@ async function send(options = {}) {
 
         if (attachmentBundle.skippedCount > 0) {
           showStatus(`Used ${attachmentBundle.readableCount} file${attachmentBundle.readableCount === 1 ? '' : 's'} and skipped ${attachmentBundle.skippedCount}.`, 2800);
+        }
+
+        if (attachmentBundle.gemmaBypassCount > 0) {
+          showStatus(`Gemma multimodal mode: skipped OCR/DOCX text extraction for ${attachmentBundle.gemmaBypassCount} file${attachmentBundle.gemmaBypassCount === 1 ? '' : 's'}.`, 3400);
         }
 
         if (!attachmentContext && !prompt.trim()) {
