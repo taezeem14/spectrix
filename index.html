@@ -6331,8 +6331,14 @@ function mergeAdjacentCodeFences(text) {
   while (output !== previous && iterations < 8) {
     previous = output;
     output = output.replace(adjacentFencePattern, (match, leftLang, leftBody, rightLang, rightBody) => {
-      if (leftLang !== rightLang) return match;
-      return `\`\`\`${leftLang}\n${leftBody}\n\n${rightBody}\n\`\`\``;
+      const left = String(leftLang || '').trim().toLowerCase();
+      const right = String(rightLang || '').trim().toLowerCase();
+
+      // Merge when both fences are same language, or one side is unlabeled.
+      if (left && right && left !== right) return match;
+
+      const mergedLang = left || right;
+      return `\`\`\`${mergedLang}\n${leftBody}\n\n${rightBody}\n\`\`\``;
     });
     iterations += 1;
   }

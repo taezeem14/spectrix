@@ -86,7 +86,7 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Advanced API key rotation** — strict round-robin across OpenRouter keys per request, with retry failover/cooldown, plus model-sticky routing for title and memory-extraction model calls
 - **Rate-limit UX** — friendly in-app message, not a dead crash
 - **Web search mode** — powered by Firecrawl via OpenRouter (`Ctrl+Shift+S` to toggle)
-- **Anti-hallucination guardrails** — avoids made-up facts/specs, respects a June 1, 2024 knowledge cutoff, and asks for Web search when newer verification is needed
+- **Anti-hallucination guardrails** — avoids made-up facts/specs and asks for Web search when verification is needed for fast-changing information
 - **Enthusiastic full-detail responses** — default style is energetic and comprehensive; strict step-by-step formatting appears only when explicitly requested
 - **Auto-titled chats** — AI names your conversations after the first exchange
 - **Title model pinned** — `liquid/lfm-2.5-1.2b-instruct:free`
