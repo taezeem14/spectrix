@@ -2897,8 +2897,8 @@ body.dark .voice-btn.recording {
         </div>
           <div class="select-wrap">
             <select id="textModelSelect" title="Choose text model">
+			  <option value="google/gemma-4-31b-it:free">Gemma 4 31B IT (Main • Instruction Tuned)</option>
 			  <option value="openai/gpt-oss-120b:free">GPT-OSS 120B (Fast • Strong)</option>
-			  <option value="google/gemma-4-31b-it:free">Gemma 4 31B IT (Instruction Tuned)</option>
               <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 3 Super (Deep Reasoning)</option>
             </select>
           </div>
@@ -4091,14 +4091,14 @@ async function fetchChatApiWithFallback(options = {}, retryCount = 1) {
 
   throw lastError || new Error('Chat request failed');
 }
-const DEFAULT_TEXT_MODEL = "openai/gpt-oss-120b:free";
+const DEFAULT_TEXT_MODEL = GEMMA_MULTIMODAL_MODEL;
 const ALLOWED_TEXT_MODELS = new Set([
-  "openai/gpt-oss-120b:free",
   GEMMA_MULTIMODAL_MODEL,
+  "openai/gpt-oss-120b:free",
   "nvidia/nemotron-3-super-120b-a12b:free"
 ]);
 const LEGACY_TEXT_MODEL_MIGRATIONS = new Map([
-  ["openai/gpt-oss-20b:free", "google/gemma-4-31b-it:free"]
+  ["openai/gpt-oss-20b:free", GEMMA_MULTIMODAL_MODEL]
 ]);
 const DEPRECATED_TEXT_MODELS = new Set([
   "stepfun/step-3.5-flash:free",

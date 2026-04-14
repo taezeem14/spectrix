@@ -391,7 +391,7 @@ function buildOpenRouterPayload(body) {
     throw new Error('No messages provided');
   }
 
-  const selectedModel = model || 'openai/gpt-oss-120b:free';
+  const selectedModel = model || 'google/gemma-4-31b-it:free';
   const finalMessages = mergeSystemPrompt(messages);
   const maxTokens = getMaxTokensForModel(selectedModel);
   const isDeepseek = selectedModel.includes('deepseek');

@@ -47,7 +47,7 @@
 **Spectrix AI** is a high-performance, PWA-first AI chatbot engineered for students, developers, and power users.
 
 Built from scratch — **zero frameworks, zero bloat** — it combines:
-- 🤖 Multi-model AI routing via **OpenRouter** (GPT-OSS 120B, GPT-OSS 20B, Nemotron 3 Super)
+- 🤖 Multi-model AI routing via **OpenRouter** (Gemma 4 31B IT, GPT-OSS 120B, Nemotron 3 Super)
 - ⚡ Serverless backend on **Vercel Functions** with smart key rotation + route rewrites
 - 🧮 **Full LaTeX math rendering** via KaTeX + MathJax with copy-to-clipboard
 - 📡 **Offline-first** architecture with IndexedDB local persistence
@@ -206,8 +206,8 @@ User sends message
 
 | Mode | Model | Best For |
 |------|-------|----------|
+| 🌟 Main | `google/gemma-4-31b-it:free` | Instruction-tuned coding and productivity workflows |
 | ⚡ Quick | `openai/gpt-oss-120b:free` | Fast chats, tools, and agent loops |
-| 🚀 Smart | `google/gemma-4-31b-it:free` | Instruction-tuned coding and productivity workflows |
 | 🧠 Reasoning | `nvidia/nemotron-3-super-120b-a12b:free` | Deep reasoning and long-context tasks |
 
 > 💾 Model preference saved to `localStorage → Spectrix_text_model` and persists across sessions.
