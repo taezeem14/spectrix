@@ -67,8 +67,8 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 | Stat | Value |
 |------|-------|
 | 🗓️ Build Duration | 3+ months |
-| 🔁 Commits | 530+ |
-| 🚀 Deployments | 280+ |
+| 🔁 Commits | 600+ |
+| 🚀 Deployments | 300+ |
 | 📦 Framework | None (Vanilla JS) |
 | ⚙️ Backend | Vercel Functions |
 | 📱 Architecture | Single-file PWA (`index.html`) |
@@ -342,7 +342,7 @@ Idea  →  AI generates core logic
 
 > **AI is the tool — not the decision-maker.**
 > Every architectural choice, every design decision, every UX fix — made by a human. 🧠
-> 530+ commits. 280+ deployments. Obsessive iteration. That's Spectrix.
+> 600+ commits. 300+ deployments. Obsessive iteration. That's Spectrix.
 
 ---
 
