@@ -114,7 +114,10 @@ Built from scratch — **zero frameworks, zero bloat** — it combines:
 - **Categorized** — personal, preference, technical, interest, context, general
 - **Full control** — view all memories, delete individually, or wipe clean
 - **Toggle on/off** — disable auto-learning anytime
-- **Cooldown-throttled** — extraction runs max once every 90 seconds, no spam
+- **Cooldown-throttled** — extraction runs max once every 15 minutes to prevent memory spam
+- **High-signal capture only** — auto-extraction runs only when messages contain clear personal/profile/preference signals
+- **Single-fact auto-save** — each extraction pass saves at most one strong memory
+- **Auto-memory cap** — oldest auto memories are trimmed beyond 40 items to keep the panel clean
 - **Deduplication** — near-identical facts are never saved twice
 - **Local-first IndexedDB** — fast on-device memory persistence
 - **Firestore memory sync** — auto-mirrors memories across signed-in devices

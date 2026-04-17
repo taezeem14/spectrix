@@ -3309,7 +3309,9 @@ const ATTACHMENT_TEXT_EXTENSIONS = new Set([
 ]);
 const ATTACHMENT_IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tif', 'tiff']);
 const MEMORY_EXTRACT_MIN_CHARS = 24;
-const MEMORY_EXTRACT_COOLDOWN_MS = 90 * 1000;
+const MEMORY_EXTRACT_COOLDOWN_MS = 15 * 60 * 1000;
+const MEMORY_AUTO_MAX_ITEMS = 40;
+const MEMORY_AUTO_MAX_SAVE_PER_PASS = 1;
 const MATH_FORMAT_SYSTEM_PROMPT = `
 When writing mathematics, use valid MathJax / KaTeX LaTeX syntax.
 
@@ -8831,6 +8833,24 @@ async function cleanupMemories() {
   showStatus(`Cleaned up ${deleted} memory item${deleted === 1 ? '' : 's'}.`);
 }
 
+async function enforceAutoMemoryCap(maxCount = MEMORY_AUTO_MAX_ITEMS) {
+  const memories = await getAllMemories();
+  const autoMemories = memories
+    .filter((m) => String(m?.source || '').toLowerCase() === 'auto')
+    .sort((a, b) => Number(b?.timestamp || 0) - Number(a?.timestamp || 0));
+
+  if (autoMemories.length <= maxCount) return 0;
+
+  const overflow = autoMemories.slice(maxCount);
+  let deleted = 0;
+  for (const mem of overflow) {
+    if (!mem?.id) continue;
+    await deleteMemory(mem.id);
+    deleted += 1;
+  }
+  return deleted;
+}
+
 async function buildMemoryContext() {
   try {
     if (incognitoEnabled) return '';
@@ -8870,6 +8890,11 @@ function shouldExtractMemories(userMessage) {
   const last = Number(localStorage.getItem(LAST_MEMORY_EXTRACT_KEY) || 0);
   const now = Date.now();
   if (now - last < MEMORY_EXTRACT_COOLDOWN_MS) return false;
+
+  const normalized = message.toLowerCase();
+  const hasStrongSignal = MEMORY_SUBJECT_HINT_REGEX.test(normalized) && MEMORY_VERB_HINT_REGEX.test(normalized);
+  const hasExplicitProfileSignal = /\b(i\s+(am|like|prefer|want|need|use|work|study|live|build)|my\s+(name|goal|project|stack|preference|interest|location|role|workflow))\b/i.test(normalized);
+  if (!hasStrongSignal && !hasExplicitProfileSignal) return false;
   return true;
 }
 
@@ -8902,7 +8927,7 @@ Rules:
 - Categorize each fact using ONLY one of these exact words: personal, preference, technical, interest, context, general
 - If nothing worth remembering, respond with EXACTLY: NONE
 - Format: category|fact
-- One fact per line. Max 3 facts.
+- One fact per line. Max 1 fact.
 
 Existing memories (avoid near-duplicates):
 ${existingFacts.slice(0, 20).join('\n')}`
@@ -8956,6 +8981,7 @@ ${existingFacts.slice(0, 20).join('\n')}`
     if (!parsedFacts.length) return;
 
     let saved = 0;
+    let autoMemoryCount = existingMemories.filter((m) => String(m?.source || '').toLowerCase() === 'auto').length;
 
     for (const entry of parsedFacts) {
       const rawCat = String(entry.categoryPart || '').toLowerCase().replace(/[^a-z]/g, '');
@@ -8963,7 +8989,9 @@ ${existingFacts.slice(0, 20).join('\n')}`
       const fact = String(entry.fact || '').trim();
 
       if (!fact || fact.length < 4 || fact.length > 200) continue;
+      if (/^(the\s+user|user|they)\b/i.test(fact)) continue;
       if (!isUsefulMemoryFact(fact, category)) continue;
+      if (autoMemoryCount >= MEMORY_AUTO_MAX_ITEMS) break;
 
       // FIX 3: stricter but fairer duplicate check (full string match, not substring)
       const factLower = fact.toLowerCase();
@@ -8989,10 +9017,12 @@ ${existingFacts.slice(0, 20).join('\n')}`
       await saveMemory(memory);
       existingFacts.push(factLower); // prevent within-batch duplicates
       saved++;
-      if (saved >= 3) break;
+      autoMemoryCount++;
+      if (saved >= MEMORY_AUTO_MAX_SAVE_PER_PASS) break;
     }
 
     if (saved > 0) {
+      await enforceAutoMemoryCap();
       await updateMemoryBadge();
       console.log(`🧠 Saved ${saved} new memories`);
     }
