@@ -25,6 +25,15 @@
 
 ---
 
+## ⚡ TL;DR
+
+- Spectrix is a fast, installable, offline-ready AI chat app built in pure vanilla JS (single `index.html`, no framework bloat).
+- You get multi-model chat, streaming, voice I/O, math rendering, persistent AI memory, web search mode, and `/img` + `/vid` generation.
+- Data is local-first (IndexedDB) with optional Google sign-in for cloud sync (Firestore + Storage) across devices.
+- It is tuned for speed, control, and power-user workflows, not just basic chatbot replies.
+
+---
+
 ## 🌐 Live Demo
 
 | Link | Description |
