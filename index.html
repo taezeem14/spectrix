@@ -6507,29 +6507,11 @@ function buildChatTldr(session, options = {}) {
   const mode = normalizeTldrMode(options.mode || 'bullets');
   const requestedWindow = Number(options.windowSize || TLDR_DEFAULT_WINDOW);
   const windowSize = Math.max(TLDR_MIN_WINDOW, Math.min(TLDR_MAX_WINDOW, requestedWindow));
-  const requestedWindowHours = options.windowHours;
-  const windowHours = (requestedWindowHours === 0)
-    ? 0
-    : (Number.isFinite(Number(requestedWindowHours))
-      ? Math.max(TLDR_MIN_WINDOW_HOURS, Math.min(TLDR_MAX_WINDOW_HOURS, Number(requestedWindowHours)))
-      : null);
-  const scopeLabel = formatTldrScopeLabel(windowSize, windowHours, String(options.windowPreset || ''));
 
-  const allEntries = (Array.isArray(session?.messages) ? session.messages : [])
+  const entries = (Array.isArray(session?.messages) ? session.messages : [])
     .map((msg, idx) => ({ msg, idx }))
     .filter((entry) => typeof entry.msg?.content === 'string')
     .filter((entry) => !/^\/tldr\b/i.test(String(entry.msg.content).trim()));
-
-  const nowTs = Date.now();
-  const cutoff = (windowHours === 0 || windowHours == null) ? 0 : (nowTs - (windowHours * 60 * 60 * 1000));
-  const scopedEntries = (cutoff > 0)
-    ? allEntries.filter((entry) => {
-      const msgTs = Number(entry?.msg?.timestamp || 0);
-      return msgTs > 0 && msgTs >= cutoff;
-    })
-    : allEntries;
-
-  const entries = scopedEntries.length ? scopedEntries : allEntries;
 
   if (!entries.length) {
     return {
@@ -6563,13 +6545,11 @@ function buildChatTldr(session, options = {}) {
 
   if (mode === 'short') {
     lines.push('### TL;DR (Short)');
-    lines.push(`- Scope: ${scopeLabel}.`);
     lines.push(`- Focus: ${topicText}.`);
     if (latestUser) lines.push(`- Latest ask: ${latestUser}`);
     if (latestBot) lines.push(`- Latest outcome: ${latestBot}`);
   } else if (mode === 'keypoints') {
     lines.push('### TL;DR (Keypoints)');
-    lines.push(`1. Scope: ${scopeLabel}.`);
     lines.push(`1. Conversation focus: ${topicText}.`);
     lines.push(`2. Window analyzed: ${windowed.length} messages.`);
     if (latestUser) lines.push(`3. Current user direction: ${latestUser}`);
@@ -6578,27 +6558,8 @@ function buildChatTldr(session, options = {}) {
       const role = entry.msg.role === 'bot' ? 'Spectrix' : 'You';
       lines.push(`${lines.length + 1}. Key moment ${i + 1} (${role}): ${entry.preview}`);
     });
-  } else if (mode === 'grouped') {
-    lines.push('### TL;DR (Grouped Topics)');
-    lines.push(`- Scope: ${scopeLabel}.`);
-    lines.push(`- Window analyzed: ${windowed.length} messages (${userMessages.length} from you, ${botMessages.length} from Spectrix).`);
-    const topicGroups = buildTldrTopicGroups(scored, keywords, 4);
-    if (!topicGroups.length) {
-      lines.push(`- Main focus: ${topicText}.`);
-    } else {
-      lines.push('- Topic groups:');
-      topicGroups.forEach((group) => {
-        lines.push(`  - ${group.label} (${group.count} messages): ${group.sample}`);
-      });
-      topicGroups.forEach((group) => {
-        if (Number.isInteger(group.highlightIndex) && !highlightIndices.includes(group.highlightIndex)) {
-          highlightIndices.push(group.highlightIndex);
-        }
-      });
-    }
   } else {
     lines.push('### TL;DR (Bullets)');
-    lines.push(`- Scope: ${scopeLabel}.`);
     lines.push(`- Window analyzed: ${windowed.length} messages (${userMessages.length} from you, ${botMessages.length} from Spectrix).`);
     lines.push(`- Main topics: ${topicText}.`);
     lines.push('- Key highlights:');
@@ -6611,7 +6572,7 @@ function buildChatTldr(session, options = {}) {
   lines.push('');
   lines.push('> Key messages in the current chat are highlighted in green.');
   lines.push('> Actions: use Quick Actions for Copy last TL;DR or Download last TL;DR.');
-  lines.push('> Tip: `/tldr short`, `/tldr bullets`, `/tldr keypoints`, `/tldr grouped`, `/tldr 12h`, `/tldr week`, `/tldr all`');
+  lines.push('> Tip: `/tldr short`, `/tldr bullets`, `/tldr keypoints`, `/tldr 40`');
 
   return {
     summary: lines.join('\n'),
@@ -6619,8 +6580,7 @@ function buildChatTldr(session, options = {}) {
     meta: {
       mode,
       windowAnalyzed: windowed.length,
-      topics: keywords,
-      scopeLabel
+      topics: keywords
     }
   };
 }
@@ -7827,25 +7787,13 @@ async function streamBotFromSSE(payload, options = {}) {
     activeChatStreamApiUrl,
     ...CHAT_STREAM_API_URL_CANDIDATES.filter((url) => url !== activeChatStreamApiUrl)
   ];
-  const streamStartedAt = Date.now();
-  const metricBase = {
-    model: String(payload?.model || ''),
-    messageCount: Array.isArray(payload?.messages) ? payload.messages.length : 0,
-    candidateCount: streamCandidates.length
-  };
-  pushStreamDebugMetric({
-    event: 'stream_start',
-    ...metricBase
-  });
 
   const requestBody = JSON.stringify(payload);
   let res = null;
   let lastStreamError = null;
-  const routeAttempts = [];
 
   for (let index = 0; index < streamCandidates.length; index++) {
     const url = streamCandidates[index];
-    const attemptStartedAt = Date.now();
     try {
       const attempt = await fetch(url, {
         method: "POST",
@@ -7853,88 +7801,29 @@ async function streamBotFromSSE(payload, options = {}) {
         body: requestBody,
         signal
       });
-      routeAttempts.push({
-        attempt: index + 1,
-        url,
-        status: attempt.status,
-        durationMs: Date.now() - attemptStartedAt
-      });
 
       const hasNext = index < streamCandidates.length - 1;
       if (hasNext && CHAT_ROUTE_FALLBACK_STATUSES.has(attempt.status)) {
-        pushStreamDebugMetric({
-          event: 'stream_route_retry_status',
-          ...metricBase,
-          attempt: index + 1,
-          url,
-          status: attempt.status
-        });
         continue;
       }
 
       activeChatStreamApiUrl = url;
       res = attempt;
-      pushStreamDebugMetric({
-        event: 'stream_route_selected',
-        ...metricBase,
-        attempt: index + 1,
-        url,
-        status: attempt.status,
-        routeAttempts
-      });
       break;
     } catch (error) {
-      routeAttempts.push({
-        attempt: index + 1,
-        url,
-        error: String(error?.message || error || 'unknown error'),
-        durationMs: Date.now() - attemptStartedAt
-      });
       if (signal?.aborted) {
-        pushStreamDebugMetric({
-          event: 'stream_aborted_before_connect',
-          ...metricBase,
-          attempt: index + 1,
-          url,
-          durationMs: Date.now() - streamStartedAt,
-          routeAttempts
-        });
         const abortError = new Error('Generation stopped');
         abortError.isUserAbort = true;
         throw abortError;
       }
 
       lastStreamError = error;
-      if (index < streamCandidates.length - 1) {
-        pushStreamDebugMetric({
-          event: 'stream_route_retry_error',
-          ...metricBase,
-          attempt: index + 1,
-          url,
-          error: String(error?.message || error || 'unknown error')
-        });
-        continue;
-      }
-
-      pushStreamDebugMetric({
-        event: 'stream_connect_failed',
-        ...metricBase,
-        durationMs: Date.now() - streamStartedAt,
-        error: String(error?.message || error || 'unknown error'),
-        routeAttempts
-      });
+      if (index < streamCandidates.length - 1) continue;
       throw error;
     }
   }
 
   if (!res) {
-    pushStreamDebugMetric({
-      event: 'stream_unavailable',
-      ...metricBase,
-      durationMs: Date.now() - streamStartedAt,
-      error: String(lastStreamError?.message || lastStreamError || 'Streaming endpoint unavailable'),
-      routeAttempts
-    });
     throw lastStreamError || new Error('Streaming endpoint unavailable');
   }
 
@@ -7947,35 +7836,14 @@ async function streamBotFromSSE(payload, options = {}) {
     const err = new Error(`Rate limited — please wait ~${retryAfter}s and try again.`);
     err.isRateLimit = true;
     err.retryAfter = retryAfter;
-    pushStreamDebugMetric({
-      event: 'stream_rate_limited',
-      ...metricBase,
-      status: res.status,
-      retryAfter,
-      durationMs: Date.now() - streamStartedAt,
-      routeAttempts
-    });
     throw err;
   }
 
   if (!res.ok) {
-    pushStreamDebugMetric({
-      event: 'stream_http_error',
-      ...metricBase,
-      status: res.status,
-      durationMs: Date.now() - streamStartedAt,
-      routeAttempts
-    });
     throw new Error(`HTTP ${res.status}`);
   }
 
   if (!res.body) {
-    pushStreamDebugMetric({
-      event: 'stream_body_missing',
-      ...metricBase,
-      durationMs: Date.now() - streamStartedAt,
-      routeAttempts
-    });
     throw new Error("Streaming is not supported in this browser.");
   }
 
@@ -7995,27 +7863,16 @@ async function streamBotFromSSE(payload, options = {}) {
   let frameScheduled = false;
   let streamTextNode = null;
   let pendingDeltaText = "";
-  let chunkCount = 0;
-  let parseEventCount = 0;
-  let deltaCount = 0;
-  let totalBytes = 0;
-  let visibilityHiddenCount = 0;
-  let streamDoneReason = 'reader_done';
 
   const decoder = new TextDecoder();
   const reader = res.body.getReader();
   const onVisibilityChange = () => {
     if (document.visibilityState === 'hidden' && !streamDone && !abortedByUser) {
-      visibilityHiddenCount += 1;
       showStatus('Tab backgrounded — stream may stall on some browsers.', 4000);
     }
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
   const STREAM_IDLE_TIMEOUT_MS = 20000;
-  const cleanupStreamRuntime = () => {
-    document.removeEventListener('visibilitychange', onVisibilityChange);
-    streamResumeRenderCallback = null;
-  };
 
   const readChunkWithTimeout = async () => {
     let timeoutId;
@@ -8105,209 +7962,132 @@ async function streamBotFromSSE(payload, options = {}) {
     });
   };
 
-  try {
-    while (!streamDone) {
-      let chunk;
-      try {
-        chunk = await readChunkWithTimeout();
-      } catch (error) {
-        if (signal?.aborted) {
-          abortedByUser = true;
-          streamDoneReason = 'user_abort';
-          break;
-        }
-        streamDoneReason = error?.message === 'Stream stalled.' ? 'idle_timeout' : 'reader_error';
-        throw error;
+  while (!streamDone) {
+    let chunk;
+    try {
+      chunk = await readChunkWithTimeout();
+    } catch (error) {
+      if (signal?.aborted) {
+        abortedByUser = true;
+        break;
       }
+      throw error;
+    }
 
-      if (chunk.done) break;
+    if (chunk.done) break;
 
-      chunkCount += 1;
-      totalBytes += Number(chunk?.value?.byteLength || 0);
-      buffer += decoder.decode(chunk.value, { stream: true });
-      buffer = buffer.replace(/\r\n/g, "\n");
+    buffer += decoder.decode(chunk.value, { stream: true });
+    buffer = buffer.replace(/\r\n/g, "\n");
 
-      let boundaryIndex = buffer.indexOf("\n\n");
-      while (boundaryIndex !== -1) {
-        const rawEvent = buffer.slice(0, boundaryIndex).trim();
-        buffer = buffer.slice(boundaryIndex + 2);
+    let boundaryIndex = buffer.indexOf("\n\n");
+    while (boundaryIndex !== -1) {
+      const rawEvent = buffer.slice(0, boundaryIndex).trim();
+      buffer = buffer.slice(boundaryIndex + 2);
 
-        if (rawEvent) {
-          const dataLines = rawEvent
-            .split("\n")
-            .filter((line) => line.startsWith("data:"))
-            .map((line) => line.slice(5).trimStart());
+      if (rawEvent) {
+        const dataLines = rawEvent
+          .split("\n")
+          .filter((line) => line.startsWith("data:"))
+          .map((line) => line.slice(5).trimStart());
 
-          if (dataLines.length > 0) {
-            parseEventCount += 1;
-            const dataRaw = dataLines.join("\n").trim();
+        if (dataLines.length > 0) {
+          const dataRaw = dataLines.join("\n").trim();
 
-            if (dataRaw === "[DONE]") {
-              streamDoneReason = 'done_token';
-              streamDone = true;
-              break;
-            }
-
-            let eventData = null;
-            try {
-              eventData = JSON.parse(dataRaw);
-            } catch {
-              eventData = null;
-            }
-
-            if (eventData?.type === "error") {
-              streamDoneReason = 'event_error';
-              throw new Error(eventData.message || "Streaming failed");
-            }
-
-            const wrappedDelta = (eventData?.type === "delta" && typeof eventData.delta === "string")
-              ? eventData.delta
-              : "";
-            const rawDelta = eventData?.choices?.[0]?.delta?.content;
-            const nextDelta = wrappedDelta || (typeof rawDelta === "string" ? rawDelta : "");
-
-            if (nextDelta) {
-              deltaCount += 1;
-              renderedText += nextDelta;
-              pendingDeltaText += nextDelta;
-              if (!streamPaused) scheduleRender();
-            }
-
-            const finishReason = eventData?.choices?.[0]?.finish_reason;
-            if (eventData?.type === "done" || finishReason) {
-              streamDoneReason = eventData?.type === 'done' ? 'done_event' : `finish:${String(finishReason || '')}`;
-              streamDone = true;
-              break;
-            }
+          if (dataRaw === "[DONE]") {
+            streamDone = true;
+            break;
           }
-        }
 
-        streamParseEventsSinceYield += 1;
-        const parseNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        if (
-          streamParseEventsSinceYield >= STREAM_PARSE_YIELD_EVENT_COUNT
-          || (parseNow - lastStreamParseYieldAt) > STREAM_PARSE_YIELD_BUDGET_MS
-        ) {
-          streamParseEventsSinceYield = 0;
-          lastStreamParseYieldAt = parseNow;
-          await new Promise((resolve) => setTimeout(resolve, 0));
-          if (signal?.aborted) {
-            abortedByUser = true;
-            streamDoneReason = 'user_abort';
+          let eventData = null;
+          try {
+            eventData = JSON.parse(dataRaw);
+          } catch {
+            eventData = null;
+          }
+
+          if (eventData?.type === "error") {
+            throw new Error(eventData.message || "Streaming failed");
+          }
+
+          const wrappedDelta = (eventData?.type === "delta" && typeof eventData.delta === "string")
+            ? eventData.delta
+            : "";
+          const rawDelta = eventData?.choices?.[0]?.delta?.content;
+          const nextDelta = wrappedDelta || (typeof rawDelta === "string" ? rawDelta : "");
+
+          if (nextDelta) {
+            renderedText += nextDelta;
+            pendingDeltaText += nextDelta;
+            if (!streamPaused) scheduleRender();
+          }
+
+          if (eventData?.type === "done" || eventData?.choices?.[0]?.finish_reason) {
             streamDone = true;
             break;
           }
         }
-
-        boundaryIndex = buffer.indexOf("\n\n");
-      }
-    }
-
-    if (abortedByUser) {
-      if (!renderedText.trim()) {
-        d.remove();
-        pushStreamDebugMetric({
-          event: 'stream_aborted_empty',
-          ...metricBase,
-          durationMs: Date.now() - streamStartedAt,
-          chunkCount,
-          parseEventCount,
-          deltaCount,
-          totalBytes,
-          reason: streamDoneReason,
-          visibilityHiddenCount,
-          routeAttempts
-        });
-        const abortError = new Error('Generation stopped');
-        abortError.isUserAbort = true;
-        throw abortError;
       }
 
-      await finalizeRenderedMessage();
-      session.messages.push({ role: "bot", content: renderedText, timestamp: Date.now() });
-      session.timestamp = Date.now();
-      await saveChat(session);
-      renderHistory();
-      updateHeaderTitle();
-      showStatus('Generation stopped');
-      pushStreamDebugMetric({
-        event: 'stream_aborted_partial',
-        ...metricBase,
-        durationMs: Date.now() - streamStartedAt,
-        chunkCount,
-        parseEventCount,
-        deltaCount,
-        totalBytes,
-        textLength: renderedText.length,
-        reason: streamDoneReason,
-        visibilityHiddenCount,
-        routeAttempts
-      });
-      return renderedText;
-    }
+      streamParseEventsSinceYield += 1;
+      const parseNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      if (
+        streamParseEventsSinceYield >= STREAM_PARSE_YIELD_EVENT_COUNT
+        || (parseNow - lastStreamParseYieldAt) > STREAM_PARSE_YIELD_BUDGET_MS
+      ) {
+        streamParseEventsSinceYield = 0;
+        lastStreamParseYieldAt = parseNow;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (signal?.aborted) {
+          abortedByUser = true;
+          streamDone = true;
+          break;
+        }
+      }
 
+      boundaryIndex = buffer.indexOf("\n\n");
+    }
+  }
+
+  if (abortedByUser) {
     if (!renderedText.trim()) {
-      pushStreamDebugMetric({
-        event: 'stream_empty',
-        ...metricBase,
-        durationMs: Date.now() - streamStartedAt,
-        chunkCount,
-        parseEventCount,
-        deltaCount,
-        totalBytes,
-        reason: streamDoneReason,
-        visibilityHiddenCount,
-        routeAttempts
-      });
-      throw new Error("Empty response from model");
+      d.remove();
+      streamResumeRenderCallback = null;
+      const abortError = new Error('Generation stopped');
+      abortError.isUserAbort = true;
+      throw abortError;
     }
 
     await finalizeRenderedMessage();
-
-    // Play TTS once final text is complete.
-    speakText(renderedText);
-
-    session.messages.push({ role: "bot", content: renderedText, timestamp: Date.now() });
+    session.messages.push({ role: "bot", content: renderedText });
     session.timestamp = Date.now();
     await saveChat(session);
     renderHistory();
     updateHeaderTitle();
-
-    pushStreamDebugMetric({
-      event: 'stream_complete',
-      ...metricBase,
-      durationMs: Date.now() - streamStartedAt,
-      chunkCount,
-      parseEventCount,
-      deltaCount,
-      totalBytes,
-      textLength: renderedText.length,
-      reason: streamDoneReason,
-      visibilityHiddenCount,
-      routeAttempts
-    });
-
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    streamResumeRenderCallback = null;
+    showStatus('Generation stopped');
     return renderedText;
-  } catch (error) {
-    if (!error?.isUserAbort) {
-      pushStreamDebugMetric({
-        event: 'stream_error',
-        ...metricBase,
-        durationMs: Date.now() - streamStartedAt,
-        chunkCount,
-        parseEventCount,
-        deltaCount,
-        totalBytes,
-        reason: streamDoneReason,
-        visibilityHiddenCount,
-        error: String(error?.message || error || 'unknown error'),
-        routeAttempts
-      });
-    }
-    throw error;
-  } finally {
-    cleanupStreamRuntime();
   }
+
+  if (!renderedText.trim()) {
+    streamResumeRenderCallback = null;
+    throw new Error("Empty response from model");
+  }
+
+  await finalizeRenderedMessage();
+
+  // Play TTS once final text is complete.
+  speakText(renderedText);
+
+  session.messages.push({ role: "bot", content: renderedText });
+  session.timestamp = Date.now();
+  await saveChat(session);
+  renderHistory();
+  updateHeaderTitle();
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  streamResumeRenderCallback = null;
+
+  return renderedText;
 }
 
 // ===== FULL AUTO TITLE =====
@@ -8401,8 +8181,6 @@ async function send(options = {}) {
   const tldrCommand = parseTldrCommand(prompt);
   const isTldrCommand = Boolean(tldrCommand);
   const tldrWindowSize = tldrCommand?.windowSize ?? TLDR_DEFAULT_WINDOW;
-  const tldrWindowHours = tldrCommand?.windowHours ?? TLDR_DEFAULT_WINDOW_HOURS;
-  const tldrWindowPreset = tldrCommand?.windowPreset ?? 'today';
   const tldrMode = tldrCommand?.mode ?? 'bullets';
 
   if (!prompt && hasPendingAttachments) {
@@ -8477,12 +8255,7 @@ async function send(options = {}) {
       showStatus('Attachments are ignored for /tldr.', 1800);
     }
 
-    const tldrResult = buildChatTldr(session, {
-      mode: tldrMode,
-      windowSize: tldrWindowSize,
-      windowHours: tldrWindowHours,
-      windowPreset: tldrWindowPreset
-    });
+    const tldrResult = buildChatTldr(session, { mode: tldrMode, windowSize: tldrWindowSize });
     render('bot', tldrResult.summary);
     saveTldrSummaryForSession(session.id, {
       summary: tldrResult.summary,
@@ -8735,19 +8508,9 @@ try {
     throw streamError;
   }
 
-  pushStreamDebugMetric({
-    event: 'stream_to_json_fallback',
-    model: String(payload?.model || ''),
-    reason: String(streamError?.message || streamError || 'stream interruption')
-  });
   removePendingStreamBubble();
   showStatus('Stream interrupted. Switching to standard response...');
   answer = await fetchBotAnswerViaJson(payload);
-  pushStreamDebugMetric({
-    event: 'json_fallback_success',
-    model: String(payload?.model || ''),
-    textLength: String(answer || '').length
-  });
   render("bot", answer);
 }
 activeStreamAbortController = null;
