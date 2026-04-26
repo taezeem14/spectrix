@@ -4175,6 +4175,8 @@ function normalizeTextModelId(modelId) {
   return ALLOWED_TEXT_MODELS.has(candidate) ? candidate : DEFAULT_TEXT_MODEL;
 }
 
+let FIXED_TEXT_MODEL = normalizeTextModelId(localStorage.getItem('Spectrix_text_model'));
+
 function isGemmaMultimodalSelected(modelId = FIXED_TEXT_MODEL) {
   return normalizeTextModelId(modelId) === GEMMA_MULTIMODAL_MODEL;
 }
@@ -4191,7 +4193,6 @@ function resolveTextModelForRequest(modelId, webSearchOn = false) {
   return `${baseModel}:online`;
 }
 
-let FIXED_TEXT_MODEL = normalizeTextModelId(localStorage.getItem('Spectrix_text_model'));
 const FIXED_VIDEO_MODEL = "ByteDance/Seedance-1.0-lite";
 const FIXED_TITLE_MODEL = "liquid/lfm-2.5-1.2b-instruct:free";
 const FIXED_MEMORY_EXTRACT_MODEL = "liquid/lfm-2.5-1.2b-instruct:free";
